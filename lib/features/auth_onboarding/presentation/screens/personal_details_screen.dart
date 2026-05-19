@@ -56,11 +56,11 @@ class PersonalDetailsScreen extends StatelessWidget {
               const CustomDropdownField(label: 'Nationality/ Citizenship', hint: 'Select nationality'),
               const SizedBox(height: 32),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Family & Physical', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               CustomRadioGroup(label: 'Do you have children?', options: const ['Yes', 'No'], selected: 'No'),
@@ -77,11 +77,11 @@ class PersonalDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Family & Physical', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               CustomRadioGroup(label: 'Prayer 5x a day?', options: const ['Yes', 'Mostly', 'No'], selected: 'Mostly'),
@@ -90,11 +90,11 @@ class PersonalDetailsScreen extends StatelessWidget {
               CustomRadioGroup(label: 'Are you open to relocating?', options: const ['Yes', 'Maybe', 'No'], selected: 'Maybe'),
               const SizedBox(height: 32),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('For sisters only', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               const CustomDropdownField(label: 'How do you dress?', hint: 'Select an option'),

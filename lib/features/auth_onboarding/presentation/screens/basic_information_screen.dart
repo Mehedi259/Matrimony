@@ -159,11 +159,11 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               const CustomTextField(label: 'Date of Birth', hint: 'DD / MM / YYYY'), // Needs icon update in a real scenario
               const SizedBox(height: 32),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               Row(

@@ -60,11 +60,11 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               ),
               const SizedBox(height: 32),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Preferred Age Range', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               Row(
@@ -96,11 +96,11 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               ),
               const SizedBox(height: 24),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Preferred Marital Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               CustomCheckboxItem(label: 'Never been married', initialValue: true),
@@ -110,11 +110,11 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               const CustomCheckboxItem(label: 'Widowed'),
               const SizedBox(height: 24),
               
-              const Divider(),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Preferred Ethnicity', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
+              const Divider(),
               const SizedBox(height: 16),
               
               TextField(
