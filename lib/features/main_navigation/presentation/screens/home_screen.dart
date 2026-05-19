@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 
@@ -22,12 +23,16 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Text('Welcome Back', style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold, fontSize: 18)),
           ],
-        ),
+        ).animate()
+            .fadeIn(duration: 600.ms)
+            .slideX(begin: -0.2, end: 0),
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
             onPressed: () => context.push('/settings'),
-          ),
+          ).animate()
+              .fadeIn(duration: 600.ms, delay: 100.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           IconButton(
             icon: Stack(
               children: [
@@ -44,7 +49,9 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             onPressed: () => context.push('/notifications'),
-          ),
+          ).animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(width: 8),
         ],
       ),
@@ -70,17 +77,46 @@ class HomeScreen extends StatelessWidget {
                   border: InputBorder.none,
                 ),
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 100.ms)
+                .slideY(begin: -0.2, end: 0),
             const SizedBox(height: 24),
             
             // Stats Row
             Row(
-              children: const [
-                Expanded(child: _StatCard(icon: Icons.visibility_outlined, iconColor: Colors.blue, count: '12', label: 'Profile View')),
-                SizedBox(width: 12),
-                Expanded(child: _StatCard(icon: Icons.favorite_border, iconColor: Colors.red, count: '03', label: 'Saved')),
-                SizedBox(width: 12),
-                Expanded(child: _StatCard(icon: Icons.mail_outline, iconColor: Colors.amber, count: '01', label: 'Pending')),
+              children: [
+                Expanded(
+                  child: const _StatCard(
+                    icon: Icons.visibility_outlined, 
+                    iconColor: Colors.blue, 
+                    count: '12', 
+                    label: 'Profile View'
+                  ).animate()
+                      .fadeIn(duration: 600.ms, delay: 200.ms)
+                      .slideX(begin: -0.3, end: 0, curve: Curves.easeOutCubic),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: const _StatCard(
+                    icon: Icons.favorite_border, 
+                    iconColor: Colors.red, 
+                    count: '03', 
+                    label: 'Saved'
+                  ).animate()
+                      .fadeIn(duration: 600.ms, delay: 300.ms)
+                      .scale(begin: const Offset(0.8, 0.8)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: const _StatCard(
+                    icon: Icons.mail_outline, 
+                    iconColor: Colors.amber, 
+                    count: '01', 
+                    label: 'Pending'
+                  ).animate()
+                      .fadeIn(duration: 600.ms, delay: 400.ms)
+                      .slideX(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -100,10 +136,15 @@ class HomeScreen extends StatelessWidget {
                   child: Text('Private MatchMaking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 500.ms)
+                .shimmer(duration: 2000.ms, delay: 1000.ms, color: Colors.amber[100]),
             const SizedBox(height: 24),
             
-            const Text('Suggested for you', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Suggested for you', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 600.ms)
+                .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 16),
             
             // Cards
@@ -118,7 +159,9 @@ class HomeScreen extends StatelessWidget {
               onSendInterest: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
               },
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 700.ms)
+                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 16),
             MatchCard(
               username: 'jm0052',
@@ -131,10 +174,14 @@ class HomeScreen extends StatelessWidget {
               onSendInterest: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
               },
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 900.ms)
+                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 24),
             
-            const PrivacyBanner(),
+            const PrivacyBanner()
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 1100.ms),
           ],
         ),
       ),
