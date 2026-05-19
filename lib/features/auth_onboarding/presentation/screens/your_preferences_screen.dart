@@ -48,7 +48,13 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
                   children: [
                     Icon(Icons.info, color: Colors.blue[400], size: 16),
                     const SizedBox(width: 8),
-                    Text('Not required (can skip without filling out)', style: TextStyle(color: Colors.blue[400])),
+                    Flexible(
+                      child: Text(
+                        'Not required (can skip without filling out)', 
+                        style: TextStyle(color: Colors.blue[400]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
