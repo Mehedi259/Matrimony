@@ -49,6 +49,30 @@ import 'features/main_navigation/presentation/screens/delete_account_reason_scre
 import 'features/main_navigation/presentation/screens/delete_account_feedback_screen.dart';
 import 'features/main_navigation/presentation/screens/pending_screen.dart';
 
+// Custom page transition
+Page<dynamic> _buildPageWithTransition(Widget child, {bool slideFromRight = true}) {
+  return CustomTransitionPage(
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOutCubic;
+
+      var tween = Tween(begin: slideFromRight ? begin : const Offset(-1.0, 0.0), end: end)
+          .chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 class MatrimonyApp extends StatelessWidget {
   MatrimonyApp({super.key});
 
@@ -57,39 +81,39 @@ class MatrimonyApp extends StatelessWidget {
     routes: [
       GoRoute(
         path: '/welcome',
-        builder: (context, state) => const WelcomeScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const WelcomeScreen()),
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const LoginScreen()),
       ),
       GoRoute(
         path: '/onboarding/profile-type',
-        builder: (context, state) => const ProfileTypeSelectionScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const ProfileTypeSelectionScreen()),
       ),
       GoRoute(
         path: '/onboarding/wali-info',
-        builder: (context, state) => const WaliProfileInfoScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const WaliProfileInfoScreen()),
       ),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => const SignupScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const SignupScreen()),
       ),
       GoRoute(
         path: '/verify-email',
-        builder: (context, state) => const EmailVerificationScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const EmailVerificationScreen()),
       ),
       GoRoute(
         path: '/verified-success',
-        builder: (context, state) => const VerifiedSuccessScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const VerifiedSuccessScreen()),
       ),
       GoRoute(
         path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const ForgotPasswordScreen()),
       ),
       GoRoute(
         path: '/create-new-password',
-        builder: (context, state) => const CreateNewPasswordScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const CreateNewPasswordScreen()),
       ),
       ShellRoute(
         builder: (context, state, child) {
@@ -124,29 +148,29 @@ class MatrimonyApp extends StatelessWidget {
         routes: [
           GoRoute(
             path: '/onboarding/basic-info',
-            builder: (context, state) => const BasicInformationScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(const BasicInformationScreen()),
           ),
           GoRoute(
             path: '/onboarding/personal-details',
-            builder: (context, state) => const PersonalDetailsScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(const PersonalDetailsScreen()),
           ),
           GoRoute(
             path: '/onboarding/about-expectations',
-            builder: (context, state) => const AboutExpectationsScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(const AboutExpectationsScreen()),
           ),
           GoRoute(
             path: '/onboarding/upload-photos',
-            builder: (context, state) => const UploadPhotosScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(const UploadPhotosScreen()),
           ),
           GoRoute(
             path: '/onboarding/preferences',
-            builder: (context, state) => const YourPreferencesScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(const YourPreferencesScreen()),
           ),
         ],
       ),
       GoRoute(
         path: '/subscription-plans',
-        builder: (context, state) => const SubscriptionPlansScreen(),
+        pageBuilder: (context, state) => _buildPageWithTransition(const SubscriptionPlansScreen()),
       ),
       ShellRoute(
         builder: (context, state, child) {

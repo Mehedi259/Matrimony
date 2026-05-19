@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../widgets/common/dropdown_field.dart';
+import '../../../../core/utils/animation_helper.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
@@ -27,13 +29,13 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               const Text(
                 'Basic Information',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              ).animateOnboarding(index: 0),
               const SizedBox(height: 8),
               const Text(
                 'Your privacy is important. Your name,\ncontact details and photos are hidden.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
+              ).animateOnboarding(index: 1),
               const SizedBox(height: 16),
               
               Container(
@@ -50,10 +52,10 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                     Text('These fields are required', style: TextStyle(color: Colors.red[300])),
                   ],
                 ),
-              ),
+              ).animateOnboarding(index: 2),
               const SizedBox(height: 32),
               
-              const CustomDropdownField(label: 'How did you find us?*', hint: 'Select an option'),
+              const CustomDropdownField(label: 'How did you find us?*', hint: 'Select an option').animateOnboarding(index: 3),
               const SizedBox(height: 24),
               
               Column(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/radio_group.dart';
+import '../../../../core/utils/animation_helper.dart';
 
 class PersonalDetailsScreen extends StatelessWidget {
   const PersonalDetailsScreen({super.key});
@@ -21,13 +23,13 @@ class PersonalDetailsScreen extends StatelessWidget {
               const Text(
                 'Personal Details',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              ).animateOnboarding(index: 0),
               const SizedBox(height: 8),
               const Text(
                 'Tell us more about yourself.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
+              ).animateOnboarding(index: 1),
               const SizedBox(height: 16),
               
               Container(
@@ -44,16 +46,16 @@ class PersonalDetailsScreen extends StatelessWidget {
                     Text('These fields are required', style: TextStyle(color: Colors.red[300])),
                   ],
                 ),
-              ),
+              ).animateOnboarding(index: 2),
               const SizedBox(height: 32),
               
-              const CustomDropdownField(label: 'Sect', hint: 'Select sect'),
+              const CustomDropdownField(label: 'Sect', hint: 'Select sect').animateOnboarding(index: 3),
               const SizedBox(height: 24),
-              const CustomDropdownField(label: 'Marital Status', hint: 'Select marital status'),
+              const CustomDropdownField(label: 'Marital Status', hint: 'Select marital status').animateOnboarding(index: 4),
               const SizedBox(height: 24),
-              const CustomDropdownField(label: 'Ethnicity', hint: 'Select ethnicity'),
+              const CustomDropdownField(label: 'Ethnicity', hint: 'Select ethnicity').animateOnboarding(index: 5),
               const SizedBox(height: 24),
-              const CustomDropdownField(label: 'Nationality/ Citizenship', hint: 'Select nationality'),
+              const CustomDropdownField(label: 'Nationality/ Citizenship', hint: 'Select nationality').animateOnboarding(index: 6),
               const SizedBox(height: 32),
               
               const Align(

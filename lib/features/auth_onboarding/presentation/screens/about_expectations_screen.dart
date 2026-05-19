@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
+import '../../../../core/utils/animation_helper.dart';
 
 class AboutExpectationsScreen extends StatelessWidget {
   const AboutExpectationsScreen({super.key});
@@ -18,7 +20,7 @@ class AboutExpectationsScreen extends StatelessWidget {
               const Text(
                 'About you & expectations',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              ).animateOnboarding(index: 0),
               const SizedBox(height: 8),
               const Text(
                 'Help us understand you better.',

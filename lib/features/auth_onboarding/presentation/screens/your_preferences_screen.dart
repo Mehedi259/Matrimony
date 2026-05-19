@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/common/checkbox_item.dart';
 import '../widgets/common/dropdown_field.dart';
+import '../../../../core/utils/animation_helper.dart';
 
 class YourPreferencesScreen extends StatefulWidget {
   const YourPreferencesScreen({super.key});
@@ -28,13 +30,13 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               const Text(
                 'Your Preferences',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              ).animateOnboarding(index: 0),
               const SizedBox(height: 8),
               const Text(
                 'Let us know what you\'re looking for.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
+              ).animateOnboarding(index: 1),
               const SizedBox(height: 16),
               
               Container(
@@ -57,7 +59,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
                     ),
                   ],
                 ),
-              ),
+              ).animateOnboarding(index: 2),
               const SizedBox(height: 32),
               
               const Align(
@@ -141,7 +143,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
                 children: ['Pakistan', 'Arab', 'Turkish'].map((country) {
                   return Chip(
                     label: Text(country),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     deleteIcon: const Icon(Icons.close, size: 16),
                     onDeleted: () {},
                     side: BorderSide.none,

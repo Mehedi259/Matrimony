@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
 
@@ -40,7 +41,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     fit: BoxFit.cover,
                   ),
                 ),
-              ),
+              ).animate()
+                  .fadeIn(duration: 500.ms)
+                  .scale(begin: const Offset(0.8, 0.8)),
               const SizedBox(height: 32),
               
               // Title
@@ -54,7 +57,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   fontWeight: FontWeight.w600,
                   height: 1.50,
                 ),
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 200.ms)
+                  .slideY(begin: 0.2, end: 0),
               const SizedBox(height: 24),
               
               // Email Field
@@ -62,14 +67,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 label: 'Email',
                 hint: 'name@example.com',
                 keyboardType: TextInputType.emailAddress,
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 300.ms)
+                  .slideX(begin: -0.2, end: 0),
               const SizedBox(height: 20),
               
               // Full Name Field
               const CustomTextField(
                 label: 'Full Name',
                 hint: 'Bonnie Green',
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 350.ms)
+                  .slideX(begin: -0.2, end: 0),
               const SizedBox(height: 20),
               
               // Password Field
@@ -77,7 +86,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 label: 'Password',
                 hint: '••••••••••',
                 isPassword: true,
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 400.ms)
+                  .slideX(begin: -0.2, end: 0),
               const SizedBox(height: 20),
               
               // Confirm Password Field
@@ -85,7 +96,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 label: 'Confirm Password',
                 hint: '••••••••••',
                 isPassword: true,
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 450.ms)
+                  .slideX(begin: -0.2, end: 0),
               const SizedBox(height: 20),
               
               // Terms and Conditions Checkbox
@@ -142,7 +155,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ],
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 500.ms),
               const SizedBox(height: 24),
               
               // Create Account Button
@@ -176,7 +190,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ),
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 600.ms)
+                  .slideY(begin: 0.2, end: 0),
               const SizedBox(height: 16),
               
               // Already have account
@@ -193,7 +209,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 1.50,
                   ),
                 ),
-              ),
+              ).animate()
+                  .fadeIn(duration: 600.ms, delay: 700.ms),
               const SizedBox(height: 24),
             ],
           ),

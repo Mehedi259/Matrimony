@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
 
@@ -38,11 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                // Logo placeholder
-                Image.asset('assets/mainlogo.png', height: 100, width: 100),
+                // Logo with animation
+                Image.asset('assets/mainlogo.png', height: 100, width: 100)
+                    .animate()
+                    .fadeIn(duration: 500.ms)
+                    .scale(begin: const Offset(0.8, 0.8)),
                 const SizedBox(height: 48),
                 
-                Text('Log in', style: Theme.of(context).textTheme.displaySmall),
+                Text('Log in', style: Theme.of(context).textTheme.displaySmall)
+                    .animate()
+                    .fadeIn(duration: 600.ms, delay: 200.ms)
+                    .slideY(begin: 0.2, end: 0),
                 const SizedBox(height: 32),
                 
                 CustomTextField(
@@ -50,7 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   hint: 'name@example.com',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                ),
+                ).animate()
+                    .fadeIn(duration: 600.ms, delay: 300.ms)
+                    .slideX(begin: -0.2, end: 0),
                 const SizedBox(height: 24),
                 
                 CustomTextField(
@@ -58,7 +67,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   hint: '•••••••••',
                   isPassword: true,
                   controller: _passwordController,
-                ),
+                ).animate()
+                    .fadeIn(duration: 600.ms, delay: 400.ms)
+                    .slideX(begin: -0.2, end: 0),
                 const SizedBox(height: 16),
                 
                 Row(
@@ -91,7 +102,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
+                ).animate()
+                    .fadeIn(duration: 600.ms, delay: 500.ms),
                 const SizedBox(height: 32),
                 
                 GradientButton(
@@ -100,7 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Temporary navigation for UI demonstration
                     context.push('/onboarding/profile-type');
                   },
-                ),
+                ).animate()
+                    .fadeIn(duration: 600.ms, delay: 600.ms)
+                    .slideY(begin: 0.2, end: 0),
                 const SizedBox(height: 24),
                 
                 Row(
@@ -117,7 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
+                ).animate()
+                    .fadeIn(duration: 600.ms, delay: 700.ms),
               ],
             ),
           ),
