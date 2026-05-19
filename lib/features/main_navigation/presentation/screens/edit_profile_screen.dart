@@ -28,7 +28,7 @@ class EditProfileScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: const DecorationImage(
-                      image: NetworkImage('https://placehold.co/150/png'), // Mock avatar
+                      image: AssetImage('assets/profileImage.png'), // Profile avatar
                       fit: BoxFit.cover,
                     ),
                   ),

@@ -58,7 +58,7 @@ class MatchedProfileViewScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 image: const DecorationImage(
-                  image: NetworkImage('https://placehold.co/400x500/png?text=Clear+Profile'),
+                  image: AssetImage('assets/profileImage.png'), // Clear profile image
                   fit: BoxFit.cover,
                 ),
               ),

@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
         title: Row(
           children: [
             const CircleAvatar(
-              backgroundImage: NetworkImage('https://placehold.co/150/png'), // Placeholder avatar
+              backgroundImage: AssetImage('assets/profileImage.png'), // Profile avatar
               radius: 20,
             ),
             const SizedBox(width: 12),

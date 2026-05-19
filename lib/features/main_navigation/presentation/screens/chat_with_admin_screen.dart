@@ -52,7 +52,7 @@ class ChatWithAdminScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(radius: 12, backgroundImage: NetworkImage(avatarUrl)),
+            CircleAvatar(radius: 12, backgroundImage: AssetImage('assets/profileImage.png')),
             const SizedBox(width: 8),
             Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
             const SizedBox(width: 8),
@@ -92,7 +92,7 @@ class ChatWithAdminScreen extends StatelessWidget {
             const SizedBox(width: 8),
             Text(time, style: const TextStyle(color: Colors.black54, fontSize: 12)),
             const SizedBox(width: 8),
-            CircleAvatar(radius: 12, backgroundImage: NetworkImage(avatarUrl)),
+            CircleAvatar(radius: 12, backgroundImage: AssetImage('assets/profileImage.png')),
           ],
         ),
         const SizedBox(height: 8),

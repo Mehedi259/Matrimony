@@ -51,7 +51,7 @@ class MatchCard extends StatelessWidget {
         color: Colors.grey[300], // Placeholder for image
         borderRadius: BorderRadius.circular(24),
         image: DecorationImage(
-          image: NetworkImage(isBlurred ? 'https://placehold.co/400x500/png?text=Blurred+Profile' : 'https://placehold.co/400x500/png?text=Clear+Profile'), // Mock image
+          image: AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png'), // Profile image
           fit: BoxFit.cover,
         ),
       ),

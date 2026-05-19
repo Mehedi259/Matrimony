@@ -47,7 +47,7 @@ class ProfileViewDetailsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   image: const DecorationImage(
-                    image: NetworkImage('https://placehold.co/400x500/png?text=Blurred+Profile'),
+                    image: AssetImage('assets/blurredProfile1.png'), // Blurred profile
                     fit: BoxFit.cover,
                   ),
                 ),

@@ -45,8 +45,8 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Center(
-                child: Icon(Icons.favorite_border, color: Colors.pinkAccent, size: 80),
+              child: Center(
+                child: Image.asset('assets/cupleIllustration.png', height: 150, fit: BoxFit.contain),
               ),
             ),
             const SizedBox(height: 24),
@@ -158,7 +158,7 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: const DecorationImage(
-                        image: NetworkImage('https://placehold.co/150/png'), // Placeholder for matchmaker illustration
+                        image: AssetImage('assets/profileImage.png'), // Matchmaker profile image
                         fit: BoxFit.cover,
                       ),
                     ),

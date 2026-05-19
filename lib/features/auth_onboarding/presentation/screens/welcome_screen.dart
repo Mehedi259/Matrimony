@@ -18,7 +18,7 @@ class WelcomeScreen extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    Icon(Icons.favorite_border, size: 48, color: Theme.of(context).primaryColor),
+                    Image.asset('assets/mainlogo.png', height: 48, width: 48),
                     const Text('A MUSLIM MATCHMAKER', style: TextStyle(fontSize: 10, letterSpacing: 1.5)),
                   ],
                 ),
@@ -26,14 +26,7 @@ class WelcomeScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   // Illustration placeholder (Couple)
-                  child: Container(
-                    height: 250,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(child: Text('Couple Illustration\n(Insert SVG/Image)', textAlign: TextAlign.center,)),
-                  ),
+                  child: Image.asset('assets/cupleIllustration.png', height: 250, fit: BoxFit.contain),
                 ),
               ),
               Column(

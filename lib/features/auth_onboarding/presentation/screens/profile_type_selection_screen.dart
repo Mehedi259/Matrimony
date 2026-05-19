@@ -16,7 +16,7 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               // Logo
-              Icon(Icons.favorite_border, size: 48, color: Theme.of(context).primaryColor),
+              Image.asset('assets/mainlogo.png', height: 48, width: 48),
               const Text('A MUSLIM MATCHMAKER', style: TextStyle(fontSize: 10, letterSpacing: 1.5)),
               const SizedBox(height: 48),
               
@@ -100,7 +100,11 @@ class _ProfileCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
-                  child: Text('Image\nPlaceholder\n$title', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+                  child: title == 'Male' 
+                    ? Image.asset('assets/male.png', height: 120, width: 120, fit: BoxFit.contain)
+                    : title == 'Female'
+                      ? Image.asset('assets/female.png', height: 120, width: 120, fit: BoxFit.contain)
+                      : Image.asset('assets/waliProfile.png', height: 120, width: 120, fit: BoxFit.contain),
                 ),
               ),
             ),

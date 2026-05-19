@@ -178,7 +178,7 @@ class _MatchCard extends StatelessWidget {
         color: Colors.grey[400],
         borderRadius: BorderRadius.circular(16),
         image: const DecorationImage(
-          image: NetworkImage('https://placehold.co/400x200/png?text=Blurred+Profile'),
+          image: AssetImage('assets/blurredProfile2.png'), // Blurred profile
           fit: BoxFit.cover,
         ),
       ),

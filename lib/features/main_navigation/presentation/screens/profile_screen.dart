@@ -51,7 +51,7 @@ class ProfileScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.5), width: 4),
                       image: const DecorationImage(
-                        image: NetworkImage('https://placehold.co/150/png'), // Mock avatar
+                        image: AssetImage('assets/profileImage.png'), // Profile avatar
                         fit: BoxFit.cover,
                       ),
                     ),

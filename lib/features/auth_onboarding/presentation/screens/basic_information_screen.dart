@@ -63,21 +63,55 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Radio<String>(
-                        value: 'Male',
-                        groupValue: _selectedGender,
-                        activeColor: Theme.of(context).primaryColor,
-                        onChanged: (v) => setState(() => _selectedGender = v!),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedGender = 'Male'),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _selectedGender == 'Male' 
+                                  ? Theme.of(context).colorScheme.secondary 
+                                  : Colors.grey[300]!,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Image.asset('assets/male.png', height: 60, width: 60),
+                                const SizedBox(height: 8),
+                                const Text('Male', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      const Text('Male'),
-                      const SizedBox(width: 24),
-                      Radio<String>(
-                        value: 'Female',
-                        groupValue: _selectedGender,
-                        activeColor: Theme.of(context).primaryColor,
-                        onChanged: (v) => setState(() => _selectedGender = v!),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedGender = 'Female'),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _selectedGender == 'Female' 
+                                  ? Theme.of(context).primaryColor 
+                                  : Colors.grey[300]!,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Image.asset('assets/female.png', height: 60, width: 60),
+                                const SizedBox(height: 8),
+                                const Text('Female', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      const Text('Female'),
                     ],
                   ),
                 ],
