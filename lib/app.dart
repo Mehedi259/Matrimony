@@ -48,6 +48,7 @@ import 'features/main_navigation/presentation/screens/change_password_screen.dar
 import 'features/main_navigation/presentation/screens/delete_account_reason_screen.dart';
 import 'features/main_navigation/presentation/screens/delete_account_feedback_screen.dart';
 import 'features/main_navigation/presentation/screens/pending_screen.dart';
+import 'features/main_navigation/presentation/screens/my_profile_view_screen.dart';
 
 // Custom page transition
 Page<dynamic> _buildPageWithTransition(Widget child, {bool slideFromRight = true}) {
@@ -282,6 +283,10 @@ class MatrimonyApp extends StatelessWidget {
       GoRoute(
         path: '/pending',
         builder: (context, state) => const PendingScreen(),
+      ),
+      GoRoute(
+        path: '/my-profile-view',
+        builder: (context, state) => const MyProfileViewScreen(),
       ),
     ],
   );

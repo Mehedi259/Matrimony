@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
 
 class BrowseScreen extends StatelessWidget {
@@ -12,12 +13,19 @@ class BrowseScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('A Muslim Matchmaker', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'A Muslim Matchmaker',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+        ).animate()
+            .fadeIn(duration: 600.ms)
+            .slideX(begin: -0.2, end: 0),
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
             onPressed: () => context.push('/settings'),
-          ),
+          ).animate()
+              .fadeIn(duration: 600.ms, delay: 100.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           IconButton(
             icon: Stack(
               children: [
@@ -34,7 +42,9 @@ class BrowseScreen extends StatelessWidget {
               ],
             ),
             onPressed: () => context.push('/notifications'),
-          ),
+          ).animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(width: 8),
         ],
       ),
@@ -44,30 +54,38 @@ class BrowseScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search by your preferences',
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.tune, color: Colors.grey),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Filter settings opened')));
-                    },
-                  ),
-                  border: InputBorder.none,
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search by your preferences',
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400], size: 22),
+                suffixIcon: GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Filter settings opened')));
+                  },
+                  child: Icon(Icons.tune_rounded, color: Colors.grey[400], size: 20),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.4), width: 1.5),
                 ),
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 100.ms)
+                .slideY(begin: -0.2, end: 0),
             const SizedBox(height: 16),
-            
+
             // Chips
             Row(
               children: [
@@ -77,9 +95,11 @@ class BrowseScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 const _FilterChip(label: 'New', isSelected: false),
               ],
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 300.ms)
+                .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 24),
-            
+
             // Cards
             MatchCard(
               username: 'mm0058',
@@ -92,7 +112,9 @@ class BrowseScreen extends StatelessWidget {
               onSendInterest: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
               },
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 500.ms)
+                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 16),
             MatchCard(
               username: 'jm0052',
@@ -105,7 +127,9 @@ class BrowseScreen extends StatelessWidget {
               onSendInterest: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
               },
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 700.ms)
+                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PrivateMatchmakingScreen extends StatelessWidget {
   const PrivateMatchmakingScreen({super.key});
@@ -7,12 +8,15 @@ class PrivateMatchmakingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF7FA), // Very light pink/white
+      backgroundColor: const Color(0xFFFDF7FA),
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Private Matchmaking', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: const Text(
+          'Private Matchmaking',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+        ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.2, end: 0),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -20,20 +24,28 @@ class PrivateMatchmakingScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+
+            // ── Headline ────────────────────────────────────────────────
             const Text(
               'Tired of\nEndless\nSearching?',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, height: 1.2),
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 100.ms)
+                .slideY(begin: -0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 16),
+
+            // ── Sub-headline ─────────────────────────────────────────────
             const Text(
               'Our private matchmaking service helps you find meaningful connections without endless searching.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.black54, fontSize: 14),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 250.ms)
+                .slideY(begin: 0.2, end: 0),
             const SizedBox(height: 32),
-            
-            // Big Heart Icon
+
+            // ── Illustration ─────────────────────────────────────────────
             Container(
               height: 200,
               width: double.infinity,
@@ -48,10 +60,12 @@ class PrivateMatchmakingScreen extends StatelessWidget {
               child: Center(
                 child: Image.asset('assets/cupleIllustration.png', height: 150, fit: BoxFit.contain),
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 400.ms)
+                .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
             const SizedBox(height: 24),
-            
-            // Book Consultation Button
+
+            // ── Book Consultation Button ──────────────────────────────────
             Container(
               width: double.infinity,
               height: 56,
@@ -63,18 +77,26 @@ class PrivateMatchmakingScreen extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () {},
                 icon: Icon(Icons.calendar_month, color: Colors.amber[700]),
-                label: Text('Book Consultation', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16)),
+                label: Text(
+                  'Book Consultation',
+                  style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16),
+                ),
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 550.ms)
+                .shimmer(duration: 1800.ms, delay: 1200.ms, color: Colors.amber[100]),
             const SizedBox(height: 24),
-            
-            // Privacy Banner
+
+            // ── Privacy Banner ────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.grey[200]!),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,11 +109,17 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                         child: const Icon(Icons.security, color: Colors.redAccent, size: 20),
                       ),
                       const SizedBox(width: 12),
-                      const Text('Your Privacy Comes First', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        'Your Privacy Comes First',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text('We understand the importance of discretion and privacy in your search for love.', style: TextStyle(color: Colors.black54, fontSize: 12)),
+                  const Text(
+                    'We understand the importance of discretion and privacy in your search for love.',
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     children: const [
@@ -102,12 +130,21 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 700.ms)
+                .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 40),
-            
-            // How it works
-            const Text('How Private Matchmaking Works', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+
+            // ── How it Works Title ────────────────────────────────────────
+            const Text(
+              'How Private Matchmaking Works',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 800.ms)
+                .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 24),
+
+            // ── How it Works Grid ─────────────────────────────────────────
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -116,17 +153,53 @@ class PrivateMatchmakingScreen extends StatelessWidget {
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
               children: const [
-                _FeatureItem(icon: Icons.person_outline, iconBgColor: Color(0xFFFDE8E9), iconColor: Colors.redAccent, title: 'Book Consultation', subtitle: 'Explain what you\'re looking for in detail'),
-                _FeatureItem(icon: Icons.people_outline, iconBgColor: Color(0xFFE8EAF6), iconColor: Colors.blueAccent, title: 'Human Matcher', subtitle: 'Expert finds your matches'),
-                _FeatureItem(icon: Icons.check_circle_outline, iconBgColor: Color(0xFFFDE8E9), iconColor: Colors.redAccent, title: 'Mutual Approval', subtitle: 'Both parties agree first'),
-                _FeatureItem(icon: Icons.chat_bubble_outline, iconBgColor: Color(0xFFE8EAF6), iconColor: Colors.blueAccent, title: 'Virtual Introduction', subtitle: 'Have a chance to speak in a held environment'),
+                _FeatureItem(
+                  icon: Icons.person_outline,
+                  iconBgColor: Color(0xFFFDE8E9),
+                  iconColor: Colors.redAccent,
+                  title: 'Book Consultation',
+                  subtitle: 'Explain what you\'re looking for in detail',
+                  delay: 900,
+                ),
+                _FeatureItem(
+                  icon: Icons.people_outline,
+                  iconBgColor: Color(0xFFE8EAF6),
+                  iconColor: Colors.blueAccent,
+                  title: 'Human Matcher',
+                  subtitle: 'Expert finds your matches',
+                  delay: 1000,
+                ),
+                _FeatureItem(
+                  icon: Icons.check_circle_outline,
+                  iconBgColor: Color(0xFFFDE8E9),
+                  iconColor: Colors.redAccent,
+                  title: 'Mutual Approval',
+                  subtitle: 'Both parties agree first',
+                  delay: 1100,
+                ),
+                _FeatureItem(
+                  icon: Icons.chat_bubble_outline,
+                  iconBgColor: Color(0xFFE8EAF6),
+                  iconColor: Colors.blueAccent,
+                  title: 'Virtual Introduction',
+                  subtitle: 'Have a chance to speak in a held environment',
+                  delay: 1200,
+                ),
               ],
             ),
             const SizedBox(height: 40),
-            
-            // Why choose
-            const Text('Why Choose Private\nMatchmaking?', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+
+            // ── Why Choose Title ──────────────────────────────────────────
+            const Text(
+              'Why Choose Private\nMatchmaking?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ).animate()
+                .fadeIn(duration: 600.ms, delay: 1300.ms)
+                .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 24),
+
+            // ── Why Choose Grid ───────────────────────────────────────────
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -135,20 +208,51 @@ class PrivateMatchmakingScreen extends StatelessWidget {
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
               children: const [
-                _FeatureItem(icon: Icons.access_time, iconBgColor: Color(0xFFFDE8E9), iconColor: Colors.redAccent, title: 'Save Time', subtitle: 'No endless searching required'),
-                _FeatureItem(icon: Icons.favorite_border, iconBgColor: Color(0xFFE8EAF6), iconColor: Colors.blueAccent, title: 'Better Matches', subtitle: 'Curated just for you'),
-                _FeatureItem(icon: Icons.lock_outline, iconBgColor: Color(0xFFFDE8E9), iconColor: Colors.redAccent, title: 'Safe & Private', subtitle: 'Your data is protected'),
-                _FeatureItem(icon: Icons.support_agent, iconBgColor: Color(0xFFF3E5F5), iconColor: Colors.purpleAccent, title: 'Trusted Support', subtitle: 'Expert guidance always'),
+                _FeatureItem(
+                  icon: Icons.access_time,
+                  iconBgColor: Color(0xFFFDE8E9),
+                  iconColor: Colors.redAccent,
+                  title: 'Save Time',
+                  subtitle: 'No endless searching required',
+                  delay: 1400,
+                ),
+                _FeatureItem(
+                  icon: Icons.favorite_border,
+                  iconBgColor: Color(0xFFE8EAF6),
+                  iconColor: Colors.blueAccent,
+                  title: 'Better Matches',
+                  subtitle: 'Curated just for you',
+                  delay: 1500,
+                ),
+                _FeatureItem(
+                  icon: Icons.lock_outline,
+                  iconBgColor: Color(0xFFFDE8E9),
+                  iconColor: Colors.redAccent,
+                  title: 'Safe & Private',
+                  subtitle: 'Your data is protected',
+                  delay: 1600,
+                ),
+                _FeatureItem(
+                  icon: Icons.support_agent,
+                  iconBgColor: Color(0xFFF3E5F5),
+                  iconColor: Colors.purpleAccent,
+                  title: 'Trusted Support',
+                  subtitle: 'Expert guidance always',
+                  delay: 1700,
+                ),
               ],
             ),
             const SizedBox(height: 40),
-            
-            // Personal Matchmaker Support Card
+
+            // ── Matchmaker Card ───────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                ],
               ),
               child: Row(
                 children: [
@@ -158,28 +262,36 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: const DecorationImage(
-                        image: AssetImage('assets/profileImage.png'), // Matchmaker profile image
+                        image: AssetImage('assets/profileImage.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Personal\nMatchmaker Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      children: [
+                        Text(
+                          'Personal\nMatchmaker Support',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
                         SizedBox(height: 8),
-                        Text('Work one-on-one with a dedicated matchmaker who understands your unique needs and personally finds compatible matches for you.', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                        Text(
+                          'Work one-on-one with a dedicated matchmaker who understands your unique needs and personally finds compatible matches for you.',
+                          style: TextStyle(fontSize: 10, color: Colors.black54),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 1800.ms)
+                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 40),
-            
-            // Bottom CTA
+
+            // ── Bottom CTA ────────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -189,9 +301,15 @@ class PrivateMatchmakingScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text('Ready to Start Your Journey?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text(
+                    'Ready to Start Your Journey?',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                   const SizedBox(height: 8),
-                  const Text('Book a free consultation today', style: TextStyle(fontSize: 12, color: Colors.black87)),
+                  const Text(
+                    'Book a free consultation today',
+                    style: TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
                   const SizedBox(height: 16),
                   Container(
                     width: double.infinity,
@@ -204,12 +322,17 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                     child: TextButton.icon(
                       onPressed: () {},
                       icon: Icon(Icons.calendar_month, color: Colors.amber[700], size: 20),
-                      label: Text('Book Consultation', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold)),
+                      label: Text(
+                        'Book Consultation',
+                        style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
+            ).animate()
+                .fadeIn(duration: 700.ms, delay: 1900.ms)
+                .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
             const SizedBox(height: 40),
           ],
         ),
@@ -218,12 +341,14 @@ class PrivateMatchmakingScreen extends StatelessWidget {
   }
 }
 
+// ── Feature Item ──────────────────────────────────────────────────────────────
 class _FeatureItem extends StatelessWidget {
   final IconData icon;
   final Color iconBgColor;
   final Color iconColor;
   final String title;
   final String subtitle;
+  final int delay;
 
   const _FeatureItem({
     required this.icon,
@@ -231,6 +356,7 @@ class _FeatureItem extends StatelessWidget {
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    required this.delay,
   });
 
   @override
@@ -248,6 +374,8 @@ class _FeatureItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.black54)),
       ],
-    );
+    ).animate()
+        .fadeIn(duration: 600.ms, delay: Duration(milliseconds: delay))
+        .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack);
   }
 }

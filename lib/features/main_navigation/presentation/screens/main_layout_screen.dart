@@ -25,9 +25,9 @@ class MainLayoutScreen extends StatelessWidget {
         children: [
           child,
           Positioned(
-            left: 24,
-            right: 24,
-            bottom: 24,
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 8,
             child: Container(
               height: 72,
               padding: const EdgeInsets.symmetric(horizontal: 16),
