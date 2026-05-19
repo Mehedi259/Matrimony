@@ -10,18 +10,16 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               // Logo
-              Image.asset('assets/mainlogo.png', height: 48, width: 48),
-              const Text('A MUSLIM MATCHMAKER', style: TextStyle(fontSize: 10, letterSpacing: 1.5)),
-              const SizedBox(height: 48),
+              Image.asset('assets/mainlogo.png', height: 100, width: 100),
+              const SizedBox(height: 24),
               
               Text('Select Profile', style: Theme.of(context).textTheme.displaySmall),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               
               Row(
                 children: [
@@ -49,13 +47,13 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                 isWide: true,
                 onTap: () => context.push('/onboarding/wali-info'),
               ),
+              const Spacer(),
             ],
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _ProfileCard extends StatelessWidget {
@@ -76,14 +74,14 @@ class _ProfileCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 250,
+        height: 200,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.5), width: 3),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -101,10 +99,10 @@ class _ProfileCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: title == 'Male' 
-                    ? Image.asset('assets/male.png', height: 120, width: 120, fit: BoxFit.contain)
+                    ? Image.asset('assets/male.png', height: 100, width: 100, fit: BoxFit.contain)
                     : title == 'Female'
-                      ? Image.asset('assets/female.png', height: 120, width: 120, fit: BoxFit.contain)
-                      : Image.asset('assets/waliProfile.png', height: 120, width: 120, fit: BoxFit.contain),
+                      ? Image.asset('assets/female.png', height: 100, width: 100, fit: BoxFit.contain)
+                      : Image.asset('assets/waliProfile.png', height: 100, width: 100, fit: BoxFit.contain),
                 ),
               ),
             ),
@@ -114,7 +112,7 @@ class _ProfileCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),

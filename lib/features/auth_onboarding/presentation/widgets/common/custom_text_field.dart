@@ -48,6 +48,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
           keyboardType: widget.keyboardType,
           decoration: InputDecoration(
             hintText: widget.hint,
+            hintStyle: const TextStyle(
+              color: Color(0xFFBDBDBD), // More transparent/lighter gray
+              fontWeight: FontWeight.w400,
+            ),
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(

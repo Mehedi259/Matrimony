@@ -16,12 +16,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 40),
               // Logo placeholder
               Center(
-                child: Column(
-                  children: [
-                    Image.asset('assets/mainlogo.png', height: 48, width: 48),
-                    const Text('A MUSLIM MATCHMAKER', style: TextStyle(fontSize: 10, letterSpacing: 1.5)),
-                  ],
-                ),
+                child: Image.asset('assets/mainlogo.png', height: 100, width: 100),
               ),
               Expanded(
                 child: Center(
