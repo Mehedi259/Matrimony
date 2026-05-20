@@ -51,7 +51,11 @@ class MatchCard extends StatelessWidget {
         color: Colors.grey[300], // Placeholder for image
         borderRadius: BorderRadius.circular(24),
         image: DecorationImage(
-          image: AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png'), // Profile image
+          image: AssetImage(
+            isBlurred 
+              ? 'assets/blurredProfile1.png' 
+              : 'assets/blurredProfile1.png' // Use blurredProfile2 for matched profiles
+          ),
           fit: BoxFit.cover,
         ),
       ),
@@ -65,8 +69,8 @@ class MatchCard extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  isBlurred ? Colors.black.withOpacity(0.3) : Colors.transparent,
-                  Colors.black.withOpacity(0.7), // Always dark at bottom for text
+                  isBlurred ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
+                  Colors.black.withValues(alpha: 0.7), // Always dark at bottom for text
                 ],
               ),
             ),
@@ -107,7 +111,7 @@ class MatchCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Row(
@@ -127,7 +131,7 @@ class MatchCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -191,7 +195,7 @@ class MatchCard extends StatelessWidget {
                           ElevatedButton(
                             onPressed: onMatchedButtonPressed,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.9),
+                              backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.9),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             ),
@@ -281,7 +285,7 @@ class MatchCard extends StatelessWidget {
                               icon: const Icon(Icons.fit_screen, size: 16, color: Colors.white),
                               label: const Text('View Profile', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                                backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                               ),
@@ -310,7 +314,7 @@ class MatchCard extends StatelessWidget {
                             child: Container(
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
@@ -320,7 +324,7 @@ class MatchCard extends StatelessWidget {
                             child: Container(
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
