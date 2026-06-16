@@ -127,7 +127,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             
-            // Private MatchMaking Button
+            // Private Matchmaking Button
             GestureDetector(
               onTap: () => context.push('/private-matchmaking'),
               child: Container(
@@ -139,7 +139,7 @@ class HomeScreen extends StatelessWidget {
                   border: Border.all(color: Colors.amber[200]!),
                 ),
                 child: const Center(
-                  child: Text('Private MatchMaking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text('Private Matchmaking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ).animate()

@@ -60,12 +60,33 @@ class EditProfileScreen extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text('Personal Information', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
             ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber[200]!),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.lock_outline, size: 14, color: Color(0xFFE57C04)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Name and Gender cannot be changed after registration.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFFE57C04)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             
-            _buildTextField('Full Name', 'James'),
+            _buildReadOnlyField('Full Name', 'James'),
             const SizedBox(height: 24),
             
-            _buildDropdownField('Gender', 'Male'),
+            _buildReadOnlyDropdownField('Gender', 'Male'),
             const SizedBox(height: 40),
             
             Container(
@@ -95,7 +116,7 @@ class EditProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String label, String value) {
+  Widget _buildReadOnlyField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -103,40 +124,40 @@ class EditProfileScreen extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           controller: TextEditingController(text: value),
+          readOnly: true,
+          enabled: false,
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFFF2F4F7),
+            fillColor: const Color(0xFFEEEEEE),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+            suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
           ),
+          style: const TextStyle(color: Colors.black45),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField(String label, String value) {
+  Widget _buildReadOnlyDropdownField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.black54)),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF2F4F7),
+            color: const Color(0xFFEEEEEE),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: value,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              items: [
-                DropdownMenuItem(value: 'Male', child: Text('Male')),
-                DropdownMenuItem(value: 'Female', child: Text('Female')),
-              ],
-              onChanged: (val) {},
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(value, style: const TextStyle(color: Colors.black45)),
+              ),
+              const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+            ],
           ),
         ),
       ],

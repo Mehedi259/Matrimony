@@ -61,91 +61,143 @@ class BasicInformationFormScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber[200]!),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.lock_outline, size: 14, color: Color(0xFFE57C04)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Name, Date of Birth, Phone Number, and Gender cannot be changed after registration.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFFE57C04)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 32),
             
             // Form Fields
             _buildDropdownField('How did you find us?*', 'Select an option'),
             const SizedBox(height: 24),
             
-            // Gender Radio
+            // Gender Radio (Locked)
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+              child: Row(
+                children: const [
+                  Text('Gender', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  SizedBox(width: 6),
+                  Icon(Icons.lock_outline, size: 14, color: Colors.grey),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildRadioOption('Male', isSelected: false),
-                const SizedBox(width: 24),
-                _buildRadioOption('Female', isSelected: true, activeColor: Theme.of(context).primaryColor),
-              ],
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0.6,
+                child: Row(
+                  children: [
+                    _buildRadioOption('Male', isSelected: false),
+                    const SizedBox(width: 24),
+                    _buildRadioOption('Female', isSelected: true, activeColor: Theme.of(context).primaryColor),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             
-            _buildTextField('First Name', 'First Name'),
+            _buildLockedTextField('First Name', 'First Name'),
             const SizedBox(height: 24),
             
-            _buildTextField('Last Name', 'Last Name'),
+            _buildLockedTextField('Last Name', 'Last Name'),
             const SizedBox(height: 24),
             
             _buildTextField('Email', 'Enter your email address'),
             const SizedBox(height: 24),
             
-            // Phone Number
+            // Phone Number (Locked)
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+              child: Row(
+                children: const [
+                  Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  SizedBox(width: 6),
+                  Icon(Icons.lock_outline, size: 14, color: Colors.grey),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.8), // Blueish
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), bottomLeft: Radius.circular(4)),
-                  ),
-                  child: const Text('+44', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: '1234567',
-                      hintStyle: const TextStyle(color: Colors.black38),
-                      filled: true,
-                      fillColor: const Color(0xFFF9F9F9),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0.6,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.5),
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), bottomLeft: Radius.circular(4)),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      child: const Text('+44', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        enabled: false,
+                        decoration: InputDecoration(
+                          hintText: '1234567',
+                          hintStyle: const TextStyle(color: Colors.black38),
+                          filled: true,
+                          fillColor: const Color(0xFFEEEEEE),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          disabledBorder: OutlineInputBorder(
+                            borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: 24),
             
-            // Date of Birth
+            // Date of Birth (Locked)
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text('Date of Birth', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+              child: Row(
+                children: const [
+                  Text('Date of Birth', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  SizedBox(width: 6),
+                  Icon(Icons.lock_outline, size: 14, color: Colors.grey),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
+              enabled: false,
               decoration: InputDecoration(
                 hintText: 'DD / MM / YYYY',
                 hintStyle: const TextStyle(color: Colors.black38),
                 filled: true,
-                fillColor: const Color(0xFFF9F9F9),
+                fillColor: const Color(0xFFEEEEEE),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                suffixIcon: Icon(Icons.calendar_today_outlined, color: Theme.of(context).primaryColor, size: 20),
+                suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
+                disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
               ),
             ),
             const SizedBox(height: 24),
@@ -351,6 +403,28 @@ class BasicInformationFormScreen extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(label, style: const TextStyle(color: Colors.black87, fontSize: 14)),
+      ],
+    );
+  }
+  Widget _buildLockedTextField(String label, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        const SizedBox(height: 8),
+        TextField(
+          enabled: false,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.black38),
+            filled: true,
+            fillColor: const Color(0xFFEEEEEE),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
+            disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
+          ),
+        ),
       ],
     );
   }

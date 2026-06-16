@@ -159,9 +159,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           profession: 'Software Engineer',
           photoCount: 5,
           lockMessage: 'Photos will be revealed after mutual interest',
-          onCancelRequest: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Cancelled!')));
-          },
+          onCancelRequest: () => _showCancelDialog(context),
           onViewProfile: () => context.push('/profile-view-details'),
         ).animate().fadeIn(duration: 700.ms, delay: 500.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
         const SizedBox(height: 16),
@@ -172,9 +170,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           profession: 'Student',
           photoCount: 4,
           lockMessage: 'Photos will be revealed after mutual interest',
-          onCancelRequest: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Cancelled!')));
-          },
+          onCancelRequest: () => _showCancelDialog(context),
           onViewProfile: () => context.push('/profile-view-details'),
         ).animate().fadeIn(duration: 700.ms, delay: 700.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
       ],
@@ -186,7 +182,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
       children: [
         MatchCard(
-          username: 'Marium Sultana',
+          username: 'MM005',
           age: '28 Years old',
           height: '5\'6"',
           profession: 'Software Engineer',
@@ -195,12 +191,12 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           isLocked: false,
           isMatched: true,
           isBlurred: false,
-          matchedButtonText: 'View all details',
+          matchedButtonText: 'View photos',
           onMatchedButtonPressed: () => context.push('/matched-profile-view'),
         ).animate().fadeIn(duration: 700.ms, delay: 400.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
         const SizedBox(height: 16),
         MatchCard(
-          username: 'Shehnaz Khan',
+          username: 'Mj003',
           age: '22 Years old',
           height: '5\'4"',
           profession: 'Student',
@@ -209,7 +205,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           isLocked: false,
           isMatched: true,
           isBlurred: false,
-          matchedButtonText: 'View all details',
+          matchedButtonText: 'View photos',
           onMatchedButtonPressed: () => context.push('/matched-profile-view'),
         ).animate().fadeIn(duration: 700.ms, delay: 600.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
       ],
@@ -255,6 +251,66 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                       elevation: 0,
                     ),
                     child: const Text('Yes, decline', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('No, go back', style: TextStyle(color: Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(28.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.cancel_outlined, color: Color(0xFFE57C04), size: 32),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Cancel Request?',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Are you sure you want to cancel this request?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500], height: 1.5),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Cancelled!')));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE57C04),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Yes, cancel', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 10),
