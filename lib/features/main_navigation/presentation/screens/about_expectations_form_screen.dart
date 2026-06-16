@@ -57,7 +57,7 @@ class AboutExpectationsFormScreen extends StatelessWidget {
                 children: const [
                   Icon(Icons.info, color: Color(0xFF5C71CA), size: 14),
                   SizedBox(width: 6),
-                  Text('Not required (can skip without filling out)', style: TextStyle(color: Color(0xFF5C71CA), fontSize: 12)),
+                  Text('These fields are optional.', style: TextStyle(color: Color(0xFF5C71CA), fontSize: 12)),
                 ],
               ),
             ),

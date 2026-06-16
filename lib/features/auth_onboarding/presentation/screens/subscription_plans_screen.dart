@@ -111,7 +111,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 discountBadge: '(30% off)',
                 features: [
                   'Unlimited connection requests',
-                  'Profile listed at top of directory',
+                  'Profile listed at the top of suggested matches',
                   'Send connection requests',
                   'See Suggested matches',
                   'Priority support',

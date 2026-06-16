@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/dropdown_options.dart';
+import '../../../auth_onboarding/presentation/widgets/common/multi_select_field.dart';
 
-class PreferencesFormScreen extends StatelessWidget {
+class PreferencesFormScreen extends StatefulWidget {
   const PreferencesFormScreen({super.key});
+
+  @override
+  State<PreferencesFormScreen> createState() => _PreferencesFormScreenState();
+}
+
+class _PreferencesFormScreenState extends State<PreferencesFormScreen> {
+  List<String> _selectedEthnicities = ['Pakistan', 'Arab', 'Turkish'];
+  List<String> _selectedCountries = ['United Kingdom', 'United States'];
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +67,7 @@ class PreferencesFormScreen extends StatelessWidget {
                 children: const [
                   Icon(Icons.info, color: Color(0xFF5C71CA), size: 14),
                   SizedBox(width: 6),
-                  Text('Not required (can skip without filling out)', style: TextStyle(color: Color(0xFF5C71CA), fontSize: 12)),
+                  Text('These fields are optional.', style: TextStyle(color: Color(0xFF5C71CA), fontSize: 12)),
                 ],
               ),
             ),
@@ -102,43 +112,31 @@ class PreferencesFormScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // Preferred Ethnicity
-            _buildDivider('Preferred Ethnicity'),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search ethnicity',
-                hintStyle: const TextStyle(color: Colors.black38),
-                filled: true,
-                fillColor: const Color(0xFFF9F9F9),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Select (3)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Clear all', style: TextStyle(color: Theme.of(context).primaryColor.withOpacity(0.8), fontSize: 12)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildChip('Pakistan', context),
-                _buildChip('Arab', context),
-                _buildChip('Turkish', context),
-              ],
+            MultiSelectField(
+              label: 'Preferred Ethnicity',
+              options: DropdownOptions.ethnicities,
+              selectedValues: _selectedEthnicities,
+              searchHint: 'Search ethnicity',
+              onChanged: (values) {
+                setState(() {
+                  _selectedEthnicities = values;
+                });
+              },
             ),
             const SizedBox(height: 32),
             
             // Country of residence
-            _buildDropdownField('Preference to country of residence (or region)', 'Select residence'),
+            MultiSelectField(
+              label: 'Preference to country of residence (or region)',
+              options: DropdownOptions.nationalities,
+              selectedValues: _selectedCountries,
+              searchHint: 'Search country/region',
+              onChanged: (values) {
+                setState(() {
+                  _selectedCountries = values;
+                });
+              },
+            ),
             
             const SizedBox(height: 32),
             Divider(color: Colors.grey[300]),
@@ -247,51 +245,6 @@ class PreferencesFormScreen extends StatelessWidget {
           Text(label, style: const TextStyle(color: Colors.black87, fontSize: 14)),
         ],
       ),
-    );
-  }
-
-  Widget _buildChip(String label, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label, style: TextStyle(color: Theme.of(context).primaryColor.withOpacity(0.8), fontSize: 12)),
-          const SizedBox(width: 4),
-          Icon(Icons.close, size: 12, color: Theme.of(context).primaryColor.withOpacity(0.8)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdownField(String label, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9F9F9),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              hint: Text(hint, style: const TextStyle(color: Colors.black38, fontSize: 14)),
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              items: [],
-              onChanged: (val) {},
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

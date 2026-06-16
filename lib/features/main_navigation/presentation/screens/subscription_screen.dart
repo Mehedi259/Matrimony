@@ -119,7 +119,7 @@ class SubscriptionScreen extends StatelessWidget {
               isButtonGradient: true,
               features: [
                 _buildFeatureItem('Unlimited connection requests', true, const Color(0xFFF7D154)),
-                _buildFeatureItem('Profile listed at top of directory', true, const Color(0xFFF7D154)),
+                _buildFeatureItem('Profile listed at the top of suggested matches', true, const Color(0xFFF7D154)),
                 _buildFeatureItem('Send connection requests', true, const Color(0xFFF7D154)),
                 _buildFeatureItem('See Suggested matches', true, const Color(0xFFF7D154)),
                 _buildFeatureItem('Priority support', true, const Color(0xFFF7D154)),

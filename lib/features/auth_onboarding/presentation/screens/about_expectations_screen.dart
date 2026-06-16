@@ -42,7 +42,7 @@ class AboutExpectationsScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'Not required (can skip without filling out)', 
+                        'These fields are optional.', 
                         style: TextStyle(color: Colors.blue[400]),
                         overflow: TextOverflow.ellipsis,
                       ),

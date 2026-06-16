@@ -6,7 +6,9 @@ import '../widgets/onboarding/step_progress_indicator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/common/checkbox_item.dart';
 import '../widgets/common/dropdown_field.dart';
+import '../widgets/common/multi_select_field.dart';
 import '../../../../core/utils/animation_helper.dart';
+import '../../../../core/constants/dropdown_options.dart';
 
 class YourPreferencesScreen extends StatefulWidget {
   const YourPreferencesScreen({super.key});
@@ -17,6 +19,8 @@ class YourPreferencesScreen extends StatefulWidget {
 
 class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
   RangeValues _ageRange = const RangeValues(22, 35);
+  List<String> _selectedEthnicities = ['Pakistan', 'Arab', 'Turkish'];
+  List<String> _selectedCountries = ['United Kingdom', 'United States'];
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +56,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'Not required (can skip without filling out)', 
+                        'These fields are optional.', 
                         style: TextStyle(color: Colors.blue[400]),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -112,49 +116,30 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               const CustomCheckboxItem(label: 'Widowed'),
               const SizedBox(height: 24),
               
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Preferred Ethnicity', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-              const Divider(),
-              const SizedBox(height: 16),
-              
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search ethnicity',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Select (3)', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Clear all', style: TextStyle(color: Theme.of(context).primaryColor)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              
-              Wrap(
-                spacing: 8,
-                children: ['Pakistan', 'Arab', 'Turkish'].map((country) {
-                  return Chip(
-                    label: Text(country),
-                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () {},
-                    side: BorderSide.none,
-                    labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                    deleteIconColor: Theme.of(context).primaryColor,
-                  );
-                }).toList(),
+              MultiSelectField(
+                label: 'Preferred Ethnicity',
+                options: DropdownOptions.ethnicities,
+                selectedValues: _selectedEthnicities,
+                searchHint: 'Search ethnicity',
+                onChanged: (values) {
+                  setState(() {
+                    _selectedEthnicities = values;
+                  });
+                },
               ),
               const SizedBox(height: 24),
               
-              const CustomDropdownField(label: 'Preference to country of residence (or region)', hint: 'Select residence'),
+              MultiSelectField(
+                label: 'Preference to country of residence (or region)',
+                options: DropdownOptions.nationalities,
+                selectedValues: _selectedCountries,
+                searchHint: 'Search country/region',
+                onChanged: (values) {
+                  setState(() {
+                    _selectedCountries = values;
+                  });
+                },
+              ),
               const SizedBox(height: 48),
               
               Row(
