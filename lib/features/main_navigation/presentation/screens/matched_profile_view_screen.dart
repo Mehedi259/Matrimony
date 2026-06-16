@@ -58,7 +58,7 @@ class MatchedProfileViewScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 image: const DecorationImage(
-                  image: AssetImage('assets/profileImage.png'), // Clear profile image
+                  image: AssetImage('assets/blurredProfile1.png'), // Clear profile image
                   fit: BoxFit.cover,
                 ),
               ),

@@ -6,16 +6,42 @@ import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../widgets/common/dropdown_field.dart';
 import '../../../../core/utils/animation_helper.dart';
+import '../../../../core/constants/dropdown_options.dart';
 
 class BasicInformationScreen extends StatefulWidget {
-  const BasicInformationScreen({super.key});
+  final String? profileType; // 'brother', 'sister', or 'wali'
+  final String? gender; // 'Male' or 'Female'
+  
+  const BasicInformationScreen({
+    super.key,
+    this.profileType,
+    this.gender,
+  });
 
   @override
   State<BasicInformationScreen> createState() => _BasicInformationScreenState();
 }
 
 class _BasicInformationScreenState extends State<BasicInformationScreen> {
-  String _selectedGender = 'Female';
+  String? _howDidYouFindUs;
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  String? _selectedCountry;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _cityController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,78 +81,112 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               ).animateOnboarding(index: 2),
               const SizedBox(height: 32),
               
-              const CustomDropdownField(label: 'How did you find us?*', hint: 'Select an option').animateOnboarding(index: 3),
-              const SizedBox(height: 24),
-              
+              // How did you find us? Dropdown
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Gender', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  RichText(
+                    text: const TextSpan(
+                      text: 'How did you find us?',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                      children: [
+                        TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedGender = 'Male'),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: _selectedGender == 'Male' 
-                                  ? Theme.of(context).colorScheme.secondary 
-                                  : Colors.grey[300]!,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Image.asset('assets/male.png', height: 60, width: 60),
-                                const SizedBox(height: 8),
-                                const Text('Male', style: TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _howDidYouFindUs,
+                        hint: Text('Select an option', style: TextStyle(color: Colors.grey[400])),
+                        isExpanded: true,
+                        items: DropdownOptions.howDidYouFindUs.map((item) {
+                          return DropdownMenuItem(value: item, child: Text(item));
+                        }).toList(),
+                        onChanged: (value) => setState(() => _howDidYouFindUs = value),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedGender = 'Female'),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: _selectedGender == 'Female' 
-                                  ? Theme.of(context).primaryColor 
-                                  : Colors.grey[300]!,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Image.asset('assets/female.png', height: 60, width: 60),
-                                const SizedBox(height: 8),
-                                const Text('Female', style: TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
-              ),
+              ).animateOnboarding(index: 3),
               const SizedBox(height: 24),
               
-              const CustomTextField(label: 'First Name', hint: 'First Name'),
+              // Display selected gender (read-only)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: widget.gender == 'Male' 
+                    ? const Color(0xFF7685C2).withOpacity(0.1) 
+                    : const Color(0xFFD48B91).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: widget.gender == 'Male' 
+                      ? const Color(0xFF7685C2) 
+                      : const Color(0xFFD48B91),
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.gender == 'Male' ? Icons.male : Icons.female,
+                      color: widget.gender == 'Male' 
+                        ? const Color(0xFF7685C2) 
+                        : const Color(0xFFD48B91),
+                      size: 32,
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Profile Type: ${widget.profileType == 'wali' ? 'Wali (Guardian)' : widget.gender}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.profileType == 'wali' 
+                            ? 'Registering for a female (will see male profiles)'
+                            : 'Will see ${widget.gender == 'Male' ? 'female' : 'male'} profiles',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ).animateOnboarding(index: 4),
               const SizedBox(height: 24),
               
-              const CustomTextField(label: 'Last Name', hint: 'Last Name'),
+              CustomTextField(
+                label: 'First Name',
+                hint: 'First Name',
+                controller: _firstNameController,
+              ).animateOnboarding(index: 5),
               const SizedBox(height: 24),
               
-              const CustomTextField(label: 'Email', hint: 'Enter your email address'),
+              CustomTextField(
+                label: 'Last Name',
+                hint: 'Last Name',
+                controller: _lastNameController,
+              ).animateOnboarding(index: 6),
+              const SizedBox(height: 24),
+              
+              CustomTextField(
+                label: 'Email',
+                hint: 'Enter your email address',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ).animateOnboarding(index: 7),
               const SizedBox(height: 24),
               
               Column(
@@ -146,9 +206,16 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                       ),
                       Expanded(
                         child: TextFormField(
-                          decoration: InputDecoration(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
                             hintText: '1234567',
-                            border: const OutlineInputBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8))),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(8),
+                                bottomRight: Radius.circular(8),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -158,7 +225,11 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               ),
               const SizedBox(height: 24),
               
-              const CustomTextField(label: 'Date of Birth', hint: 'DD / MM / YYYY'), // Needs icon update in a real scenario
+              CustomTextField(
+                label: 'Date of Birth',
+                hint: 'DD / MM / YYYY',
+                controller: _dobController,
+              ).animateOnboarding(index: 9),
               const SizedBox(height: 32),
               
               const Align(
@@ -170,11 +241,47 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               
               Row(
                 children: [
-                  Expanded(child: CustomTextField(label: 'City', hint: 'Enter City')),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'City',
+                      hint: 'Enter City',
+                      controller: _cityController,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  const Expanded(child: CustomDropdownField(label: 'Country', hint: 'Select Country')),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Country',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE0E0E0)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedCountry,
+                              hint: Text('Select Country', style: TextStyle(color: Colors.grey[400])),
+                              isExpanded: true,
+                              items: DropdownOptions.nationalities.map((item) {
+                                return DropdownMenuItem(value: item, child: Text(item));
+                              }).toList(),
+                              onChanged: (value) => setState(() => _selectedCountry = value),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+              ).animateOnboarding(index: 10),
               const SizedBox(height: 48),
               
               Row(
@@ -196,7 +303,10 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                   Expanded(
                     child: GradientButton(
                       text: 'Next',
-                      onPressed: () => context.push('/onboarding/personal-details'),
+                      onPressed: () {
+                        // Pass profile type and gender to next screen
+                        context.push('/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}');
+                      },
                     ),
                   ),
                 ],

@@ -149,11 +149,29 @@ class MatrimonyApp extends StatelessWidget {
         routes: [
           GoRoute(
             path: '/onboarding/basic-info',
-            pageBuilder: (context, state) => _buildPageWithTransition(const BasicInformationScreen()),
+            pageBuilder: (context, state) {
+              final profileType = state.uri.queryParameters['profileType'];
+              final gender = state.uri.queryParameters['gender'];
+              return _buildPageWithTransition(
+                BasicInformationScreen(
+                  profileType: profileType,
+                  gender: gender,
+                ),
+              );
+            },
           ),
           GoRoute(
             path: '/onboarding/personal-details',
-            pageBuilder: (context, state) => _buildPageWithTransition(const PersonalDetailsScreen()),
+            pageBuilder: (context, state) {
+              final profileType = state.uri.queryParameters['profileType'];
+              final gender = state.uri.queryParameters['gender'];
+              return _buildPageWithTransition(
+                PersonalDetailsScreen(
+                  profileType: profileType,
+                  gender: gender,
+                ),
+              );
+            },
           ),
           GoRoute(
             path: '/onboarding/about-expectations',

@@ -358,7 +358,7 @@ class _MyHeroImageSection extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/profileImage.png', fit: BoxFit.cover),
+        Image.asset('assets/profile image full.jpg', fit: BoxFit.cover),
         // Gradient overlay
         Container(
           decoration: BoxDecoration(

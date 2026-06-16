@@ -9,7 +9,14 @@ import '../widgets/common/radio_group.dart';
 import '../../../../core/utils/animation_helper.dart';
 
 class PersonalDetailsScreen extends StatelessWidget {
-  const PersonalDetailsScreen({super.key});
+  final String? profileType; // 'brother', 'sister', or 'wali'
+  final String? gender; // 'Male' or 'Female'
+  
+  const PersonalDetailsScreen({
+    super.key,
+    this.profileType,
+    this.gender,
+  });
 
   @override
   Widget build(BuildContext context) {

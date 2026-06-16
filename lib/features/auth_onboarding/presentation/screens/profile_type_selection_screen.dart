@@ -56,9 +56,10 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                     Expanded(
                       child: _ProfileCard(
                         title: 'Male',
+                        subtitle: 'Looking for myself',
                         color: const Color(0xFF7685C2),
                         cardWidth: cardWidth,
-                        onTap: () => context.push('/onboarding/basic-info'),
+                        onTap: () => context.push('/onboarding/basic-info?profileType=brother&gender=Male'),
                       ).animate()
                           .fadeIn(duration: 600.ms, delay: 300.ms)
                           .slideX(begin: -0.3, end: 0, curve: Curves.easeOutCubic),
@@ -67,9 +68,10 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                     Expanded(
                       child: _ProfileCard(
                         title: 'Female',
+                        subtitle: 'Looking for myself',
                         color: const Color(0xFFD48B91),
                         cardWidth: cardWidth,
-                        onTap: () => context.push('/onboarding/basic-info'),
+                        onTap: () => context.push('/onboarding/basic-info?profileType=sister&gender=Female'),
                       ).animate()
                           .fadeIn(duration: 600.ms, delay: 400.ms)
                           .slideX(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -85,9 +87,10 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                     width: cardWidth,
                     child: _ProfileCard(
                       title: 'Wali Profile',
+                      subtitle: 'Guardian registering',
                       color: const Color(0xFFF2D76E),
                       cardWidth: cardWidth,
-                      onTap: () => context.push('/onboarding/wali-info'),
+                      onTap: () => context.push('/onboarding/wali-info?profileType=wali&gender=Female'),
                     ).animate()
                         .fadeIn(duration: 600.ms, delay: 500.ms)
                         .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -106,12 +109,14 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
 
 class _ProfileCard extends StatelessWidget {
   final String title;
+  final String? subtitle;
   final Color color;
   final double cardWidth;
   final VoidCallback onTap;
 
   const _ProfileCard({
     required this.title,
+    this.subtitle,
     required this.color,
     required this.cardWidth,
     required this.onTap,
@@ -166,6 +171,19 @@ class _ProfileCard extends StatelessWidget {
                 height: 1.1,
               ),
             ),
+            
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                  height: 1.1,
+                ),
+              ),
+            ],
           ],
         ),
       ),
