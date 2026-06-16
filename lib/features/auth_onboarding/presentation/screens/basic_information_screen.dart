@@ -5,6 +5,7 @@ import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../widgets/common/dropdown_field.dart';
+import '../widgets/common/country_phone_field.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
 
@@ -31,7 +32,6 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   String? _selectedCountry;
-  String _selectedCountryCode = '+44';
 
   @override
   void dispose() {
@@ -190,79 +190,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               ).animateOnboarding(index: 7),
               const SizedBox(height: 24),
               
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: const TextSpan(
-                      text: 'Phone Number',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                      children: [
-                        TextSpan(
-                          text: ' *',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(12),
-                            bottomLeft: Radius.circular(12),
-                          ),
-                          border: Border.all(color: const Color(0xFFE0E0E0)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedCountryCode,
-                            items: const [
-                              DropdownMenuItem(value: '+1', child: Text('+1')),
-                              DropdownMenuItem(value: '+44', child: Text('+44')),
-                              DropdownMenuItem(value: '+91', child: Text('+91')),
-                              DropdownMenuItem(value: '+880', child: Text('+880')),
-                              DropdownMenuItem(value: '+92', child: Text('+92')),
-                              DropdownMenuItem(value: '+971', child: Text('+971')),
-                              DropdownMenuItem(value: '+966', child: Text('+966')),
-                              DropdownMenuItem(value: '+61', child: Text('+61')),
-                              DropdownMenuItem(value: '+81', child: Text('+81')),
-                              DropdownMenuItem(value: '+86', child: Text('+86')),
-                            ],
-                            onChanged: (value) => setState(() => _selectedCountryCode = value!),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            hintText: 'Phone number',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(12),
-                                bottomRight: Radius.circular(12),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(12),
-                                bottomRight: Radius.circular(12),
-                              ),
-                              borderSide: BorderSide(color: Color(0xFFE0E0E0)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              CountryPhoneField(controller: _phoneController),
               const SizedBox(height: 24),
               
               CustomTextField(
