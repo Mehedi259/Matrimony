@@ -11,7 +11,7 @@ import 'features/auth_onboarding/presentation/screens/verified_success_screen.da
 import 'features/auth_onboarding/presentation/screens/forgot_password_screen.dart';
 import 'features/auth_onboarding/presentation/screens/create_new_password_screen.dart';
 import 'features/auth_onboarding/presentation/screens/basic_information_screen.dart';
-import 'features/auth_onboarding/presentation/screens/personal_details_screen.dart';
+import 'features/auth_onboarding/presentation/screens/personal_details_screen_new.dart';
 import 'features/auth_onboarding/presentation/screens/about_expectations_screen.dart';
 import 'features/auth_onboarding/presentation/screens/upload_photos_screen.dart';
 import 'features/auth_onboarding/presentation/screens/your_preferences_screen.dart';
@@ -166,8 +166,8 @@ class MatrimonyApp extends StatelessWidget {
               final profileType = state.uri.queryParameters['profileType'];
               final gender = state.uri.queryParameters['gender'];
               return _buildPageWithTransition(
-                PersonalDetailsScreen(
-                  profileType: profileType,
+                PersonalDetailsScreenNew(
+                  userType: profileType,
                   gender: gender,
                 ),
               );

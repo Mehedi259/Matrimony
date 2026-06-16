@@ -31,6 +31,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   String? _selectedCountry;
+  String _selectedCountryCode = '+44';
 
   @override
   void dispose() {
@@ -192,29 +193,68 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Phone Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  RichText(
+                    text: const TextSpan(
+                      text: 'Phone Number',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                      children: [
+                        TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary,
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), bottomLeft: Radius.circular(8)),
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
+                          ),
+                          border: Border.all(color: const Color(0xFFE0E0E0)),
                         ),
-                        child: const Text('+44', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCountryCode,
+                            items: const [
+                              DropdownMenuItem(value: '+1', child: Text('+1')),
+                              DropdownMenuItem(value: '+44', child: Text('+44')),
+                              DropdownMenuItem(value: '+91', child: Text('+91')),
+                              DropdownMenuItem(value: '+880', child: Text('+880')),
+                              DropdownMenuItem(value: '+92', child: Text('+92')),
+                              DropdownMenuItem(value: '+971', child: Text('+971')),
+                              DropdownMenuItem(value: '+966', child: Text('+966')),
+                              DropdownMenuItem(value: '+61', child: Text('+61')),
+                              DropdownMenuItem(value: '+81', child: Text('+81')),
+                              DropdownMenuItem(value: '+86', child: Text('+86')),
+                            ],
+                            onChanged: (value) => setState(() => _selectedCountryCode = value!),
+                          ),
+                        ),
                       ),
                       Expanded(
                         child: TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
-                            hintText: '1234567',
+                            hintText: 'Phone number',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(8),
-                                bottomRight: Radius.circular(8),
+                                topRight: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
                               ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
+                              ),
+                              borderSide: BorderSide(color: Color(0xFFE0E0E0)),
                             ),
                           ),
                         ),
@@ -227,8 +267,28 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               
               CustomTextField(
                 label: 'Date of Birth',
-                hint: 'DD / MM / YYYY',
+                hint: 'DD/MM/YYYY',
                 controller: _dobController,
+                keyboardType: TextInputType.number,
+                maxLength: 10,
+                onChanged: (value) {
+                  // Auto-format as DD/MM/YYYY
+                  String text = value.replaceAll('/', '');
+                  if (text.length > 8) text = text.substring(0, 8);
+                  
+                  String formatted = '';
+                  for (int i = 0; i < text.length; i++) {
+                    if (i == 2 || i == 4) formatted += '/';
+                    formatted += text[i];
+                  }
+                  
+                  if (formatted != value) {
+                    _dobController.value = TextEditingValue(
+                      text: formatted,
+                      selection: TextSelection.collapsed(offset: formatted.length),
+                    );
+                  }
+                },
               ).animateOnboarding(index: 9),
               const SizedBox(height: 32),
               

@@ -149,23 +149,27 @@ class _ProfileCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Square Image Container
-            Container(
-              width: imageSize,
-              height: imageSize,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _getProfileImage(title),
+            Flexible(
+              child: Container(
+                width: imageSize,
+                height: imageSize,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: _getProfileImage(title),
+                ),
               ),
             ),
             
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             
             // Title
             Text(
               title,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: color,
                 height: 1.1,
@@ -173,12 +177,14 @@ class _ProfileCard extends StatelessWidget {
             ),
             
             if (subtitle != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: Colors.grey[600],
                   height: 1.1,
                 ),

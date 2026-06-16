@@ -7,6 +7,8 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
+  final int? maxLength;
+  final ValueChanged<String>? onChanged;
 
   const CustomTextField({
     super.key,
@@ -16,6 +18,8 @@ class CustomTextField extends StatefulWidget {
     this.controller,
     this.validator,
     this.keyboardType = TextInputType.text,
+    this.maxLength,
+    this.onChanged,
   });
 
   @override
@@ -46,12 +50,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
           obscureText: _obscureText,
           validator: widget.validator,
           keyboardType: widget.keyboardType,
+          maxLength: widget.maxLength,
+          onChanged: widget.onChanged,
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: const TextStyle(
               color: Color(0xFFBDBDBD), // More transparent/lighter gray
               fontWeight: FontWeight.w400,
             ),
+            counterText: widget.maxLength != null ? '' : null, // Hide character counter
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
