@@ -260,7 +260,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                               value: _selectedCountry,
                               hint: Text('Select Country', style: TextStyle(color: Colors.grey[400])),
                               isExpanded: true,
-                              items: DropdownOptions.nationalities.map((item) {
+                              items: DropdownOptions.countries.map((item) {
                                 return DropdownMenuItem(value: item, child: Text(item));
                               }).toList(),
                               onChanged: (value) => setState(() => _selectedCountry = value),
