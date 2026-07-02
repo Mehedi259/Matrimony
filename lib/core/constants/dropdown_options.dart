@@ -84,6 +84,7 @@ class DropdownOptions {
 
   // Ethnicity options
   static const List<String> ethnicities = [
+    'Open to other Ethnicities',
     'Afghan', 'African-American', 'Albanian', 'Algerian', 'American', 'Andorran',
     'Ango', 'Anguillan', 'Antigua', 'Argentine', 'Armenian', 'Australian',
     'Austrian', 'Azerbaijani', 'Bahamian', 'Bahraini', 'Bangladeshi', 'Bar',
@@ -124,7 +125,7 @@ class DropdownOptions {
     'Turkish', 'Turkmen', 'Turks and Caicos Islander', 'Tuvaluan', 'Ugandan',
     'Ukrainian', 'Uruguayan', 'Uzbek', 'Vatican citizen', 'Citizen of Vanuatu',
     'Venezuelan', 'Vietnamese', 'Vincentian', 'Wallisian', 'Welsh', 'White',
-    'Yemeni', 'Zambian', 'Zimbabwean', 'Other', 'Open to other Ethnicities',
+    'Yemeni', 'Zambian', 'Zimbabwean', 'Other',
   ];
 
   // Countries list for location
