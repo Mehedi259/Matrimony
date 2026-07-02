@@ -131,7 +131,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               
               MultiSelectField(
                 label: 'Preference to country of residence (or region)',
-                options: DropdownOptions.nationalities,
+                options: DropdownOptions.countries,
                 selectedValues: _selectedCountries,
                 searchHint: 'Search country/region',
                 onChanged: (values) {

@@ -128,7 +128,7 @@ class _PreferencesFormScreenState extends State<PreferencesFormScreen> {
             // Country of residence
             MultiSelectField(
               label: 'Preference to country of residence (or region)',
-              options: DropdownOptions.nationalities,
+              options: DropdownOptions.countries,
               selectedValues: _selectedCountries,
               searchHint: 'Search country/region',
               onChanged: (values) {
