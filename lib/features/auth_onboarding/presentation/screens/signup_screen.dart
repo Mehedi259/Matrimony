@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
-import '../widgets/common/gradient_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -25,15 +24,15 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
               // Logo
               Container(
-                width: 100,
-                height: 100,
+                width: 70,
+                height: 70,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   image: const DecorationImage(
@@ -44,7 +43,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 500.ms)
                   .scale(begin: const Offset(0.8, 0.8)),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               
               // Title
               const Text(
@@ -52,15 +51,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFF2D292E),
-                  fontSize: 18,
+                  fontSize: 16,
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w600,
-                  height: 1.50,
+                  height: 1.3,
                 ),
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 200.ms)
                   .slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Email Field
               const CustomTextField(
@@ -70,7 +69,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 300.ms)
                   .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               
               // Full Name Field
               const CustomTextField(
@@ -79,7 +78,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 350.ms)
                   .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               
               // Password Field
               const CustomTextField(
@@ -89,7 +88,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 400.ms)
                   .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               
               // Confirm Password Field
               const CustomTextField(
@@ -99,7 +98,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 450.ms)
                   .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               
               // Terms and Conditions Checkbox
               Row(
@@ -157,7 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ],
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 500.ms),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Create Account Button
               Container(
@@ -193,7 +192,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 600.ms)
                   .slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               
               // Already have account
               GestureDetector(
@@ -211,7 +210,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ).animate()
                   .fadeIn(duration: 600.ms, delay: 700.ms),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
             ],
           ),
         ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/common/gradient_button.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
@@ -19,13 +18,13 @@ class SubscriptionPlansScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Pay as you go
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -41,13 +40,14 @@ class SubscriptionPlansScreen extends StatelessWidget {
                       decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
                       child: const Icon(Icons.wallet, color: Colors.black54),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
-                          Text('Pay as you go', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text('3 extra connections for £5 to top up any time on monthly', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                          Text('Pay as you go', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          SizedBox(height: 2),
+                          Text('3 extra connections for £5 to top up any time on monthly', style: TextStyle(fontSize: 11, color: Colors.black54)),
                         ],
                       ),
                     ),
@@ -62,7 +62,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Free Plan
               _PlanCard(
@@ -83,7 +83,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 borderColor: Theme.of(context).colorScheme.secondary,
                 onTap: () => context.push('/home'),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Monthly Plan
               _PlanCard(
@@ -101,7 +101,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 iconColor: Theme.of(context).primaryColor,
                 onTap: () => context.push('/home'),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Annual Plan
               _PlanCard(
@@ -121,7 +121,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 iconColor: Colors.amber,
                 onTap: () => context.push('/home'),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -158,7 +158,7 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -167,42 +167,43 @@ class _PlanCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(price, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+              Text(price, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
               if (discountBadge != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(discountBadge!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: borderColor)),
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: Text(discountBadge!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: borderColor)),
                 ),
               ],
             ],
           ),
-          Text(subtitle, style: const TextStyle(fontSize: 14, color: Colors.black54)),
-          const SizedBox(height: 24),
+          Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.black54)),
+          const SizedBox(height: 12),
           
           ...features.asMap().entries.map((entry) {
             int idx = entry.key;
             String text = entry.value;
             bool isDisabled = disabledFeatures.contains(idx);
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
                   Icon(
                     Icons.check_circle,
-                    size: 16,
+                    size: 14,
                     color: isDisabled ? Colors.grey[300] : iconColor,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       text,
                       style: TextStyle(
+                        fontSize: 13,
                         color: isDisabled ? Colors.grey : Colors.black87,
                         decoration: isDisabled ? TextDecoration.lineThrough : null,
                       ),
@@ -211,8 +212,8 @@ class _PlanCard extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
-          const SizedBox(height: 24),
+          }),
+          const SizedBox(height: 12),
           GradientButton(
             text: buttonText,
             onPressed: onTap,
