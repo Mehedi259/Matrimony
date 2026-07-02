@@ -17,7 +17,24 @@ class DropdownOptions {
     'Salafi',
   ];
 
-  // Marital Status
+  // Marital Status - Brother
+  static const List<String> maritalStatusBrother = [
+    'Never been married',
+    'Married (Polygyny)',
+    'Annulment (Khula)',
+    'Divorced',
+    'Widowed',
+  ];
+
+  // Marital Status - Sister
+  static const List<String> maritalStatusSister = [
+    'Never been married',
+    'Annulment (Khula)',
+    'Divorced',
+    'Widowed',
+  ];
+
+  // Marital Status (deprecated - use gender-specific lists above)
   static const List<String> maritalStatus = [
     'Never been married',
     'Married (Polygyny)',

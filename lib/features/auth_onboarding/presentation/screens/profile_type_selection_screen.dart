@@ -172,6 +172,7 @@ class _ProfileCard extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: color,
+
                 height: 1.1,
               ),
             ),

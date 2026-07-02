@@ -93,7 +93,9 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           _buildDropdown(
             label: 'Marital Status',
             value: _maritalStatus,
-            items: DropdownOptions.maritalStatus,
+            items: widget.gender == 'Male' 
+              ? DropdownOptions.maritalStatusBrother 
+              : DropdownOptions.maritalStatusSister,
             onChanged: (value) => setState(() => _maritalStatus = value),
             isRequired: true,
           ),
