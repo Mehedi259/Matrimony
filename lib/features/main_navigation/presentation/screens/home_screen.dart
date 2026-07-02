@@ -92,33 +92,36 @@ class HomeScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: const _StatCard(
+                  child: _StatCard(
                     icon: Icons.visibility_outlined, 
                     iconColor: Colors.blue, 
                     count: '12', 
-                    label: 'Profile View'
+                    label: 'Profile View',
+                    onTap: () => context.push('/profile-views'),
                   ).animate()
                       .fadeIn(duration: 600.ms, delay: 200.ms)
                       .slideX(begin: -0.3, end: 0, curve: Curves.easeOutCubic),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: const _StatCard(
+                  child: _StatCard(
                     icon: Icons.favorite_border, 
                     iconColor: Colors.red, 
                     count: '03', 
-                    label: 'Saved'
+                    label: 'Saved',
+                    onTap: () => context.push('/saved'),
                   ).animate()
                       .fadeIn(duration: 600.ms, delay: 300.ms)
                       .scale(begin: const Offset(0.8, 0.8)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: const _StatCard(
+                  child: _StatCard(
                     icon: Icons.mail_outline, 
                     iconColor: Colors.amber, 
                     count: '01', 
-                    label: 'Pending'
+                    label: 'Pending',
+                    onTap: () => context.push('/pending'),
                   ).animate()
                       .fadeIn(duration: 600.ms, delay: 400.ms)
                       .slideX(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -200,28 +203,38 @@ class _StatCard extends StatelessWidget {
   final Color iconColor;
   final String count;
   final String label;
+  final VoidCallback? onTap;
 
-  const _StatCard({required this.icon, required this.iconColor, required this.count, required this.label});
+  const _StatCard({
+    required this.icon, 
+    required this.iconColor, 
+    required this.count, 
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: iconColor),
-          const SizedBox(height: 8),
-          Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: iconColor),
+            const SizedBox(height: 8),
+            Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }
