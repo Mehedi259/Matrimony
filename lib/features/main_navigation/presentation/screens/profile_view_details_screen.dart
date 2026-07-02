@@ -258,7 +258,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
   Widget _buildBasicInfoTab(Color primaryColor) {
     final fields = [
       ['Name', 'mm31'],
-      ['Date of Birth', '14 / 08 / 1998'],
+      ['Age', '28 Years old'],
       ['City', 'London'],
       ['Country', 'United Kingdom'],
       ['Sect', 'Shia'],
