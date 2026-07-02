@@ -45,7 +45,7 @@ class WaliProfileInfoScreen extends StatelessWidget {
               GradientButton(
                 text: 'Continue & Provide Info',
                 onPressed: () {
-                  context.push('/onboarding/basic-info');
+                  context.push('/onboarding/basic-info?profileType=wali&gender=Female');
                 },
               ),
             ],

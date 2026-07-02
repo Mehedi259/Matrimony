@@ -147,21 +147,23 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                       size: 32,
                     ),
                     const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Profile Type: ${widget.profileType == 'wali' ? 'Wali (Guardian)' : widget.gender}',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.profileType == 'wali' 
-                            ? 'Registering for a female (will see male profiles)'
-                            : 'Will see ${widget.gender == 'Male' ? 'female' : 'male'} profiles',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Profile Type: ${widget.profileType == 'wali' ? 'Wali (Guardian)' : widget.gender}',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.profileType == 'wali' 
+                              ? 'Registering for a female (will see male profiles)'
+                              : 'Will see ${widget.gender == 'Male' ? 'female' : 'male'} profiles',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
