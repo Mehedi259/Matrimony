@@ -24,7 +24,7 @@ class DeleteAccountFeedbackScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'If you found your match through us, let us know.',
+              'If you found your match through us, let us know. We would like to send you a wedding gift.',
               style: TextStyle(fontSize: 14, color: Colors.black87),
             ),
             const SizedBox(height: 24),
@@ -48,9 +48,44 @@ class DeleteAccountFeedbackScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Your account will be permanently deleted and all your data will be erased.',
-              style: TextStyle(color: Colors.black54, fontSize: 13),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3F3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE54B5E).withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Please note:',
+                    style: TextStyle(
+                      color: Color(0xFFE54B5E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '1. Deleting your account will prevent you from receiving future matches through our private matchmaking service. If you\'d still like to receive matches, deactivate instead.',
+                    style: TextStyle(
+                      color: Color(0xFFE54B5E),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '2. Your account will be permanently deleted and all your data will be erased.',
+                    style: TextStyle(
+                      color: Color(0xFFE54B5E),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             Container(

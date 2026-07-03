@@ -25,6 +25,12 @@ class SecurityScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildActionItem(
+            title: 'Change Email',
+            icon: Icons.chevron_right,
+            onTap: () => context.push('/chat-with-admin'),
+          ),
+          const SizedBox(height: 16),
+          _buildActionItem(
             title: 'Deactive Account',
             icon: Icons.do_not_disturb_alt,
             isDestructive: true,
