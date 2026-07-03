@@ -4,8 +4,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 
-class BrowseScreen extends StatelessWidget {
+class BrowseScreen extends StatefulWidget {
   const BrowseScreen({super.key});
+
+  @override
+  State<BrowseScreen> createState() => _BrowseScreenState();
+}
+
+class _BrowseScreenState extends State<BrowseScreen> {
+  String _selectedFilter = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -90,11 +97,35 @@ class BrowseScreen extends StatelessWidget {
             // Chips
             Row(
               children: [
-                _FilterChip(label: 'All', isSelected: true, color: Theme.of(context).colorScheme.secondary),
+                _FilterChip(
+                  label: 'All', 
+                  isSelected: _selectedFilter == 'All', 
+                  color: Theme.of(context).colorScheme.secondary,
+                  onTap: () {
+                    setState(() => _selectedFilter = 'All');
+                    SnackBarHelper.showInfo(context, 'Showing All profiles');
+                  },
+                ),
                 const SizedBox(width: 12),
-                const _FilterChip(label: 'Online', isSelected: false),
+                _FilterChip(
+                  label: 'Online', 
+                  isSelected: _selectedFilter == 'Online',
+                  color: Theme.of(context).colorScheme.secondary,
+                  onTap: () {
+                    setState(() => _selectedFilter = 'Online');
+                    SnackBarHelper.showInfo(context, 'Filtered by Online');
+                  },
+                ),
                 const SizedBox(width: 12),
-                const _FilterChip(label: 'New', isSelected: false),
+                _FilterChip(
+                  label: 'New', 
+                  isSelected: _selectedFilter == 'New',
+                  color: Theme.of(context).colorScheme.secondary,
+                  onTap: () {
+                    setState(() => _selectedFilter = 'New');
+                    SnackBarHelper.showInfo(context, 'Filtered by New');
+                  },
+                ),
               ],
             ).animate()
                 .fadeIn(duration: 600.ms, delay: 300.ms)
@@ -142,20 +173,24 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final Color? color;
+  final VoidCallback? onTap;
 
-  const _FilterChip({required this.label, required this.isSelected, this.color});
+  const _FilterChip({
+    required this.label, 
+    required this.isSelected, 
+    this.color,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        SnackBarHelper.showInfo(context, 'Filtered by $label');
-      },
+      onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.grey[200],
+          color: isSelected ? (color ?? Theme.of(context).colorScheme.secondary) : Colors.grey[200],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
