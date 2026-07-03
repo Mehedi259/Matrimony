@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -138,7 +139,7 @@ class HomeScreen extends StatelessWidget {
               lockMessage: 'Photos will be revealed after mutual interest',
               onViewProfile: () => context.push('/profile-view-details'),
               onSendInterest: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
+                SnackBarHelper.showSuccess(context, 'Interest Sent!');
               },
             ).animate()
                 .fadeIn(duration: 700.ms, delay: 700.ms)
@@ -153,7 +154,7 @@ class HomeScreen extends StatelessWidget {
               lockMessage: 'Photos will be revealed after mutual interest',
               onViewProfile: () => context.push('/profile-view-details'),
               onSendInterest: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
+                SnackBarHelper.showSuccess(context, 'Interest Sent!');
               },
             ).animate()
                 .fadeIn(duration: 700.ms, delay: 900.ms)

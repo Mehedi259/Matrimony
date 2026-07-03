@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -124,7 +125,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           lockMessage: 'Photos will be revealed after mutual interest',
           onDecline: () => _showDeclineDialog(context),
           onAccept: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Match Accepted!')));
+            SnackBarHelper.showSuccess(context, 'Match Accepted!');
           },
         ).animate().fadeIn(duration: 700.ms, delay: 500.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
         const SizedBox(height: 16),
@@ -137,7 +138,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           lockMessage: 'Photos will be revealed after mutual interest',
           onDecline: () => _showDeclineDialog(context),
           onAccept: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Match Accepted!')));
+            SnackBarHelper.showSuccess(context, 'Match Accepted!');
           },
         ).animate().fadeIn(duration: 700.ms, delay: 700.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
       ],
@@ -302,7 +303,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Cancelled!')));
+                      SnackBarHelper.showInfo(context, 'Request Cancelled!');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE57C04),

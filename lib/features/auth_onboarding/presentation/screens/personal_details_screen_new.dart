@@ -5,6 +5,7 @@ import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/searchable_dropdown.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../../../../core/constants/dropdown_options.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 /// Step 2: About You - Personal Details Screen
 /// This screen collects detailed demographic and personal information
@@ -349,12 +350,7 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
         _weight == null ||
         _prayerFrequency == null ||
         _openToRelocating == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackBarHelper.showError(context, 'Please fill all required fields');
       return;
     }
 
@@ -364,24 +360,14 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           _waliNameController.text.isEmpty ||
           _waliRelationController.text.isEmpty ||
           _waliNumberController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please fill all required fields including Wali information'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarHelper.showError(context, 'Please fill all required fields including Wali information');
         return;
       }
     }
 
     // If children selected, validate number
     if (_hasChildren == 'Yes' && _numberOfChildren == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please specify the number of children'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      SnackBarHelper.showError(context, 'Please specify the number of children');
       return;
     }
 

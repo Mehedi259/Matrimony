@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/match_card.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 class BrowseScreen extends StatelessWidget {
   const BrowseScreen({super.key});
@@ -61,7 +62,7 @@ class BrowseScreen extends StatelessWidget {
                 prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400], size: 22),
                 suffixIcon: GestureDetector(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Filter settings opened')));
+                    SnackBarHelper.showInfo(context, 'Filter settings opened');
                   },
                   child: Icon(Icons.tune_rounded, color: Colors.grey[400], size: 20),
                 ),
@@ -110,7 +111,7 @@ class BrowseScreen extends StatelessWidget {
               lockMessage: 'Photos will be revealed after mutual interest',
               onViewProfile: () => context.push('/profile-view-details'),
               onSendInterest: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
+                SnackBarHelper.showSuccess(context, 'Interest Sent!');
               },
             ).animate()
                 .fadeIn(duration: 700.ms, delay: 500.ms)
@@ -125,7 +126,7 @@ class BrowseScreen extends StatelessWidget {
               lockMessage: 'Photos will be revealed after mutual interest',
               onViewProfile: () => context.push('/profile-view-details'),
               onSendInterest: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Interest Sent!')));
+                SnackBarHelper.showSuccess(context, 'Interest Sent!');
               },
             ).animate()
                 .fadeIn(duration: 700.ms, delay: 700.ms)
@@ -148,7 +149,7 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Filtered by $label')));
+        SnackBarHelper.showInfo(context, 'Filtered by $label');
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
