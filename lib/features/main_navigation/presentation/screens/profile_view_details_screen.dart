@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/matches_provider.dart';
+import '../../../../data/models/matches/match_profile_model.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
-  const ProfileViewDetailsScreen({super.key});
+  final String userId;
+  
+  const ProfileViewDetailsScreen({
+    super.key,
+    required this.userId,
+  });
 
   @override
   State<ProfileViewDetailsScreen> createState() => _ProfileViewDetailsScreenState();
@@ -13,6 +21,9 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
+  MatchProfileModel? _profile;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   final List<String> _tabLabels = ['Basic Info', 'About Me', 'Preferences'];
 
@@ -25,6 +36,10 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
         setState(() => _selectedTab = _tabController.index);
       }
     });
+    // Use addPostFrameCallback to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfileData();
+    });
   }
 
   @override
@@ -33,10 +48,104 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     super.dispose();
   }
 
+  Future<void> _loadProfileData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.getProfileDetails(widget.userId);
+
+    if (success && matchesProvider.selectedProfile != null) {
+      setState(() {
+        _profile = matchesProvider.selectedProfile;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _errorMessage = matchesProvider.errorMessage ?? 'Failed to load profile';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleSendInterest() async {
+    if (_profile == null) return;
+
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.sendConnectionRequest(_profile!.id);
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Interest sent successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null || _profile == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage ?? 'Profile not found',
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadProfileData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -60,7 +169,6 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
               ),
             ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.7, 0.7)),
             actions: [
-              // Settings
               GestureDetector(
                 onTap: () => context.push('/settings'),
                 child: Container(
@@ -70,34 +178,9 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                     color: Colors.black.withValues(alpha: 0.35),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.settings_outlined, color: Colors.white, size: 20),
+                  child: const Icon(Icons.settings_outlined, color: Colors.white, size: 20),
                 ),
               ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.7, 0.7)),
-              // Notifications
-              GestureDetector(
-                onTap: () => context.push('/notifications'),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 8, bottom: 8, right: 4),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Stack(
-                    children: [
-                      const Icon(Icons.notifications_none, color: Colors.white, size: 20),
-                      Positioned(
-                        right: 0, top: 0,
-                        child: Container(
-                          width: 7, height: 7,
-                          decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ).animate().fadeIn(duration: 500.ms, delay: 150.ms).scale(begin: const Offset(0.7, 0.7)),
-              // More options
               PopupMenuButton<String>(
                 child: Container(
                   margin: const EdgeInsets.only(top: 8, bottom: 8, right: 12),
@@ -108,16 +191,25 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   ),
                   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
                 ),
-                onSelected: (value) {},
+                onSelected: (value) {
+                  // Handle menu actions
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$value selected')),
+                  );
+                },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(value: 'hide', child: Text('Hide Profile')),
-                  const PopupMenuItem<String>(value: 'block', child: Text('Block Profile')),
-                  const PopupMenuItem<String>(value: 'report', child: Text('Report Profile')),
+                  const PopupMenuItem<String>(value: 'Hide Profile', child: Text('Hide Profile')),
+                  const PopupMenuItem<String>(value: 'Block Profile', child: Text('Block Profile')),
+                  const PopupMenuItem<String>(value: 'Report Profile', child: Text('Report Profile')),
                 ],
               ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: _HeroImageSection(primaryColor: primaryColor),
+              background: _HeroImageSection(
+                primaryColor: primaryColor,
+                photoBlurred: _profile!.photoBlurred,
+                codename: _profile!.codename,
+              ),
             ),
           ),
 
@@ -128,37 +220,58 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name + ID Row
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'mm31',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            Text(
+                              _profile!.codename,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            Text('28 years • London, UK', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                            Text(
+                              '${_profile!.age ?? 'N/A'} years • ${_profile!.city ?? 'Unknown'}, ${_profile!.country ?? ''}',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
+                      if (_profile!.isOnline)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Online',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-                            const SizedBox(width: 6),
-                            const Text('Online', style: TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideX(begin: -0.2, end: 0),
                   const SizedBox(height: 16),
@@ -168,10 +281,30 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _InfoChip(icon: Icons.work_outline, label: 'Software Engineer', color: Colors.blue),
-                      _InfoChip(icon: Icons.height, label: "5'6\"", color: Colors.orange),
-                      _InfoChip(icon: Icons.star_outline, label: 'Single', color: Colors.purple),
-                      _InfoChip(icon: Icons.menu_book_outlined, label: 'Shia', color: Colors.teal),
+                      if (_profile!.occupation != null)
+                        _InfoChip(
+                          icon: Icons.work_outline,
+                          label: _profile!.occupation!,
+                          color: Colors.blue,
+                        ),
+                      if (_profile!.height != null)
+                        _InfoChip(
+                          icon: Icons.height,
+                          label: _profile!.height!,
+                          color: Colors.orange,
+                        ),
+                      if (_profile!.maritalStatus != null)
+                        _InfoChip(
+                          icon: Icons.star_outline,
+                          label: _profile!.maritalStatus!,
+                          color: Colors.purple,
+                        ),
+                      if (_profile!.sect != null)
+                        _InfoChip(
+                          icon: Icons.menu_book_outlined,
+                          label: _profile!.sect!,
+                          color: Colors.teal,
+                        ),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 20),
@@ -181,12 +314,21 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: _handleSendInterest,
                       icon: const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
-                      label: const Text('Send Interest', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      label: const Text(
+                        'Send Interest',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                     ),
@@ -207,7 +349,11 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                         const Expanded(
                           child: Text(
                             'Full name, photos & contact details are shared only at the appropriate stage.',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.5),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF475569),
+                              height: 1.5,
+                            ),
                           ),
                         ),
                       ],
@@ -257,27 +403,26 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
   // ── Basic Info ────────────────────────────────────────────────────────
   Widget _buildBasicInfoTab(Color primaryColor) {
     final fields = [
-      ['Name', 'mm31'],
-      ['Date of Birth', '14 / 08 / 1998'],
-      ['City', 'London'],
-      ['Country', 'United Kingdom'],
-      ['Sect', 'Shia'],
-      ['Marital Status', 'Single'],
-      ['Ethnicity', 'Arab'],
-      ['Nationality / Citizenship', 'British citizenship'],
-      ['Do you have children?', 'No'],
-      ['Height', "5'6 ft"],
-      ['Weight', '58 kg'],
-      ['Prayer 5x a day?', 'Mostly'],
-      ['Open to relocating?', 'Mostly'],
-      ['How do you dress?', 'Modestly'],
+      ['Codename', _profile!.codename],
+      ['Age', _profile!.age?.toString() ?? 'N/A'],
+      ['City', _profile!.city ?? 'N/A'],
+      ['Country', _profile!.country ?? 'N/A'],
+      ['Sect', _profile!.sect ?? 'N/A'],
+      ['Marital Status', _profile!.maritalStatus ?? 'N/A'],
+      ['Ethnicity', _profile!.ethnicity ?? 'N/A'],
+      ['Height', _profile!.height ?? 'N/A'],
+      ['Occupation', _profile!.occupation ?? 'N/A'],
+      ['Education', _profile!.education ?? 'N/A'],
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: List.generate(fields.length, (i) {
-        return _InfoRow(label: fields[i][0], value: fields[i][1], primaryColor: primaryColor)
-            .animate()
+        return _InfoRow(
+          label: fields[i][0],
+          value: fields[i][1],
+          primaryColor: primaryColor,
+        ).animate()
             .fadeIn(duration: 400.ms, delay: Duration(milliseconds: i * 40))
             .slideX(begin: 0.1, end: 0);
       }),
@@ -286,24 +431,23 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
 
   // ── About Me ──────────────────────────────────────────────────────────
   Widget _buildAboutMeTab(Color primaryColor) {
-    final fields = [
-      ['Idea of marriage', 'Discover the endless possibilities with our innovative platform designed to simplify your daily tasks and boost productivity.'],
-      ['Relationship with Islam', 'Life is a continuous journey filled with moments of spiritual growth and challenges, through various experiences.'],
-      ['Role as a spouse', 'Sure! Here\'s a detailed answer for the heading you provided. Please share the heading so I can tailor the content accordingly.'],
-      ['About yourself', 'Lorem ipsum dolor sit amet consectetur. Condimentum massa nec tortor turpis. Proin adipiscing duis nam accumsan mattis ante.'],
-      ['Envision your spouse', 'Lorem ipsum dolor sit amet consectetur. Adipiscing donec sem tortor magna. Mi dui in enim eu consequat libero convallis proin.'],
-      ['Envision your marriage', 'Lorem ipsum dolor sit amet consectetur. Aliquam vel adipiscing mattis lacus lacus. Pretium proin porttitor in cursus luctus eu sit.'],
-      ['Religious preference', 'Lorem ipsum dolor sit amet consectetur. Neque dui amet volutpat vehicula urna a enim.'],
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate(fields.length, (i) {
-        return _InfoRow(label: fields[i][0], value: fields[i][1], primaryColor: primaryColor, multiLine: true)
-            .animate()
-            .fadeIn(duration: 400.ms, delay: Duration(milliseconds: i * 50))
-            .slideX(begin: 0.1, end: 0);
-      }),
+      children: [
+        _InfoRow(
+          label: 'About',
+          value: _profile!.bio ?? 'No information provided',
+          primaryColor: primaryColor,
+          multiLine: true,
+        ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+        
+        if (_profile!.languages != null && _profile!.languages!.isNotEmpty)
+          _InfoRow(
+            label: 'Languages',
+            value: _profile!.languages!,
+            primaryColor: primaryColor,
+          ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
+      ],
     );
   }
 
@@ -312,26 +456,14 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _InfoRow(label: 'Preferred Age Range', value: '22-35', primaryColor: primaryColor)
-            .animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-        _InfoRow(label: 'Preferred Marital Status', value: 'Never been married', primaryColor: primaryColor)
-            .animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
-        _InfoRow(label: 'Country of Residence', value: 'United Kingdom', primaryColor: primaryColor)
-            .animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: 0.1, end: 0),
-        const SizedBox(height: 4),
-        Text('Preferred Ethnicity', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[600]))
-            .animate().fadeIn(duration: 400.ms, delay: 150.ms),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: ['Pakistani', 'Arab', 'Turkish'].asMap().entries.map((e) {
-            return _PreferenceChip(label: e.value, primaryColor: primaryColor)
-                .animate()
-                .fadeIn(duration: 400.ms, delay: Duration(milliseconds: 200 + e.key * 60))
-                .scale(begin: const Offset(0.8, 0.8));
-          }).toList(),
-        ),
+        const Text(
+          'Profile preferences will be visible after mutual match',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+        ).animate().fadeIn(duration: 400.ms),
       ],
     );
   }
@@ -340,14 +472,26 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
 // ── Hero Image Section ─────────────────────────────────────────────────────────
 class _HeroImageSection extends StatelessWidget {
   final Color primaryColor;
-  const _HeroImageSection({required this.primaryColor});
+  final bool photoBlurred;
+  final String codename;
+
+  const _HeroImageSection({
+    required this.primaryColor,
+    required this.photoBlurred,
+    required this.codename,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/blurredProfile1.png', fit: BoxFit.cover),
+        // Profile image (blurred if needed)
+        Image.asset(
+          photoBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png',
+          fit: BoxFit.cover,
+        ),
+        
         // Gradient overlay
         Container(
           decoration: BoxDecoration(
@@ -363,54 +507,40 @@ class _HeroImageSection extends StatelessWidget {
             ),
           ),
         ),
-        // Lock & photo count overlay (bottom)
-        Positioned(
-          bottom: 20,
-          left: 20,
-          right: 20,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.lock_outline_rounded, color: Colors.white, size: 16),
-                    SizedBox(width: 8),
-                    Text(
-                      'Photos revealed after mutual interest',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
+        
+        // Lock message if photo is blurred
+        if (photoBlurred)
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(14),
               ),
-            ],
-          ),
-        ),
-        // Photo count (top right)
-        Positioned(
-          top: kToolbarHeight + MediaQuery.of(context).padding.top - 8,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.lock_outline_rounded, color: Colors.white, size: 16),
+                  SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Photos revealed after mutual interest',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.photo_library_outlined, color: Colors.white, size: 14),
-                SizedBox(width: 4),
-                Text('5', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
           ),
-        ),
       ],
     );
   }
@@ -513,7 +643,11 @@ class _InfoRow extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -521,14 +655,25 @@ class _InfoRow extends StatelessWidget {
           children: [
             Expanded(
               flex: 2,
-              child: Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 3,
               child: Text(
                 value,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF1E293B),
+                  fontWeight: FontWeight.w600,
+                ),
                 maxLines: multiLine ? null : 1,
                 overflow: multiLine ? null : TextOverflow.ellipsis,
               ),
@@ -546,7 +691,11 @@ class _InfoChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _InfoChip({required this.icon, required this.label, required this.color});
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -561,30 +710,16 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 5),
-          Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
-    );
-  }
-}
-
-// ── Preference Chip ───────────────────────────────────────────────────────────
-class _PreferenceChip extends StatelessWidget {
-  final String label;
-  final Color primaryColor;
-
-  const _PreferenceChip({required this.label, required this.primaryColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
-      ),
-      child: Text(label, style: TextStyle(fontSize: 13, color: primaryColor, fontWeight: FontWeight.w600)),
     );
   }
 }

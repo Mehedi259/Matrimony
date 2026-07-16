@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -90,9 +93,17 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
-                    context.pop();
-                    // Implement logout logic
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    
+                    // Call logout from auth provider
+                    final authProvider = context.read<AuthProvider>();
+                    await authProvider.logout();
+                    
+                    if (!context.mounted) return;
+                    
+                    // Navigate to login screen
+                    context.go('/login');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,

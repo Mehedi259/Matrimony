@@ -1,59 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 
-class SavedScreen extends StatelessWidget {
+class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
 
   @override
+  State<SavedScreen> createState() => _SavedScreenState();
+}
+
+class _SavedScreenState extends State<SavedScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadWishlists();
+  }
+
+  Future<void> _loadWishlists() async {
+    await context.read<MatchesProvider>().loadWishlists();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final matchesProvider = context.watch<MatchesProvider>();
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Saved', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20)),
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text(
+          'Saved Profiles',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: Theme.of(context).colorScheme.secondary, size: 28),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: Theme.of(context).primaryColor, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          MatchCard(
-            username: 'Mmk007',
-            age: '28 Years',
-            height: '5\'6"',
-            profession: 'Software Engineer',
-            photoCount: 5,
-            lockMessage: 'Photos will be revealed after mutual interest',
-            onViewProfile: () => context.push('/profile-view-details'),
-            onSendInterest: () {},
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _loadWishlists,
+        child: matchesProvider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : matchesProvider.wishlists.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.favorite_outline,
+                          size: 64,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No saved profiles',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Profiles you save will appear here',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: matchesProvider.wishlists.length,
+                    itemBuilder: (context, index) {
+                      final wishlist = matchesProvider.wishlists[index];
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: MatchCard(
+                          username: wishlist['codename'] ?? 'User',
+                          age: wishlist['age'] != null
+                              ? '${wishlist['age']} Years old'
+                              : 'N/A',
+                          height: wishlist['height'] ?? 'N/A',
+                          profession: wishlist['city'] ?? 'N/A',
+                          photoCount: 5,
+                          lockMessage: wishlist['photo_blurred'] == true
+                              ? 'Photos will be revealed after mutual interest'
+                              : '',
+                          isLocked: wishlist['photo_blurred'] == true,
+                          onViewProfile: () {
+                            context.push(
+                              '/profile-view-details/${wishlist['user_id'] ?? wishlist['id']}',
+                            );
+                          },
+                          onSendInterest: () async {
+                            final success = await matchesProvider
+                                .sendConnectionRequest(
+                              wishlist['user_id'] ?? wishlist['id'],
+                            );
+
+                            if (!mounted) return;
+
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Interest sent!'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    matchesProvider.errorMessage ??
+                                        'Failed to send',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
       ),
     );
   }

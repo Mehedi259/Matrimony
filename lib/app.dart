@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'providers/auth_provider.dart';
 import 'features/auth_onboarding/presentation/screens/welcome_screen.dart';
 import 'features/auth_onboarding/presentation/screens/login_screen.dart';
 import 'features/auth_onboarding/presentation/screens/profile_type_selection_screen.dart';
@@ -74,12 +76,29 @@ Page<dynamic> _buildPageWithTransition(Widget child, {bool slideFromRight = true
   );
 }
 
-class MatrimonyApp extends StatelessWidget {
-  MatrimonyApp({super.key});
+class MatrimonyApp extends StatefulWidget {
+  const MatrimonyApp({super.key});
 
-  final _router = GoRouter(
-    initialLocation: '/welcome',
-    routes: [
+  @override
+  State<MatrimonyApp> createState() => _MatrimonyAppState();
+}
+
+class _MatrimonyAppState extends State<MatrimonyApp> {
+  late GoRouter _router;
+  late bool _wasAuthenticated;
+
+  @override
+  void initState() {
+    super.initState();
+    final authProvider = context.read<AuthProvider>();
+    _wasAuthenticated = authProvider.authState == AuthState.authenticated;
+    _router = _createRouter(_wasAuthenticated);
+  }
+
+  GoRouter _createRouter(bool isAuthenticated) {
+    return GoRouter(
+      initialLocation: isAuthenticated ? '/home' : '/welcome',
+      routes: [
       GoRoute(
         path: '/welcome',
         pageBuilder: (context, state) => _buildPageWithTransition(const WelcomeScreen()),
@@ -219,8 +238,19 @@ class MatrimonyApp extends StatelessWidget {
         builder: (context, state) => const ProfileViewsScreen(),
       ),
       GoRoute(
-        path: '/profile-view-details',
-        builder: (context, state) => const ProfileViewDetailsScreen(),
+        path: '/profile-view-details/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId'] ?? '';
+          return ProfileViewDetailsScreen(userId: userId);
+        },
+      ),
+      // Alternate route for matches directory
+      GoRoute(
+        path: '/matches/directory/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId'] ?? '';
+          return ProfileViewDetailsScreen(userId: userId);
+        },
       ),
       GoRoute(
         path: '/notifications',
@@ -307,15 +337,29 @@ class MatrimonyApp extends StatelessWidget {
         builder: (context, state) => const MyProfileViewScreen(),
       ),
     ],
-  );
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Matrimony Matchmaker',
-      theme: AppTheme.lightTheme,
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final bool isAuthenticated = authProvider.authState == AuthState.authenticated;
+        
+        // Only recreate router if authentication state fundamentally changes
+        // between authenticated and unauthenticated
+        if (_wasAuthenticated != isAuthenticated) {
+          _wasAuthenticated = isAuthenticated;
+          _router = _createRouter(isAuthenticated);
+        }
+
+        return MaterialApp.router(
+          title: 'Matrimony Matchmaker',
+          theme: AppTheme.lightTheme,
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

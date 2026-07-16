@@ -1,33 +1,70 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../providers/matches_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Use addPostFrameCallback to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final authProvider = context.read<AuthProvider>();
+    final matchesProvider = context.read<MatchesProvider>();
+
+    // Reload user profile data
+    await authProvider.refreshProfile();
+
+    // Load wishlists and sent requests for stats
+    await Future.wait([
+      matchesProvider.loadWishlists(),
+      matchesProvider.loadSentRequests(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
+    final authProvider = context.watch<AuthProvider>();
+    final matchesProvider = context.watch<MatchesProvider>();
+    final user = authProvider.currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      body: CustomScrollView(
-        slivers: [
-          // ── Premium SliverAppBar ──────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: const SizedBox.shrink(),
-            flexibleSpace: FlexibleSpaceBar(
-              background: _ProfileHeader(
-                primaryColor: primaryColor,
-                secondaryColor: secondaryColor,
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: CustomScrollView(
+          slivers: [
+            // ── Premium SliverAppBar ──────────────────────────────────────
+            SliverAppBar(
+              expandedHeight: 300,
+              pinned: true,
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: const SizedBox.shrink(),
+              flexibleSpace: FlexibleSpaceBar(
+                background: _ProfileHeader(
+                  primaryColor: primaryColor,
+                  secondaryColor: secondaryColor,
+                  user: user,
+                ),
               ),
-            ),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
@@ -55,11 +92,21 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
-                  _StatPill(icon: Icons.visibility_outlined, label: 'Profile Views', value: '24', color: Colors.blue),
+                  _StatPill(icon: Icons.visibility_outlined, label: 'Profile Views', value: '24', color: Colors.blue), // TODO: Get from API
                   const SizedBox(width: 10),
-                  _StatPill(icon: Icons.favorite_border, label: 'Saved', value: '03', color: Colors.pink),
+                  _StatPill(
+                    icon: Icons.favorite_border,
+                    label: 'Saved',
+                    value: '${matchesProvider.wishlists.length.toString().padLeft(2, '0')}',
+                    color: Colors.pink,
+                  ),
                   const SizedBox(width: 10),
-                  _StatPill(icon: Icons.mail_outline, label: 'Pending', value: '01', color: Colors.amber),
+                  _StatPill(
+                    icon: Icons.mail_outline,
+                    label: 'Pending',
+                    value: '${matchesProvider.sentRequests.length.toString().padLeft(2, '0')}',
+                    color: Colors.amber,
+                  ),
                 ],
               ).animate().fadeIn(duration: 600.ms, delay: 300.ms).slideY(begin: 0.3, end: 0),
             ),
@@ -79,21 +126,22 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Profile List ──────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildProfileCard(context, primaryColor, secondaryColor),
-              ]),
+            // ── Profile List ──────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildProfileCard(context, primaryColor, secondaryColor, user),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, Color primaryColor, Color secondaryColor) {
+  Widget _buildProfileCard(BuildContext context, Color primaryColor, Color secondaryColor, user) {
     final items = [
       _ItemData(icon: Icons.verified_outlined, iconColor: Colors.green, title: 'Verify Profile', subtitle: 'Identity verified', isCompleted: true),
       _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: true, onTap: () => context.push('/basic-information-form')),
@@ -135,11 +183,32 @@ class ProfileScreen extends StatelessWidget {
 class _ProfileHeader extends StatelessWidget {
   final Color primaryColor;
   final Color secondaryColor;
+  final dynamic user;
 
-  const _ProfileHeader({required this.primaryColor, required this.secondaryColor});
+  const _ProfileHeader({
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.user,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Calculate profile completion percentage
+    double completionPercentage = 0.5; // Default
+    if (user != null) {
+      int completedFields = 0;
+      int totalFields = 5; // Adjusted to match available fields
+
+      if (user.firstName != null && user.firstName!.isNotEmpty) completedFields++;
+      if (user.email != null && user.email!.isNotEmpty) completedFields++;
+      // Note: dateOfBirth, city, height, etc. are in profile data, not UserModel
+      if (user.profilePicture != null) completedFields++;
+      if (user.lastName != null && user.lastName!.isNotEmpty) completedFields++;
+      if (user.role != null && user.role!.isNotEmpty) completedFields++;
+
+      completionPercentage = completedFields / totalFields;
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -160,7 +229,7 @@ class _ProfileHeader extends StatelessWidget {
                 SizedBox(
                   width: 108,
                   height: 108,
-                  child: CustomPaint(painter: _CircleProgressPainter(progress: 0.85, color: primaryColor)),
+                  child: CustomPaint(painter: _CircleProgressPainter(progress: completionPercentage, color: primaryColor)),
                 ),
                 Container(
                   width: 90,
@@ -168,8 +237,10 @@ class _ProfileHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 3),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/profileImage.png'),
+                    image: DecorationImage(
+                      image: user?.profilePicture != null
+                          ? NetworkImage(user!.profilePicture!)
+                          : const AssetImage('assets/profileImage.png') as ImageProvider,
                       fit: BoxFit.cover,
                     ),
                     boxShadow: [
@@ -187,7 +258,10 @@ class _ProfileHeader extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.4), blurRadius: 8)],
                     ),
-                    child: const Text('85%', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      '${(completionPercentage * 100).toInt()}%',
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -195,27 +269,30 @@ class _ProfileHeader extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            const Text(
-              'Kader Molla',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            Text(
+              user?.firstName != null ? '${user!.firstName} ${user.lastName ?? ''}' : 'User Name',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
             ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
 
             const SizedBox(height: 4),
 
             Text(
-              'kader@gmail.com',
+              user?.email ?? 'email@example.com',
               style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ).animate().fadeIn(duration: 600.ms, delay: 300.ms),
 
             const SizedBox(height: 12),
 
-            // Tags
+            // Tags - Note: dateOfBirth, city, occupation are in profile data, not UserModel
             Wrap(
               spacing: 8,
               children: [
-                _TagChip(label: '28 Years', icon: Icons.cake_outlined),
-                _TagChip(label: 'Dhaka, BD', icon: Icons.location_on_outlined),
-                _TagChip(label: 'Engineer', icon: Icons.work_outline),
+                // Removed tags that reference non-existent UserModel fields
+                // These should be loaded from ProfileProvider/BasicInfoModel instead
+                _TagChip(
+                  label: user?.role ?? 'User',
+                  icon: Icons.person_outline,
+                ),
               ],
             ).animate().fadeIn(duration: 600.ms, delay: 400.ms).slideY(begin: 0.2, end: 0),
 
@@ -229,14 +306,17 @@ class _ProfileHeader extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: 0.85,
+                      value: completionPercentage,
                       minHeight: 6,
                       backgroundColor: Colors.grey[200],
                       valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('Profile 85% complete', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                  Text(
+                    'Profile ${(completionPercentage * 100).toInt()}% complete',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                  ),
                 ],
               ),
             ).animate().fadeIn(duration: 600.ms, delay: 500.ms),

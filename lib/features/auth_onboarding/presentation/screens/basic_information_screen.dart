@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
@@ -8,6 +9,9 @@ import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/country_phone_field.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
+import '../../../../providers/profile_provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../core/services/storage_service.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   final String? profileType; // 'brother', 'sister', or 'wali'
@@ -32,6 +36,58 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   String? _selectedCountry;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    // Save the role to storage based on profileType/gender from navigation
+    // This ensures ProfileRepository can access the role when loading data
+    if (widget.profileType != null && widget.gender != null) {
+      final storageService = context.read<StorageService>();
+      String role = _getRoleFromProfileType(widget.profileType!, widget.gender!);
+      await storageService.saveUserRole(role);
+    }
+
+    if (!mounted) return;
+
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.currentUser;
+
+    if (user != null) {
+      _firstNameController.text = user.firstName ?? '';
+      _lastNameController.text = user.lastName ?? '';
+      _emailController.text = user.email ?? '';
+
+    }
+
+    // Try to load profile data
+    final profileProvider = context.read<ProfileProvider>();
+    await profileProvider.loadBasicInfo();
+    
+    if (profileProvider.basicInfo != null) {
+      final basicInfo = profileProvider.basicInfo!;
+      _phoneController.text = basicInfo.phone ?? _phoneController.text;
+      
+      if (basicInfo.dateOfBirth != null) {
+        final dob = DateTime.parse(basicInfo.dateOfBirth!);
+        _dobController.text = '${dob.day.toString().padLeft(2, '0')}/${dob.month.toString().padLeft(2, '0')}/${dob.year}';
+      }
+      
+      _cityController.text = basicInfo.city ?? _cityController.text;
+      _selectedCountry = basicInfo.country ?? _selectedCountry;
+      
+      if (basicInfo.howFound.isNotEmpty) {
+        _howDidYouFindUs = basicInfo.howFound.first;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -44,6 +100,84 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
     super.dispose();
   }
 
+  /// Map profileType and gender to the role string expected by the backend
+  String _getRoleFromProfileType(String profileType, String gender) {
+    if (profileType.toLowerCase() == 'wali') {
+      return 'wali';
+    } else if (gender.toLowerCase() == 'male') {
+      return 'male';
+    } else if (gender.toLowerCase() == 'female') {
+      return 'female';
+    }
+    // Default fallback
+    return gender.toLowerCase();
+  }
+
+  Future<void> _saveAndContinue() async {
+    // Validate required fields
+    if (_howDidYouFindUs == null || _howDidYouFindUs!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select how you found us')),
+      );
+      return;
+    }
+
+    if (_firstNameController.text.isEmpty ||
+        _lastNameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _dobController.text.isEmpty ||
+        _cityController.text.isEmpty ||
+        _selectedCountry == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    // Convert DOB to YYYY-MM-DD format
+    String? dobFormatted;
+    try {
+      final parts = _dobController.text.split('/');
+      if (parts.length == 3) {
+        dobFormatted = '${parts[2]}-${parts[1]}-${parts[0]}';
+      }
+    } catch (e) {
+      // Invalid date format
+    }
+
+    final data = {
+      'how_found': [_howDidYouFindUs],
+      'phone': _phoneController.text,
+      'date_of_birth': dobFormatted,
+      'city': _cityController.text,
+      'country': _selectedCountry,
+    };
+
+    final profileProvider = context.read<ProfileProvider>();
+    final success = await profileProvider.updateBasicInfo(data);
+
+    setState(() => _isLoading = false);
+
+    if (!mounted) return;
+
+    if (success) {
+      // Navigate to next screen
+      context.push(
+        '/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}',
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -53,255 +187,264 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
         children: [
           const SizedBox(height: 8),
               
-              const Text(
-                'Basic Information',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ).animateOnboarding(index: 0),
+          const Text(
+            'Basic Information',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ).animateOnboarding(index: 0),
+          const SizedBox(height: 8),
+          const Text(
+            'Your privacy is important. Your name,\ncontact details and photos are hidden.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ).animateOnboarding(index: 1),
+          const SizedBox(height: 16),
+          
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.red[200]!),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.emergency, color: Colors.red[300], size: 16),
+                const SizedBox(width: 8),
+                Text('These fields are required', style: TextStyle(color: Colors.red[300])),
+              ],
+            ),
+          ).animateOnboarding(index: 2),
+          const SizedBox(height: 32),
+          
+          // How did you find us? Dropdown
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                text: const TextSpan(
+                  text: 'How did you find us?',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                  children: [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 8),
-              const Text(
-                'Your privacy is important. Your name,\ncontact details and photos are hidden.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ).animateOnboarding(index: 1),
-              const SizedBox(height: 16),
-              
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.emergency, color: Colors.red[300], size: 16),
-                    const SizedBox(width: 8),
-                    Text('These fields are required', style: TextStyle(color: Colors.red[300])),
-                  ],
-                ),
-              ).animateOnboarding(index: 2),
-              const SizedBox(height: 32),
-              
-              // How did you find us? Dropdown
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: const TextSpan(
-                      text: 'How did you find us?',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                      children: [
-                        TextSpan(
-                          text: ' *',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE0E0E0)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _howDidYouFindUs,
-                        hint: Text('Select an option', style: TextStyle(color: Colors.grey[400])),
-                        isExpanded: true,
-                        items: DropdownOptions.howDidYouFindUs.map((item) {
-                          return DropdownMenuItem(value: item, child: Text(item));
-                        }).toList(),
-                        onChanged: (value) => setState(() => _howDidYouFindUs = value),
-                      ),
-                    ),
-                  ),
-                ],
-              ).animateOnboarding(index: 3),
-              const SizedBox(height: 24),
-              
-              // Display selected gender (read-only)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: widget.gender == 'Male' 
-                    ? const Color(0xFF7685C2).withOpacity(0.1) 
-                    : const Color(0xFFD48B91).withOpacity(0.1),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: widget.gender == 'Male' 
-                      ? const Color(0xFF7685C2) 
-                      : const Color(0xFFD48B91),
-                    width: 2,
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _howDidYouFindUs,
+                    hint: Text('Select an option', style: TextStyle(color: Colors.grey[400])),
+                    isExpanded: true,
+                    items: DropdownOptions.howDidYouFindUs.map((item) {
+                      return DropdownMenuItem(value: item, child: Text(item));
+                    }).toList(),
+                    onChanged: (value) => setState(() => _howDidYouFindUs = value),
                   ),
                 ),
-                child: Row(
+              ),
+            ],
+          ).animateOnboarding(index: 3),
+          const SizedBox(height: 24),
+          
+          // Display selected gender (read-only)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: widget.gender == 'Male' 
+                ? const Color(0xFF7685C2).withOpacity(0.1) 
+                : const Color(0xFFD48B91).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: widget.gender == 'Male' 
+                  ? const Color(0xFF7685C2) 
+                  : const Color(0xFFD48B91),
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  widget.gender == 'Male' ? Icons.male : Icons.female,
+                  color: widget.gender == 'Male' 
+                    ? const Color(0xFF7685C2) 
+                    : const Color(0xFFD48B91),
+                  size: 32,
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      widget.gender == 'Male' ? Icons.male : Icons.female,
-                      color: widget.gender == 'Male' 
-                        ? const Color(0xFF7685C2) 
-                        : const Color(0xFFD48B91),
-                      size: 32,
+                    Text(
+                      'Profile Type: ${widget.profileType == 'wali' ? 'Wali (Guardian)' : widget.gender}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Profile Type: ${widget.profileType == 'wali' ? 'Wali (Guardian)' : widget.gender}',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.profileType == 'wali' 
-                            ? 'Registering for a female (will see male profiles)'
-                            : 'Will see ${widget.gender == 'Male' ? 'female' : 'male'} profiles',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.profileType == 'wali' 
+                        ? 'Registering for a female (will see male profiles)'
+                        : 'Will see ${widget.gender == 'Male' ? 'female' : 'male'} profiles',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
-              ).animateOnboarding(index: 4),
-              const SizedBox(height: 24),
+              ],
+            ),
+          ).animateOnboarding(index: 4),
+          const SizedBox(height: 24),
+          
+          CustomTextField(
+            label: 'First Name',
+            hint: 'First Name',
+            controller: _firstNameController,
+            isRequired: true,
+          ).animateOnboarding(index: 5),
+          const SizedBox(height: 24),
+          
+          CustomTextField(
+            label: 'Last Name',
+            hint: 'Last Name',
+            controller: _lastNameController,
+            isRequired: true,
+          ).animateOnboarding(index: 6),
+          const SizedBox(height: 24),
+          
+          CustomTextField(
+            label: 'Email',
+            hint: 'Enter your email address',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            isRequired: true,
+          ).animateOnboarding(index: 7),
+          const SizedBox(height: 24),
+          
+          CountryPhoneField(controller: _phoneController),
+          const SizedBox(height: 24),
+          
+          CustomTextField(
+            label: 'Date of Birth',
+            hint: 'DD/MM/YYYY',
+            controller: _dobController,
+            keyboardType: TextInputType.number,
+            maxLength: 10,
+            isRequired: true,
+            onChanged: (value) {
+              // Auto-format as DD/MM/YYYY
+              String text = value.replaceAll('/', '');
+              if (text.length > 8) text = text.substring(0, 8);
               
-              CustomTextField(
-                label: 'First Name',
-                hint: 'First Name',
-                controller: _firstNameController,
-              ).animateOnboarding(index: 5),
-              const SizedBox(height: 24),
+              String formatted = '';
+              for (int i = 0; i < text.length; i++) {
+                if (i == 2 || i == 4) formatted += '/';
+                formatted += text[i];
+              }
               
-              CustomTextField(
-                label: 'Last Name',
-                hint: 'Last Name',
-                controller: _lastNameController,
-              ).animateOnboarding(index: 6),
-              const SizedBox(height: 24),
-              
-              CustomTextField(
-                label: 'Email',
-                hint: 'Enter your email address',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-              ).animateOnboarding(index: 7),
-              const SizedBox(height: 24),
-              
-              CountryPhoneField(controller: _phoneController),
-              const SizedBox(height: 24),
-              
-              CustomTextField(
-                label: 'Date of Birth',
-                hint: 'DD/MM/YYYY',
-                controller: _dobController,
-                keyboardType: TextInputType.number,
-                maxLength: 10,
-                onChanged: (value) {
-                  // Auto-format as DD/MM/YYYY
-                  String text = value.replaceAll('/', '');
-                  if (text.length > 8) text = text.substring(0, 8);
-                  
-                  String formatted = '';
-                  for (int i = 0; i < text.length; i++) {
-                    if (i == 2 || i == 4) formatted += '/';
-                    formatted += text[i];
-                  }
-                  
-                  if (formatted != value) {
-                    _dobController.value = TextEditingValue(
-                      text: formatted,
-                      selection: TextSelection.collapsed(offset: formatted.length),
-                    );
-                  }
-                },
-              ).animateOnboarding(index: 9),
-              const SizedBox(height: 32),
-              
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              if (formatted != value) {
+                _dobController.value = TextEditingValue(
+                  text: formatted,
+                  selection: TextSelection.collapsed(offset: formatted.length),
+                );
+              }
+            },
+          ).animateOnboarding(index: 9),
+          const SizedBox(height: 32),
+          
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'City',
+                  hint: 'Enter City',
+                  controller: _cityController,
+                  isRequired: true,
+                ),
               ),
-              const Divider(),
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'City',
-                      hint: 'Enter City',
-                      controller: _cityController,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Country',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE0E0E0)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: const TextSpan(
+                        text: 'Country',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(color: Colors.red),
                           ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _selectedCountry,
-                              hint: Text('Select Country', style: TextStyle(color: Colors.grey[400])),
-                              isExpanded: true,
-                              items: DropdownOptions.nationalities.map((item) {
-                                return DropdownMenuItem(value: item, child: Text(item));
-                              }).toList(),
-                              onChanged: (value) => setState(() => _selectedCountry = value),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ).animateOnboarding(index: 10),
-              const SizedBox(height: 48),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 56,
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE0E0E0)),
                       ),
-                      child: TextButton(
-                        onPressed: () => context.pop(),
-                        child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedCountry,
+                          hint: Text('Select Country', style: TextStyle(color: Colors.grey[400])),
+                          isExpanded: true,
+                          items: DropdownOptions.nationalities.map((item) {
+                            return DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontSize: 13)));
+                          }).toList(),
+                          onChanged: (value) => setState(() => _selectedCountry = value),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: GradientButton(
-                      text: 'Next',
-                      onPressed: () {
-                        // Pass profile type and gender to next screen
-                        context.push('/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}');
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ],
+          ).animateOnboarding(index: 10),
+          const SizedBox(height: 48),
+          
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: GradientButton(
+                  text: _isLoading ? 'Saving...' : 'Next',
+                  onPressed: _isLoading ? null : _saveAndContinue,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
-

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 
@@ -15,12 +17,6 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
   late TabController _tabController;
   int _selectedIndex = 0;
 
-  final List<_TabItem> _tabs = const [
-    _TabItem(label: 'Received', icon: Icons.move_to_inbox_outlined, count: 2),
-    _TabItem(label: 'Sent', icon: Icons.send_outlined, count: 2),
-    _TabItem(label: 'Matches', icon: Icons.favorite_outline, count: 2),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -30,6 +26,9 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
         setState(() => _selectedIndex = _tabController.index);
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   @override
@@ -38,10 +37,98 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     super.dispose();
   }
 
+  Future<void> _loadData() async {
+    final matchesProvider = context.read<MatchesProvider>();
+    await Future.wait([
+      matchesProvider.loadReceivedRequests(),
+      matchesProvider.loadSentRequests(),
+      matchesProvider.loadMatches(),
+    ]);
+  }
+
+  Future<void> _handleAcceptRequest(String requestId) async {
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.respondToRequest(requestId: requestId, accept: true);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Match Accepted!'), backgroundColor: Colors.green),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(matchesProvider.errorMessage ?? 'Failed to accept'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDeclineRequest(String requestId) async {
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.respondToRequest(requestId: requestId, accept: false);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request Declined'), backgroundColor: Colors.orange),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(matchesProvider.errorMessage ?? 'Failed to decline'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleCancelRequest(String requestId) async {
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.cancelRequest(requestId);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request Cancelled!'), backgroundColor: Colors.orange),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(matchesProvider.errorMessage ?? 'Failed to cancel'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
+    final matchesProvider = context.watch<MatchesProvider>();
+
+    final tabs = [
+      _TabItem(
+        label: 'Received',
+        icon: Icons.move_to_inbox_outlined,
+        count: matchesProvider.receivedRequests.length,
+      ),
+      _TabItem(
+        label: 'Sent',
+        icon: Icons.send_outlined,
+        count: matchesProvider.sentRequests.length,
+      ),
+      _TabItem(
+        label: 'Matches',
+        icon: Icons.favorite_outline,
+        count: matchesProvider.matches.length,
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -85,7 +172,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: _CustomTabBar(
-              tabs: _tabs,
+              tabs: tabs,
               selectedIndex: _selectedIndex,
               primaryColor: primaryColor,
               onTap: (i) {
@@ -99,120 +186,156 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildReceivedTab(context, primaryColor),
-          _buildSentTab(context),
-          _buildMatchesTab(context),
+          _buildReceivedTab(context, primaryColor, matchesProvider),
+          _buildSentTab(context, matchesProvider),
+          _buildMatchesTab(context, matchesProvider),
         ],
       ),
     );
   }
 
-  Widget _buildReceivedTab(BuildContext context, Color primaryColor) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-      children: [
-        const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
-            .animate()
-            .fadeIn(duration: 600.ms, delay: 400.ms),
-        const SizedBox(height: 20),
-        MatchCard(
-          username: 'MM005',
-          age: '28 Years old',
-          height: '5\'6"',
-          profession: 'Software Engineer',
-          photoCount: 5,
-          lockMessage: 'Photos will be revealed after mutual interest',
-          onDecline: () => _showDeclineDialog(context),
-          onAccept: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Match Accepted!')));
-          },
-        ).animate().fadeIn(duration: 700.ms, delay: 500.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-        const SizedBox(height: 16),
-        MatchCard(
-          username: 'Mj003',
-          age: '22 Years old',
-          height: '5\'4"',
-          profession: 'Student',
-          photoCount: 4,
-          lockMessage: 'Photos will be revealed after mutual interest',
-          onDecline: () => _showDeclineDialog(context),
-          onAccept: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Match Accepted!')));
-          },
-        ).animate().fadeIn(duration: 700.ms, delay: 700.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-      ],
+  Widget _buildReceivedTab(BuildContext context, Color primaryColor, MatchesProvider matchesProvider) {
+    if (matchesProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (matchesProvider.receivedRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No received requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => matchesProvider.loadReceivedRequests(),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+        children: [
+          const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 400.ms),
+          const SizedBox(height: 20),
+          ...matchesProvider.receivedRequests.map((request) {
+            final index = matchesProvider.receivedRequests.indexOf(request);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: MatchCard(
+                username: request.senderCodename,
+                age: request.senderAge != null ? '${request.senderAge} Years old' : 'N/A',
+                height: request.senderHeight ?? 'N/A',
+                profession: request.senderCity ?? 'N/A',
+                photoCount: 5,
+                lockMessage: 'Photos will be revealed after mutual interest',
+                onDecline: () => _showDeclineDialog(context, request.id),
+                onAccept: () => _handleAcceptRequest(request.id),
+              ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+            );
+          }).toList(),
+        ],
+      ),
     );
   }
 
-  Widget _buildSentTab(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-      children: [
-        const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
-            .animate()
-            .fadeIn(duration: 600.ms, delay: 400.ms),
-        const SizedBox(height: 20),
-        MatchCard(
-          username: 'Mm005',
-          age: '28 Years old',
-          height: '5\'6"',
-          profession: 'Software Engineer',
-          photoCount: 5,
-          lockMessage: 'Photos will be revealed after mutual interest',
-          onCancelRequest: () => _showCancelDialog(context),
-          onViewProfile: () => context.push('/profile-view-details'),
-        ).animate().fadeIn(duration: 700.ms, delay: 500.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-        const SizedBox(height: 16),
-        MatchCard(
-          username: 'Mj003',
-          age: '22 Years old',
-          height: '5\'4"',
-          profession: 'Student',
-          photoCount: 4,
-          lockMessage: 'Photos will be revealed after mutual interest',
-          onCancelRequest: () => _showCancelDialog(context),
-          onViewProfile: () => context.push('/profile-view-details'),
-        ).animate().fadeIn(duration: 700.ms, delay: 700.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-      ],
+  Widget _buildSentTab(BuildContext context, MatchesProvider matchesProvider) {
+    if (matchesProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (matchesProvider.sentRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.send_outlined, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No sent requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => matchesProvider.loadSentRequests(),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+        children: [
+          const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 400.ms),
+          const SizedBox(height: 20),
+          ...matchesProvider.sentRequests.map((request) {
+            final index = matchesProvider.sentRequests.indexOf(request);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: MatchCard(
+                username: request.receiverCodename,
+                age: request.receiverAge != null ? '${request.receiverAge} Years old' : 'N/A',
+                height: request.receiverHeight ?? 'N/A',
+                profession: request.receiverCity ?? 'N/A',
+                photoCount: 5,
+                lockMessage: 'Photos will be revealed after mutual interest',
+                onCancelRequest: () => _showCancelDialog(context, request.id),
+                onViewProfile: () => context.push('/matches/directory/${request.receiverId}'),
+              ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+            );
+          }).toList(),
+        ],
+      ),
     );
   }
 
-  Widget _buildMatchesTab(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-      children: [
-        MatchCard(
-          username: 'MM005',
-          age: '28 Years old',
-          height: '5\'6"',
-          profession: 'Software Engineer',
-          photoCount: 5,
-          lockMessage: '',
-          isLocked: false,
-          isMatched: true,
-          isBlurred: false,
-          matchedButtonText: 'View photos',
-          onMatchedButtonPressed: () => context.push('/matched-profile-view'),
-        ).animate().fadeIn(duration: 700.ms, delay: 400.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-        const SizedBox(height: 16),
-        MatchCard(
-          username: 'Mj003',
-          age: '22 Years old',
-          height: '5\'4"',
-          profession: 'Student',
-          photoCount: 4,
-          lockMessage: '',
-          isLocked: false,
-          isMatched: true,
-          isBlurred: false,
-          matchedButtonText: 'View photos',
-          onMatchedButtonPressed: () => context.push('/matched-profile-view'),
-        ).animate().fadeIn(duration: 700.ms, delay: 600.ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-      ],
+  Widget _buildMatchesTab(BuildContext context, MatchesProvider matchesProvider) {
+    if (matchesProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (matchesProvider.matches.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_outline, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No matches yet', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => matchesProvider.loadMatches(),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+        children: matchesProvider.matches.map((match) {
+          final index = matchesProvider.matches.indexOf(match);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: MatchCard(
+              username: match.matchedUserCodename,
+              age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
+              height: match.matchedUserHeight ?? 'N/A',
+              profession: match.matchedUserCity ?? 'N/A',
+              photoCount: 5,
+              lockMessage: '',
+              isLocked: false,
+              isMatched: true,
+              isBlurred: false,
+              matchedButtonText: 'View photos',
+              onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
+            ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  void _showDeclineDialog(BuildContext context) {
+  void _showDeclineDialog(BuildContext context, String requestId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -243,7 +366,10 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _handleDeclineRequest(requestId);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE54B5E),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -269,7 +395,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     );
   }
 
-  void _showCancelDialog(BuildContext context) {
+  void _showCancelDialog(BuildContext context, String requestId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -302,7 +428,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request Cancelled!')));
+                      _handleCancelRequest(requestId);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE57C04),
@@ -372,7 +498,6 @@ class _CustomTabBar extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
-                // ── key change: fills the entire Expanded slot ──
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.white : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),

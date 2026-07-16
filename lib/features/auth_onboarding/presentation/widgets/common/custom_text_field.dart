@@ -9,6 +9,8 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final int? maxLength;
   final ValueChanged<String>? onChanged;
+  final bool isRequired;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
@@ -20,6 +22,8 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.maxLength,
     this.onChanged,
+    this.isRequired = false,
+    this.enabled = true,
   });
 
   @override
@@ -50,6 +54,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           obscureText: _obscureText,
           validator: widget.validator,
           keyboardType: widget.keyboardType,
+          enabled: widget.enabled,
           maxLength: widget.maxLength,
           onChanged: widget.onChanged,
           decoration: InputDecoration(

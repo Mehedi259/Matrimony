@@ -3,13 +3,13 @@ import 'package:matrimony/core/theme/app_colors.dart';
 
 class GradientButton extends StatefulWidget {
   final String text;
-  final VoidCallback onPressed;
+  final Function()? onPressed;
   final bool isLoading;
 
   const GradientButton({
     super.key,
     required this.text,
-    required this.onPressed,
+    this.onPressed,
     this.isLoading = false,
   });
 
@@ -60,10 +60,10 @@ class _GradientButtonState extends State<GradientButton> with SingleTickerProvid
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: widget.isLoading ? null : () {
+            onTap: (widget.isLoading || widget.onPressed == null) ? null : () {
               _controller.forward().then((_) {
                 _controller.reverse();
-                widget.onPressed();
+                widget.onPressed?.call();
               });
             },
             onTapDown: (_) => _controller.forward(),
