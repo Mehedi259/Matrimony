@@ -57,6 +57,10 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    print('🔵 Starting signup process...');
+    print('Email: ${_emailController.text.trim()}');
+    print('Role: $_selectedRole');
+
     final authProvider = context.read<AuthProvider>();
 
     final success = await authProvider.registerInitiate(
@@ -68,9 +72,15 @@ class _SignupScreenState extends State<SignupScreen> {
       role: _selectedRole!,
     );
 
+    print('🔵 Signup result: $success');
+    if (!success) {
+      print('🔴 Error: ${authProvider.errorMessage}');
+    }
+
     if (!mounted) return;
 
     if (success) {
+      print('✅ Navigating to /verify-email');
       // Navigate to email verification screen
       context.push('/verify-email');
     } else {
@@ -322,7 +332,12 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: isLoading ? null : _handleSignup,
+                      onTap: isLoading
+                          ? null
+                          : () {
+                              print('🔴 BUTTON CLICKED!');
+                              _handleSignup();
+                            },
                       borderRadius: BorderRadius.circular(8),
                       child: Center(
                         child: isLoading

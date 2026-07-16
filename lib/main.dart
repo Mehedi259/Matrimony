@@ -10,7 +10,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize storage service
-  await StorageService().init();
+  final storageService = StorageService();
+  await storageService.init();
   
   // Initialize AuthProvider and check authentication state
   final authProvider = AuthProvider();
@@ -19,6 +20,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<StorageService>.value(value: storageService),
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => MatchesProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),

@@ -59,7 +59,7 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                         subtitle: 'Looking for myself',
                         color: const Color(0xFF7685C2),
                         cardWidth: cardWidth,
-                        onTap: () => context.push('/onboarding/basic-info?profileType=brother&gender=Male'),
+                        onTap: () => context.push('/signup?role=male'),
                       ).animate()
                           .fadeIn(duration: 600.ms, delay: 300.ms)
                           .slideX(begin: -0.3, end: 0, curve: Curves.easeOutCubic),
@@ -71,7 +71,7 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                         subtitle: 'Looking for myself',
                         color: const Color(0xFFD48B91),
                         cardWidth: cardWidth,
-                        onTap: () => context.push('/onboarding/basic-info?profileType=sister&gender=Female'),
+                        onTap: () => context.push('/signup?role=female'),
                       ).animate()
                           .fadeIn(duration: 600.ms, delay: 400.ms)
                           .slideX(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -90,7 +90,7 @@ class ProfileTypeSelectionScreen extends StatelessWidget {
                       subtitle: 'Guardian registering',
                       color: const Color(0xFFF2D76E),
                       cardWidth: cardWidth,
-                      onTap: () => context.push('/onboarding/wali-info?profileType=wali&gender=Female'),
+                      onTap: () => context.push('/signup?role=wali'),
                     ).animate()
                         .fadeIn(duration: 600.ms, delay: 500.ms)
                         .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),

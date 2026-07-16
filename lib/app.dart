@@ -117,7 +117,10 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       ),
       GoRoute(
         path: '/signup',
-        pageBuilder: (context, state) => _buildPageWithTransition(const SignupScreen()),
+        pageBuilder: (context, state) {
+          final role = state.uri.queryParameters['role'];
+          return _buildPageWithTransition(SignupScreen(role: role));
+        },
       ),
       GoRoute(
         path: '/verify-email',
@@ -346,12 +349,9 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       builder: (context, authProvider, _) {
         final bool isAuthenticated = authProvider.authState == AuthState.authenticated;
         
-        // Only recreate router if authentication state fundamentally changes
-        // between authenticated and unauthenticated
-        if (_wasAuthenticated != isAuthenticated) {
-          _wasAuthenticated = isAuthenticated;
-          _router = _createRouter(isAuthenticated);
-        }
+        // We do not recreate the router here. 
+        // Recreating the router dynamically breaks the navigation stack (like context.push)
+        // Navigation after login/logout is handled manually in the respective screens.
 
         return MaterialApp.router(
           title: 'Matrimony Matchmaker',

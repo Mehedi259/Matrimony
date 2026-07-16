@@ -9,6 +9,7 @@ class ApiClient {
 
   late final Dio _dio;
   final StorageService _storageService = StorageService();
+  bool _isInitialized = false;
 
   ApiClient._internal() {
     _dio = Dio(
@@ -27,10 +28,28 @@ class ApiClient {
     _setupInterceptors();
   }
 
+  // Ensure StorageService is initialized before making requests
+  Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      try {
+        await _storageService.init();
+        _isInitialized = true;
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ StorageService already initialized or error: $e');
+        }
+        _isInitialized = true; // Assume it's already initialized
+      }
+    }
+  }
+
   void _setupInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Ensure StorageService is initialized
+          await _ensureInitialized();
+          
           // Add auth token if available
           final token = await _storageService.getAccessToken();
           if (token != null && token.isNotEmpty) {

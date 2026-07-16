@@ -37,7 +37,7 @@ class WelcomeScreen extends StatelessWidget {
                     text: 'Sign up with Email',
                     icon: const Icon(Icons.email_outlined, color: Colors.red),
                     onPressed: () {
-                      context.push('/signup');
+                      context.push('/onboarding/profile-type');
                     },
                   ).animate()
                       .fadeIn(duration: 600.ms, delay: 400.ms)

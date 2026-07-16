@@ -278,6 +278,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                           ),
                           decoration: InputDecoration(
                             counterText: '',
+                            contentPadding: EdgeInsets.zero,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: const BorderSide(

@@ -236,6 +236,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                       decoration: InputDecoration(
                         counterText: '',
+                        contentPadding: EdgeInsets.zero,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(

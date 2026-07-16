@@ -5,7 +5,7 @@ class UserModel {
   final String lastName;
   final String email;
   final String role;
-  final String gender;
+  final String? gender;
   final String? profilePicture;
   final String subscriptionPlan;
   final DateTime? subscriptionStart;
@@ -25,7 +25,7 @@ class UserModel {
     required this.lastName,
     required this.email,
     required this.role,
-    required this.gender,
+    this.gender,
     this.profilePicture,
     required this.subscriptionPlan,
     this.subscriptionStart,
