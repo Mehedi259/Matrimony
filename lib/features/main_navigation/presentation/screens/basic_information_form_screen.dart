@@ -75,7 +75,7 @@ class BasicInformationFormScreen extends StatelessWidget {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Name, Date of Birth, Phone Number, and Gender cannot be changed after registration.',
+                      'Name, Date of Birth, Phone Number, and Gender cannot be changed after registration. Please contact support if you would like to make any changes.',
                       style: TextStyle(fontSize: 12, color: Color(0xFFE57C04)),
                     ),
                   ),

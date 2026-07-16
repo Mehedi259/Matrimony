@@ -143,7 +143,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileCard(BuildContext context, Color primaryColor, Color secondaryColor, user) {
     final items = [
-      _ItemData(icon: Icons.verified_outlined, iconColor: Colors.green, title: 'Verify Profile', subtitle: 'Identity verified', isCompleted: true),
+      _ItemData(
+        icon: Icons.verified_outlined, 
+        iconColor: Colors.green, 
+        title: 'Verify Profile', 
+        subtitle: 'Identity verified', 
+        isCompleted: false, // Set to false if not verified
+        onTap: () => context.push('/chat-with-admin'),
+      ),
       _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: true, onTap: () => context.push('/basic-information-form')),
       _ItemData(icon: Icons.location_on_outlined, iconColor: Colors.orange, title: 'Personal Information', subtitle: 'Lifestyle, values, hobbies, about you', isCompleted: true, onTap: () => context.push('/personal-details-form')),
       _ItemData(icon: Icons.favorite_border, iconColor: Colors.pink, title: 'Preferences', subtitle: 'Partner preferences and expectations', isCompleted: true, onTap: () => context.push('/preferences-form')),
