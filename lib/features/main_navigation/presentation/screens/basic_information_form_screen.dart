@@ -19,7 +19,8 @@ class BasicInformationFormScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Progress Tracker
-            Row(
+            FittedBox(
+              child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildStep(context, 'Step 1', isActive: true),
@@ -32,6 +33,7 @@ class BasicInformationFormScreen extends StatelessWidget {
                 _buildStepLine(),
                 _buildStep(context, 'Step 5'),
               ],
+            ),
             ),
             const SizedBox(height: 32),
             

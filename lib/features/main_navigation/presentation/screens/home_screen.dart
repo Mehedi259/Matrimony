@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       iconColor: Colors.amber,
                       count: '${matchesProvider.sentRequests.length.toString().padLeft(2, '0')}',
                       label: 'Pending',
-                      onTap: () => context.push('/pending'),
+                      onTap: () => context.go('/requests'),
                     )
                         .animate()
                         .fadeIn(duration: 600.ms, delay: 400.ms)

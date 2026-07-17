@@ -1,8 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../auth_onboarding/presentation/widgets/common/gradient_button.dart';
+import '../../../../providers/profile_provider.dart';
 
-class AboutExpectationsFormScreen extends StatelessWidget {
+class AboutExpectationsFormScreen extends StatefulWidget {
   const AboutExpectationsFormScreen({super.key});
+
+  @override
+  State<AboutExpectationsFormScreen> createState() => _AboutExpectationsFormScreenState();
+}
+
+class _AboutExpectationsFormScreenState extends State<AboutExpectationsFormScreen> {
+  final TextEditingController _envisionMarriageController = TextEditingController();
+  final TextEditingController _relationshipIslamController = TextEditingController();
+  final TextEditingController _roleSpouseController = TextEditingController();
+  final TextEditingController _aboutYourselfController = TextEditingController();
+  final TextEditingController _envisionSpouseController = TextEditingController();
+  final TextEditingController _envisionMarriageSpouseController = TextEditingController();
+  final TextEditingController _spouseReligiousStatusController = TextEditingController();
+  final TextEditingController _openToRelocateDetailsController = TextEditingController();
+  final TextEditingController _otherPreferencesController = TextEditingController();
+  
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _envisionMarriageController.dispose();
+    _relationshipIslamController.dispose();
+    _roleSpouseController.dispose();
+    _aboutYourselfController.dispose();
+    _envisionSpouseController.dispose();
+    _envisionMarriageSpouseController.dispose();
+    _spouseReligiousStatusController.dispose();
+    _openToRelocateDetailsController.dispose();
+    _otherPreferencesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadExistingData() async {
+    final profileProvider = context.read<ProfileProvider>();
+    await profileProvider.loadBasicInfo();
+    
+    if (profileProvider.basicInfo != null) {
+      final info = profileProvider.basicInfo!;
+      setState(() {
+        _envisionMarriageController.text = info.envisionMarriage ?? '';
+        _relationshipIslamController.text = info.relationshipWithIslam ?? '';
+        _roleSpouseController.text = info.roleAsSpouse ?? '';
+        _aboutYourselfController.text = info.aboutYourself ?? '';
+        _envisionSpouseController.text = info.envisionSpouse ?? '';
+        _spouseReligiousStatusController.text = info.spouseReligiousStatusPref ?? '';
+        _openToRelocateDetailsController.text = info.openToRelocateDetails ?? '';
+        _otherPreferencesController.text = info.otherPreferences ?? '';
+      });
+    }
+  }
+
+  Future<void> _saveAndContinue() async {
+    setState(() => _isLoading = true);
+
+    final data = {
+      'envision_marriage': _envisionMarriageController.text.isNotEmpty ? _envisionMarriageController.text : null,
+      'relationship_with_islam': _relationshipIslamController.text.isNotEmpty ? _relationshipIslamController.text : null,
+      'role_as_spouse': _roleSpouseController.text.isNotEmpty ? _roleSpouseController.text : null,
+      'about_yourself': _aboutYourselfController.text.isNotEmpty ? _aboutYourselfController.text : null,
+      'envision_spouse': _envisionSpouseController.text.isNotEmpty ? _envisionSpouseController.text : null,
+      'spouse_religious_status_pref': _spouseReligiousStatusController.text.isNotEmpty ? _spouseReligiousStatusController.text : null,
+      'open_to_relocate_details': _openToRelocateDetailsController.text.isNotEmpty ? _openToRelocateDetailsController.text : null,
+      'other_preferences': _otherPreferencesController.text.isNotEmpty ? _otherPreferencesController.text : null,
+    };
+
+    final profileProvider = context.read<ProfileProvider>();
+    final success = await profileProvider.updateBasicInfo(data);
+
+    setState(() => _isLoading = false);
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updated successfully!'), backgroundColor: Colors.green),
+      );
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,167 +111,177 @@ class AboutExpectationsFormScreen extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Progress Tracker
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildStep(context, 'Step 1', isActive: true),
-                _buildStepLine(isActive: true),
-                _buildStep(context, 'Step 2', isActive: true),
-                _buildStepLine(isActive: true),
-                _buildStep(context, 'Step 3', isActive: true),
-                _buildStepLine(isActive: true),
-                _buildStep(context, 'Step 4', isActive: true),
-                _buildStepLine(isActive: true),
-                _buildStep(context, 'Step 5', isActive: true),
-              ],
-            ),
-            const SizedBox(height: 32),
-            
-            // Title & Subtitle
-            const Text('About you & expectations', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
             const SizedBox(height: 8),
+                
             const Text(
-              'Help us understand you better.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54, fontSize: 13),
+              'About you & expectations',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            
-            // Not Required Label
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.blue[100]!),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.info, color: Color(0xFF5C71CA), size: 14),
-                  SizedBox(width: 6),
-                  Text('These fields are optional.', style: TextStyle(color: Color(0xFF5C71CA), fontSize: 12)),
-                ],
-              ),
+            const SizedBox(height: 8),
+          const Text(
+            'Help us understand you better.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 16),
+          
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.blue[200]!),
             ),
-            const SizedBox(height: 32),
-            
-            // Text Areas
-            _buildTextArea('Idea of marriage'),
-            const SizedBox(height: 24),
-            _buildTextArea('Describe your relationship with Islam?'),
-            const SizedBox(height: 24),
-            _buildTextArea('How do you envision your role as a spouse?'),
-            const SizedBox(height: 24),
-            _buildTextArea('Tell me a bit about yourself?'),
-            const SizedBox(height: 24),
-            _buildTextArea('How do you envision your spouse to be?'),
-            const SizedBox(height: 24),
-            _buildTextArea('How do you envision your marriage to be?'),
-            const SizedBox(height: 24),
-            _buildTextArea('Preference on spouse\'s religious status?', hintText: 'Ex: Must wear hijab...etc.'),
-            const SizedBox(height: 24),
-            _buildTextArea('Are you open to relocating?'),
-            const SizedBox(height: 24),
-            _buildTextArea('Any other preferences?'),
-            
-            const SizedBox(height: 32),
-            Divider(color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            
-            // Bottom Action Buttons
-            Row(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => context.pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEEF0F2),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Back', style: TextStyle(color: Color(0xFF9C91B8), fontWeight: FontWeight.bold, fontSize: 16)),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8C9EFF), Color(0xFFE5A8B6)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('Next', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
+                Icon(Icons.info, color: Colors.blue[400], size: 16),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'These fields are optional.', 
+                    style: TextStyle(color: Colors.blue[400]),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 40),
-          ],
-        ),
+          ),
+          const SizedBox(height: 32),
+          
+          _buildMultilineTextField(
+            label: 'Idea of marriage',
+            hint: 'What does marriage mean to you?',
+            controller: _envisionMarriageController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'Describe your relationship with Islam?',
+            hint: 'How do you practice your faith?',
+            controller: _relationshipIslamController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'How do you envision your role as a spouse?',
+            hint: 'What kind of spouse do you want to be?',
+            controller: _roleSpouseController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'Tell me a bit about yourself?',
+            hint: 'Your personality, interests, hobbies...',
+            controller: _aboutYourselfController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'How do you envision your spouse to be?',
+            hint: 'What qualities are you looking for?',
+            controller: _envisionSpouseController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'How do you envision your marriage to be?',
+            hint: 'Your vision of married life...',
+            controller: _envisionMarriageSpouseController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'Preference on spouse\'s religious status?',
+            hint: 'Ex: Must wear hijab, must pray 5 times, etc.',
+            controller: _spouseReligiousStatusController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'Are you open to relocating?',
+            hint: 'Details about relocation preferences...',
+            controller: _openToRelocateDetailsController,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildMultilineTextField(
+            label: 'Any other preferences?',
+            hint: 'Anything else you\'d like to mention...',
+            controller: _otherPreferencesController,
+          ),
+          const SizedBox(height: 48),
+          
+          const Divider(),
+          const SizedBox(height: 24),
+          
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: GradientButton(
+                  text: _isLoading ? 'Saving...' : 'Next',
+                  onPressed: _isLoading ? null : _saveAndContinue,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       ),
     );
   }
 
-  Widget _buildStep(BuildContext context, String text, {bool isActive = false}) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isActive ? Theme.of(context).primaryColor.withOpacity(0.6) : const Color(0xFFF2F4F7),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isActive ? Colors.white : Colors.black54,
-          fontSize: 10,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepLine({bool isActive = false}) {
-    return Container(
-      width: 20,
-      height: 2,
-      color: isActive ? const Color(0xFFCD868A) : const Color(0xFFF2F4F7),
-    );
-  }
-
-  Widget _buildTextArea(String label, {String hintText = 'Type here...'}) {
+  Widget _buildMultilineTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
+          controller: controller,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: const TextStyle(color: Colors.black38),
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
             filled: true,
-            fillColor: const Color(0xFFF9F9F9),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: Colors.grey[300]!)),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+            ),
+            contentPadding: const EdgeInsets.all(16),
           ),
         ),
       ],

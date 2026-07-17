@@ -85,7 +85,7 @@ class MatchesRepository {
   }) async {
     final response = await _apiClient.patch(
       '${ApiConstants.respondRequest}$requestId/respond/',
-      data: {'action': action},
+      queryParameters: {'action': action},
     );
     return response.data;
   }
