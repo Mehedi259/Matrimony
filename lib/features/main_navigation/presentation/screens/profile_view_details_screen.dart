@@ -108,7 +108,13 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -123,7 +129,13 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
         ),
         body: Center(
@@ -158,7 +170,13 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
             backgroundColor: Colors.white,
             elevation: 0,
             leading: GestureDetector(
-              onTap: () => context.pop(),
+              onTap: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(

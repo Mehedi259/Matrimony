@@ -81,12 +81,15 @@ class _HomeScreenState extends State<HomeScreen> {
               radius: 20,
             ),
             const SizedBox(width: 12),
-            Text(
-              'Welcome ${user?.firstName ?? 'Back'}',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.secondary,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+            Expanded(
+              child: Text(
+                'Welcome ${user?.firstName ?? 'Back'}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../data/repositories/matches_repository.dart';
 import '../data/models/matches/match_profile_model.dart';
 
@@ -100,6 +101,13 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 403) {
+        // Access restricted for non-male users, handle gracefully
+        _sentRequests = [];
+        _setLoading(false);
+        notifyListeners();
+        return true;
+      }
       _setError(e.toString());
       return false;
     }

@@ -94,16 +94,18 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: () async {
+                    // Capture GoRouter instance before the modal context is destroyed
+                    final router = GoRouter.of(context);
+                    final authProvider = context.read<AuthProvider>();
+                    
+                    // Close the modal
                     Navigator.of(context).pop();
                     
                     // Call logout from auth provider
-                    final authProvider = context.read<AuthProvider>();
                     await authProvider.logout();
                     
-                    if (!context.mounted) return;
-                    
-                    // Navigate to login screen
-                    context.go('/login');
+                    // Navigate to login screen using the captured router
+                    router.go('/login');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
