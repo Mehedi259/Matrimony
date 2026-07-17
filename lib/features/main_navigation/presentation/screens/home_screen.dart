@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/profile_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 
@@ -65,7 +66,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final matchesProvider = context.watch<MatchesProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
     final user = authProvider.currentUser;
+    final photos = profileProvider.photos;
+
+    ImageProvider getProfileImage() {
+      if (photos.isNotEmpty) {
+        final primary = photos.where((p) => p.isPrimary).toList();
+        final url = primary.isNotEmpty ? primary.first.imageUrl : photos.first.imageUrl;
+        return NetworkImage(url);
+      }
+      if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
+        return NetworkImage(user!.profilePicture!);
+      }
+      return const AssetImage('assets/profileImage.png');
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -75,9 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundImage: user?.profilePicture != null
-                  ? NetworkImage(user!.profilePicture!)
-                  : const AssetImage('assets/profileImage.png') as ImageProvider,
+              backgroundImage: getProfileImage(),
               radius: 20,
             ),
             const SizedBox(width: 12),
@@ -283,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
-                      username: profile.codename,
+                      username: profile.firstName != null ? '${profile.firstName} ${profile.lastName ?? ''}'.trim() : profile.codename,
                       age: profile.age != null ? '${profile.age} Years old' : 'N/A',
                       height: profile.height ?? 'N/A',
                       profession: profile.city ?? 'N/A',

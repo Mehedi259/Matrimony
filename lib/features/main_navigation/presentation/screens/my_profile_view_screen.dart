@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../providers/profile_provider.dart';
 
 class MyProfileViewScreen extends StatefulWidget {
   const MyProfileViewScreen({super.key});
@@ -13,6 +16,7 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
+  bool _isLoading = true;
 
   final List<String> _tabLabels = ['Basic Info', 'About Me', 'Preferences'];
 
@@ -25,6 +29,20 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
         setState(() => _selectedTab = _tabController.index);
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final profileProvider = context.read<ProfileProvider>();
+    await Future.wait([
+      profileProvider.loadBasicInfo(),
+      profileProvider.loadPhotos(),
+    ]);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -37,6 +55,40 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
+    final authProvider = context.watch<AuthProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
+    final user = authProvider.currentUser;
+    final basicInfo = profileProvider.basicInfo;
+    final photos = profileProvider.photos;
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final displayName = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+    final ageText = basicInfo?.age != null ? '${basicInfo!.age} years' : '';
+    final cityText = basicInfo?.city ?? '';
+    final countryText = basicInfo?.country ?? '';
+    final locationText = [cityText, countryText]
+        .where((s) => s.isNotEmpty && s.toLowerCase() != 'string')
+        .join(', ');
+    final subtitle = [ageText, locationText].where((s) => s.isNotEmpty).join(' • ');
+
+    // Primary photo URL
+    String? primaryPhotoUrl;
+    if (photos.isNotEmpty) {
+      final primary = photos.where((p) => p.isPrimary).toList();
+      primaryPhotoUrl = primary.isNotEmpty ? primary.first.imageUrl : photos.first.imageUrl;
+    }
+    primaryPhotoUrl ??= user?.profilePicture;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -64,7 +116,11 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
             ).animate().fadeIn(duration: 500.ms, delay: 100.ms),
             flexibleSpace: FlexibleSpaceBar(
-              background: _MyHeroImageSection(primaryColor: primaryColor),
+              background: _MyHeroImageSection(
+                primaryColor: primaryColor,
+                photoUrl: primaryPhotoUrl,
+                photoCount: photos.length,
+              ),
             ),
           ),
 
@@ -130,12 +186,13 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Kader Molla',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            Text(
+                              displayName.isNotEmpty ? displayName : 'No Name',
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                             ),
                             const SizedBox(height: 4),
-                            Text('28 years • Dhaka, BD', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                            if (subtitle.isNotEmpty)
+                              Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                           ],
                         ),
                       ),
@@ -166,10 +223,14 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _InfoChip(icon: Icons.work_outline, label: 'Software Engineer', color: Colors.blue),
-                      _InfoChip(icon: Icons.height, label: "5'8\"", color: Colors.orange),
-                      _InfoChip(icon: Icons.star_outline, label: 'Single', color: Colors.purple),
-                      _InfoChip(icon: Icons.menu_book_outlined, label: 'Sunni', color: Colors.teal),
+                      if (basicInfo?.employment != null && basicInfo!.employment!.isNotEmpty)
+                        _InfoChip(icon: Icons.work_outline, label: _formatText(basicInfo!.employment!), color: Colors.blue),
+                      if (basicInfo?.height != null && basicInfo!.height!.isNotEmpty)
+                        _InfoChip(icon: Icons.height, label: basicInfo!.height!, color: Colors.orange),
+                      if (basicInfo?.maritalStatus != null && basicInfo!.maritalStatus!.isNotEmpty)
+                        _InfoChip(icon: Icons.star_outline, label: _formatText(basicInfo!.maritalStatus!), color: Colors.purple),
+                      if (basicInfo?.sect != null && basicInfo!.sect!.isNotEmpty)
+                        _InfoChip(icon: Icons.menu_book_outlined, label: _formatText(basicInfo!.sect!), color: Colors.teal),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 20),
@@ -253,10 +314,10 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                 key: ValueKey(_selectedTab),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
                 child: _selectedTab == 0
-                    ? _buildBasicInfoTab(primaryColor)
+                    ? _buildBasicInfoTab(primaryColor, basicInfo, user)
                     : _selectedTab == 1
-                        ? _buildAboutMeTab(primaryColor)
-                        : _buildPreferencesTab(primaryColor),
+                        ? _buildAboutMeTab(primaryColor, basicInfo)
+                        : _buildPreferencesTab(primaryColor, basicInfo),
               ),
             ),
           ),
@@ -265,24 +326,48 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     );
   }
 
+  String _formatText(String text) {
+    if (text.isEmpty) return text;
+    final formatted = text.replaceAll('_', ' ');
+    return formatted.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   // ── Basic Info ────────────────────────────────────────────────────────
-  Widget _buildBasicInfoTab(Color primaryColor) {
-    final fields = [
-      ['Name', 'Kader Molla'],
-      ['Date of Birth', '10 / 03 / 1997'],
-      ['City', 'Dhaka'],
-      ['Country', 'Bangladesh'],
-      ['Sect', 'Sunni'],
-      ['Marital Status', 'Single'],
-      ['Ethnicity', 'Bengali'],
-      ['Nationality / Citizenship', 'Bangladeshi'],
-      ['Do you have children?', 'No'],
-      ['Height', "5'8 ft"],
-      ['Weight', '72 kg'],
-      ['Prayer 5x a day?', 'Yes'],
-      ['Open to relocating?', 'Yes'],
-      ['How do you dress?', 'Modestly'],
-    ];
+  Widget _buildBasicInfoTab(Color primaryColor, basicInfo, user) {
+    final fields = <List<String>>[];
+
+    final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+    if (name.isNotEmpty) fields.add(['Name', name]);
+    if (basicInfo?.dateOfBirth != null) fields.add(['Date of Birth', basicInfo!.dateOfBirth!]);
+    if (basicInfo?.city != null) fields.add(['City', basicInfo!.city!]);
+    if (basicInfo?.country != null) fields.add(['Country', basicInfo!.country!]);
+    if (basicInfo?.sect != null) fields.add(['Sect', _formatText(basicInfo!.sect!)]);
+    if (basicInfo?.maritalStatus != null) fields.add(['Marital Status', _formatText(basicInfo!.maritalStatus!)]);
+    if (basicInfo?.ethnicity != null && basicInfo!.ethnicity.isNotEmpty) fields.add(['Ethnicity', basicInfo!.ethnicity.map((e) => _formatText(e)).join(', ')]);
+    if (basicInfo?.nationality != null && basicInfo!.nationality.isNotEmpty) fields.add(['Nationality / Citizenship', basicInfo!.nationality.map((e) => _formatText(e)).join(', ')]);
+    if (basicInfo?.hasChildren != null) fields.add(['Do you have children?', basicInfo!.hasChildren! ? 'Yes' : 'No']);
+    if (basicInfo?.height != null) fields.add(['Height', basicInfo!.height!]);
+    if (basicInfo?.weight != null) fields.add(['Weight', basicInfo!.weight!]);
+    if (basicInfo?.pray5x != null) fields.add(['Prayer 5x a day?', _formatText(basicInfo!.pray5x!)]);
+    if (basicInfo?.openToRelocate != null) fields.add(['Open to relocating?', _formatText(basicInfo!.openToRelocate!)]);
+    if (basicInfo?.preferredDress != null) fields.add(['How do you dress?', _formatText(basicInfo!.preferredDress!)]);
+    if (basicInfo?.employment != null) fields.add(['Employment', _formatText(basicInfo!.employment!)]);
+    if (basicInfo?.education != null) fields.add(['Education', _formatText(basicInfo!.education!)]);
+    if (basicInfo?.income != null) fields.add(['Income', basicInfo!.income!]);
+    if (basicInfo?.frame != null) fields.add(['Frame', _formatText(basicInfo!.frame!)]);
+    if (basicInfo?.languagesSpoken != null && basicInfo!.languagesSpoken.isNotEmpty) fields.add(['Languages Spoken', basicInfo!.languagesSpoken.join(', ')]);
+
+    if (fields.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text('No basic info added yet.', style: TextStyle(color: Colors.grey[500])),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,16 +381,25 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
   }
 
   // ── About Me ──────────────────────────────────────────────────────────
-  Widget _buildAboutMeTab(Color primaryColor) {
-    final fields = [
-      ['Idea of marriage', 'I believe marriage is a partnership built on mutual respect, understanding, and shared values rooted in Islam.'],
-      ['Relationship with Islam', 'Islam is central to my life. I strive to pray on time, read Quran regularly, and live according to Islamic principles.'],
-      ['Role as a spouse', 'I envision myself as a caring, supportive, and responsible partner who values family and communication.'],
-      ['About yourself', 'I am a software engineer with a passion for technology and continuous learning. I enjoy reading and outdoor activities.'],
-      ['Envision your spouse', 'I am looking for a practicing Muslim woman who is kind, family-oriented, and shares similar life values.'],
-      ['Envision your marriage', 'A peaceful home filled with love, mutual respect, strong Islamic values, and open communication.'],
-      ['Religious preference', 'Strongly prefer someone who is a practicing Muslim with good character and deen.'],
-    ];
+  Widget _buildAboutMeTab(Color primaryColor, basicInfo) {
+    final fields = <List<String>>[];
+
+    if (basicInfo?.envisionMarriage != null && basicInfo!.envisionMarriage!.isNotEmpty) fields.add(['Idea of marriage', basicInfo!.envisionMarriage!]);
+    if (basicInfo?.relationshipWithIslam != null && basicInfo!.relationshipWithIslam!.isNotEmpty) fields.add(['Relationship with Islam', basicInfo!.relationshipWithIslam!]);
+    if (basicInfo?.roleAsSpouse != null && basicInfo!.roleAsSpouse!.isNotEmpty) fields.add(['Role as a spouse', basicInfo!.roleAsSpouse!]);
+    if (basicInfo?.aboutYourself != null && basicInfo!.aboutYourself!.isNotEmpty) fields.add(['About yourself', basicInfo!.aboutYourself!]);
+    if (basicInfo?.envisionSpouse != null && basicInfo!.envisionSpouse!.isNotEmpty) fields.add(['Envision your spouse', basicInfo!.envisionSpouse!]);
+    if (basicInfo?.spouseReligiousStatusPref != null && basicInfo!.spouseReligiousStatusPref!.isNotEmpty) fields.add(['Religious preference', basicInfo!.spouseReligiousStatusPref!]);
+    if (basicInfo?.otherPreferences != null && basicInfo!.otherPreferences!.isNotEmpty) fields.add(['Other preferences', basicInfo!.otherPreferences!]);
+
+    if (fields.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text('No about me info added yet.', style: TextStyle(color: Colors.grey[500])),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,31 +413,63 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
   }
 
   // ── Preferences ───────────────────────────────────────────────────────
-  Widget _buildPreferencesTab(Color primaryColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _InfoRow(label: 'Preferred Age Range', value: '20-30', primaryColor: primaryColor)
+  Widget _buildPreferencesTab(Color primaryColor, basicInfo) {
+    final List<Widget> children = [];
+
+    if (basicInfo?.prefAgeMin != null && basicInfo?.prefAgeMax != null) {
+      children.add(
+        _InfoRow(label: 'Preferred Age Range', value: '${basicInfo!.prefAgeMin}-${basicInfo!.prefAgeMax}', primaryColor: primaryColor)
             .animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-        _InfoRow(label: 'Preferred Marital Status', value: 'Never been married', primaryColor: primaryColor)
+      );
+    }
+
+    if (basicInfo?.prefMaritalStatus != null && basicInfo!.prefMaritalStatus.isNotEmpty) {
+      children.add(
+        _InfoRow(label: 'Preferred Marital Status', value: basicInfo!.prefMaritalStatus.join(', '), primaryColor: primaryColor)
             .animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
-        _InfoRow(label: 'Country of Residence', value: 'Bangladesh', primaryColor: primaryColor)
+      );
+    }
+
+    if (basicInfo?.prefCountryOfResidence != null && basicInfo!.prefCountryOfResidence.isNotEmpty) {
+      children.add(
+        _InfoRow(label: 'Country of Residence', value: basicInfo!.prefCountryOfResidence.join(', '), primaryColor: primaryColor)
             .animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: 0.1, end: 0),
-        const SizedBox(height: 4),
+      );
+    }
+
+    if (basicInfo?.prefEthnicity != null && basicInfo!.prefEthnicity.isNotEmpty) {
+      children.add(const SizedBox(height: 4));
+      children.add(
         Text('Preferred Ethnicity', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[600]))
             .animate().fadeIn(duration: 400.ms, delay: 150.ms),
-        const SizedBox(height: 10),
+      );
+      children.add(const SizedBox(height: 10));
+      children.add(
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: ['Bengali', 'Pakistani', 'Arab'].asMap().entries.map((e) {
+          children: basicInfo!.prefEthnicity.asMap().entries.map<Widget>((e) {
             return _PreferenceChip(label: e.value, primaryColor: primaryColor)
                 .animate()
-                .fadeIn(duration: 400.ms, delay: Duration(milliseconds: 200 + e.key * 60))
+                .fadeIn(duration: 400.ms, delay: Duration(milliseconds: (200 + e.key * 60).toInt()))
                 .scale(begin: const Offset(0.8, 0.8));
           }).toList(),
         ),
-      ],
+      );
+    }
+
+    if (children.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text('No preferences added yet.', style: TextStyle(color: Colors.grey[500])),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
     );
   }
 }
@@ -351,14 +477,32 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
 // ── My Hero Image Section ─────────────────────────────────────────────────────
 class _MyHeroImageSection extends StatelessWidget {
   final Color primaryColor;
-  const _MyHeroImageSection({required this.primaryColor});
+  final String? photoUrl;
+  final int photoCount;
+
+  const _MyHeroImageSection({
+    required this.primaryColor,
+    this.photoUrl,
+    required this.photoCount,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/profile image full.jpg', fit: BoxFit.cover),
+        if (photoUrl != null)
+          Image.network(photoUrl!, fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.person, size: 80, color: Colors.white),
+            ),
+          )
+        else
+          Container(
+            color: Colors.grey[300],
+            child: const Icon(Icons.person, size: 80, color: Colors.white),
+          ),
         // Gradient overlay
         Container(
           decoration: BoxDecoration(
@@ -411,10 +555,10 @@ class _MyHeroImageSection extends StatelessWidget {
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.photo_library_outlined, color: Colors.white, size: 14),
-                SizedBox(width: 4),
-                Text('3', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              children: [
+                const Icon(Icons.photo_library_outlined, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                Text('$photoCount', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             ),
           ),

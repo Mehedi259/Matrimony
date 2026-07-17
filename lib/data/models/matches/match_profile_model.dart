@@ -1,6 +1,8 @@
 class MatchProfileModel {
   final String id;
   final String codename;
+  final String? firstName;
+  final String? lastName;
   final String role;
   final String? gender;
   final String subscriptionPlan;
@@ -25,6 +27,8 @@ class MatchProfileModel {
   MatchProfileModel({
     required this.id,
     required this.codename,
+    this.firstName,
+    this.lastName,
     required this.role,
     this.gender,
     required this.subscriptionPlan,
@@ -51,6 +55,8 @@ class MatchProfileModel {
     return MatchProfileModel(
       id: json['id'] as String,
       codename: json['codename'] as String,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
       role: json['role'] as String,
       gender: json['gender'] as String?,
       subscriptionPlan: json['subscription_plan'] as String,

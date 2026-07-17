@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,14 +27,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadData() async {
     final authProvider = context.read<AuthProvider>();
     final matchesProvider = context.read<MatchesProvider>();
+    final profileProvider = context.read<ProfileProvider>();
 
     // Reload user profile data
     await authProvider.refreshProfile();
 
-    // Load wishlists and sent requests for stats
+    // Load wishlists, sent requests, and photos for stats
     await Future.wait([
       matchesProvider.loadWishlists(),
       matchesProvider.loadSentRequests(),
+      profileProvider.loadPhotos(),
     ]);
   }
 
@@ -63,6 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   primaryColor: primaryColor,
                   secondaryColor: secondaryColor,
                   user: user,
+                  photos: context.watch<ProfileProvider>().photos,
                 ),
               ),
             actions: [
@@ -154,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: true, onTap: () => context.push('/basic-information-form')),
       _ItemData(icon: Icons.location_on_outlined, iconColor: Colors.orange, title: 'Personal Information', subtitle: 'Lifestyle, values, hobbies, about you', isCompleted: true, onTap: () => context.push('/personal-details-form')),
       _ItemData(icon: Icons.favorite_border, iconColor: Colors.pink, title: 'Preferences', subtitle: 'Partner preferences and expectations', isCompleted: true, onTap: () => context.push('/preferences-form')),
-      _ItemData(icon: Icons.camera_alt_outlined, iconColor: primaryColor, title: 'Photos', subtitle: '3 of 6 photos added', isCompleted: false, statusText: '3/6', onTap: () => context.push('/upload-photo-form')),
+      _ItemData(icon: Icons.camera_alt_outlined, iconColor: primaryColor, title: 'Photos', subtitle: '${context.watch<ProfileProvider>().photos.length} of 6 photos added', isCompleted: context.watch<ProfileProvider>().photos.length >= 6, statusText: '${context.watch<ProfileProvider>().photos.length}/6', onTap: () => context.push('/upload-photo-form')),
       _ItemData(icon: Icons.people_outline, iconColor: Colors.purple, title: 'About You & Expectations', subtitle: 'What you are looking for', isCompleted: true, onTap: () => context.push('/about-expectations-form')),
       _ItemData(icon: Icons.settings_outlined, iconColor: Colors.grey, title: 'Settings', subtitle: 'Privacy, notifications, security', isCompleted: null, onTap: () => context.push('/settings')),
     ];
@@ -191,11 +195,13 @@ class _ProfileHeader extends StatelessWidget {
   final Color primaryColor;
   final Color secondaryColor;
   final dynamic user;
+  final List<dynamic> photos;
 
   const _ProfileHeader({
     required this.primaryColor,
     required this.secondaryColor,
     required this.user,
+    required this.photos,
   });
 
   @override
@@ -245,9 +251,7 @@ class _ProfileHeader extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 3),
                     image: DecorationImage(
-                      image: user?.profilePicture != null
-                          ? NetworkImage(user!.profilePicture!)
-                          : const AssetImage('assets/profileImage.png') as ImageProvider,
+                      image: _getProfileImage(),
                       fit: BoxFit.cover,
                     ),
                     boxShadow: [
@@ -255,47 +259,47 @@ class _ProfileHeader extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Premium badge
                 Positioned(
                   bottom: 0,
-                  right: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: const Color(0xFFD3A4A7), // Rose gold accent
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.4), blurRadius: 8)],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
                     ),
                     child: Text(
                       '${(completionPercentage * 100).toInt()}%',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                ).animate().scale(delay: 600.ms, duration: 400.ms, curve: Curves.elasticOut),
               ],
-            ).animate().fadeIn(duration: 700.ms).scale(begin: const Offset(0.7, 0.7), curve: Curves.easeOutBack),
+            ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
 
-            const SizedBox(height: 14),
-
+            const SizedBox(height: 16),
+            
+            // Name
             Text(
-              user?.firstName != null ? '${user!.firstName} ${user.lastName ?? ''}' : 'User Name',
+              '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim().isEmpty ? 'No Name' : '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim(),
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-            ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
-
+            ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
+            
             const SizedBox(height: 4),
-
+            
+            // Email
             Text(
-              user?.email ?? 'email@example.com',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              user?.email ?? '',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ).animate().fadeIn(duration: 600.ms, delay: 300.ms),
 
             const SizedBox(height: 12),
 
-            // Tags - Note: dateOfBirth, city, occupation are in profile data, not UserModel
-            Wrap(
-              spacing: 8,
+            // Tags
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Removed tags that reference non-existent UserModel fields
-                // These should be loaded from ProfileProvider/BasicInfoModel instead
                 _TagChip(
                   label: user?.role ?? 'User',
                   icon: Icons.person_outline,
@@ -331,6 +335,18 @@ class _ProfileHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  ImageProvider _getProfileImage() {
+    if (photos.isNotEmpty) {
+      final primary = photos.where((p) => p.isPrimary).toList();
+      final url = primary.isNotEmpty ? primary.first.imageUrl : photos.first.imageUrl;
+      return NetworkImage(url);
+    }
+    if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
+      return NetworkImage(user!.profilePicture!);
+    }
+    return const AssetImage('assets/profileImage.png');
   }
 }
 
