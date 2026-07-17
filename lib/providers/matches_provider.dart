@@ -57,8 +57,10 @@ class MatchesProvider extends ChangeNotifier {
     try {
       final profileData = await _matchesRepository.getDirectoryProfile(userId);
       
-      // Convert to MatchProfileModel
-      _selectedProfile = MatchProfileModel.fromJson(profileData);
+      // API returns {"profile": {...}, "basic_info": {...}}
+      // Extract the profile section for the MatchProfileModel
+      final profileJson = profileData['profile'] as Map<String, dynamic>? ?? profileData;
+      _selectedProfile = MatchProfileModel.fromJson(profileJson);
       
       _setLoading(false);
       notifyListeners();

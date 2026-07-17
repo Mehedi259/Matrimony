@@ -10,6 +10,7 @@ import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/multi_select_field.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
+import '../../../../core/constants/choice_mappings.dart';
 import '../../../../providers/profile_provider.dart';
 
 class YourPreferencesScreen extends StatefulWidget {
@@ -51,13 +52,21 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
           (info.prefAgeMin ?? 22).toDouble(),
           (info.prefAgeMax ?? 35).toDouble(),
         );
-        _selectedEthnicities = info.prefEthnicity;
-        _selectedCountries = info.prefCountryOfResidence;
+        // Convert backend keys to display labels
+        _selectedEthnicities = ChoiceMappings.keysToDisplays(
+          info.prefEthnicity, ChoiceMappings.ethnicityKeyToDisplay,
+        );
+        _selectedCountries = ChoiceMappings.keysToDisplays(
+          info.prefCountryOfResidence, ChoiceMappings.nationalityKeyToDisplay,
+        );
         
-        // Update marital status preferences
-        for (var status in info.prefMaritalStatus) {
-          if (_maritalStatusPrefs.containsKey(status)) {
-            _maritalStatusPrefs[status] = true;
+        // Update marital status preferences (convert keys to display labels)
+        for (var statusKey in info.prefMaritalStatus) {
+          final display = ChoiceMappings.keyToDisplay(
+            statusKey, ChoiceMappings.maritalStatusKeyToDisplay,
+          );
+          if (_maritalStatusPrefs.containsKey(display)) {
+            _maritalStatusPrefs[display] = true;
           }
         }
       });
@@ -67,18 +76,23 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
   Future<void> _saveAndContinue() async {
     setState(() => _isLoading = true);
 
-    // Get selected marital statuses
+    // Get selected marital statuses and convert display labels to backend keys
     final selectedMaritalStatuses = _maritalStatusPrefs.entries
         .where((entry) => entry.value)
-        .map((entry) => entry.key)
+        .map((entry) => ChoiceMappings.displayToKey(
+              entry.key, ChoiceMappings.maritalStatusDisplayToKey))
         .toList();
 
     final data = {
       'pref_age_min': _ageRange.start.round(),
       'pref_age_max': _ageRange.end.round(),
       'pref_marital_status': selectedMaritalStatuses,
-      'pref_ethnicity': _selectedEthnicities,
-      'pref_country_of_residence': _selectedCountries,
+      'pref_ethnicity': ChoiceMappings.displaysToKeys(
+        _selectedEthnicities, ChoiceMappings.ethnicityDisplayToKey,
+      ),
+      'pref_country_of_residence': ChoiceMappings.displaysToKeys(
+        _selectedCountries, ChoiceMappings.nationalityDisplayToKey,
+      ),
     };
 
     final profileProvider = context.read<ProfileProvider>();
