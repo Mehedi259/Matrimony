@@ -9,6 +9,7 @@ import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/country_phone_field.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
+import '../../../../core/constants/choice_mappings.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
@@ -84,7 +85,10 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       _selectedCountry = basicInfo.country ?? _selectedCountry;
       
       if (basicInfo.howFound.isNotEmpty) {
-        _howDidYouFindUs = basicInfo.howFound.first;
+        final key = basicInfo.howFound.first;
+        if (ChoiceMappings.howFoundKeyToDisplay.containsKey(key)) {
+          _howDidYouFindUs = ChoiceMappings.howFoundKeyToDisplay[key];
+        }
       }
     }
   }
@@ -148,8 +152,12 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       // Invalid date format
     }
 
+    final mappedHowFound = _howDidYouFindUs != null && ChoiceMappings.howFoundDisplayToKey.containsKey(_howDidYouFindUs)
+        ? [ChoiceMappings.howFoundDisplayToKey[_howDidYouFindUs]]
+        : [];
+
     final data = {
-      'how_found': [_howDidYouFindUs],
+      'how_found': mappedHowFound,
       'phone': _phoneController.text,
       'date_of_birth': dobFormatted,
       'city': _cityController.text,

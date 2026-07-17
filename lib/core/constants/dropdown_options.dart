@@ -2,12 +2,14 @@
 class DropdownOptions {
   // How did you find us?
   static const List<String> howDidYouFindUs = [
-    'Social Media (Facebook, Instagram, etc.)',
-    'Google Search',
-    'Friend/Family Referral',
-    'YouTube',
-    'Online Advertisement',
-    'Community Event',
+    'By Referral',
+    'Instagram',
+    'FaiyadFit',
+    'Youtube',
+    'A Muslim Homemaker',
+    'IronFitCoaching',
+    'A Muslim Guide',
+    'Facebook',
     'Other',
   ];
 
@@ -84,7 +86,6 @@ class DropdownOptions {
 
   // Ethnicity options
   static const List<String> ethnicities = [
-    'Open to other Ethnicities',
     'Afghan', 'African-American', 'Albanian', 'Algerian', 'American', 'Andorran',
     'Ango', 'Anguillan', 'Antigua', 'Argentine', 'Armenian', 'Australian',
     'Austrian', 'Azerbaijani', 'Bahamian', 'Bahraini', 'Bangladeshi', 'Bar',

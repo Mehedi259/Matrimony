@@ -2,7 +2,7 @@ class MatchProfileModel {
   final String id;
   final String codename;
   final String role;
-  final String gender;
+  final String? gender;
   final String subscriptionPlan;
   final DateTime? lastActive;
   final String? lastActiveDisplay;
@@ -26,7 +26,7 @@ class MatchProfileModel {
     required this.id,
     required this.codename,
     required this.role,
-    required this.gender,
+    this.gender,
     required this.subscriptionPlan,
     this.lastActive,
     this.lastActiveDisplay,
@@ -52,7 +52,7 @@ class MatchProfileModel {
       id: json['id'] as String,
       codename: json['codename'] as String,
       role: json['role'] as String,
-      gender: json['gender'] as String,
+      gender: json['gender'] as String?,
       subscriptionPlan: json['subscription_plan'] as String,
       lastActive: json['last_active'] != null ? DateTime.parse(json['last_active'] as String) : null,
       lastActiveDisplay: json['last_active_display'] as String?,
