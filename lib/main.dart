@@ -5,6 +5,7 @@ import 'core/services/storage_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/matches_provider.dart';
 import 'providers/profile_provider.dart';
+import 'providers/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => MatchesProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MatrimonyApp(),
     ),

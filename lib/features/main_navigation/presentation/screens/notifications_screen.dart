@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/notification_provider.dart';
+import '../../../../data/models/notification_model.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -9,37 +12,13 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  // TODO: Integrate with NotificationRepository when backend endpoint is ready
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'type': 'request',
-      'title': 'New Connection Request',
-      'message': 'mm005 sent you a connection request',
-      'time': DateTime.now().subtract(const Duration(minutes: 5)),
-      'isRead': false,
-    },
-    {
-      'type': 'match',
-      'title': 'New Match!',
-      'message': 'You have a new match with mf003',
-      'time': DateTime.now().subtract(const Duration(hours: 2)),
-      'isRead': false,
-    },
-    {
-      'type': 'message',
-      'title': 'New Message',
-      'message': 'Admin replied to your message',
-      'time': DateTime.now().subtract(const Duration(hours: 5)),
-      'isRead': true,
-    },
-    {
-      'type': 'profile',
-      'title': 'Profile View',
-      'message': 'mm012 viewed your profile',
-      'time': DateTime.now().subtract(const Duration(days: 1)),
-      'isRead': true,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationProvider>().fetchNotifications();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,20 +38,53 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                for (var notification in _notifications) {
-                  notification['isRead'] = true;
-                }
-              });
+          Consumer<NotificationProvider>(
+            builder: (context, provider, child) {
+              if (provider.notifications.isEmpty) return const SizedBox();
+              return TextButton(
+                onPressed: () {
+                  // Mark all read could iterate, or we'd need a mark-all-read endpoint.
+                  // For now, doing it sequentially if needed, but omitted to prevent mass API calls
+                  // unless endpoint exists.
+                },
+                child: const Text('Mark all read'),
+              );
             },
-            child: const Text('Mark all read'),
           ),
         ],
       ),
-      body: _notifications.isEmpty
-          ? Center(
+      body: Consumer<NotificationProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.notifications.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.errorMessage != null && provider.notifications.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.errorMessage!,
+                    style: const TextStyle(color: Colors.black54),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => provider.fetchNotifications(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final notifications = provider.notifications;
+
+          if (notifications.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -99,25 +111,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
-              itemCount: _notifications.length,
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => provider.fetchNotifications(),
+            child: ListView.builder(
+              itemCount: notifications.length,
               itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return _buildNotificationItem(notification);
+                return _buildNotificationItem(context, notifications[index], provider);
               },
             ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildNotificationItem(Map<String, dynamic> notification) {
-    final bool isRead = notification['isRead'];
-    final String type = notification['type'];
+  Widget _buildNotificationItem(BuildContext context, NotificationModel notification, NotificationProvider provider) {
+    final bool isRead = notification.isRead;
+    final String type = notification.type ?? '';
     
     IconData icon;
     Color iconColor;
     
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'request':
         icon = Icons.person_add;
         iconColor = Colors.blue;
@@ -152,7 +170,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Icon(icon, color: iconColor, size: 24),
         ),
         title: Text(
-          notification['title'],
+          notification.title,
           style: TextStyle(
             fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
             fontSize: 15,
@@ -163,12 +181,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              notification['message'],
+              notification.body,
               style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 4),
             Text(
-              _formatTime(notification['time']),
+              _formatTime(DateTime.tryParse(notification.createdAt) ?? DateTime.now()),
               style: TextStyle(
                 fontSize: 11,
                 color: Colors.grey[500],
@@ -187,12 +205,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               )
             : null,
         onTap: () {
-          setState(() {
-            notification['isRead'] = true;
-          });
+          if (!isRead) {
+            provider.markAsRead(notification.id);
+          }
           
           // Navigate based on notification type
-          switch (type) {
+          switch (type.toLowerCase()) {
             case 'request':
               context.push('/requests');
               break;

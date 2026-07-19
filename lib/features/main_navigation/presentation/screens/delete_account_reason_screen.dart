@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class DeleteAccountReasonScreen extends StatelessWidget {
+class DeleteAccountReasonScreen extends StatefulWidget {
   const DeleteAccountReasonScreen({super.key});
+
+  @override
+  State<DeleteAccountReasonScreen> createState() => _DeleteAccountReasonScreenState();
+}
+
+class _DeleteAccountReasonScreenState extends State<DeleteAccountReasonScreen> {
+  String? _selectedReason;
+
+  final List<String> _reasons = [
+    'Getting married',
+    'Need a break',
+    'Ghosting',
+    'Create a new account',
+    'False profiles',
+    'Couldn\'t find a match',
+    'Too many notifications',
+    'Profiles don\'t meet my preferences',
+    'Subscription too expensive',
+    'Got married elsewhere',
+    'Other',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -20,24 +41,12 @@ class DeleteAccountReasonScreen extends StatelessWidget {
           children: [
             const Text('Why are you leaving?', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
             const SizedBox(height: 8),
-            const Text('My selection : 3/3', style: TextStyle(fontSize: 16, color: Colors.black87)),
+            const Text('Please select a reason', style: TextStyle(fontSize: 16, color: Colors.black87)),
             const SizedBox(height: 24),
             Wrap(
               spacing: 8,
               runSpacing: 12,
-              children: [
-                _buildChip('Getting married', isSelected: true),
-                _buildChip('Need a break', isSelected: true),
-                _buildChip('Ghosting', isSelected: true),
-                _buildChip('Create a new account'),
-                _buildChip('False profiles'),
-                _buildChip('Couldn\'t find a match'),
-                _buildChip('Too many notifications'),
-                _buildChip('Profiles don\'t meet my peferences'),
-                _buildChip('Subscription too expensive'),
-                _buildChip('Other'),
-                _buildChip('Got married elsewhere'),
-              ],
+              children: _reasons.map((reason) => _buildChip(reason)).toList(),
             ),
             const Spacer(),
             const Text(
@@ -49,14 +58,17 @@ class DeleteAccountReasonScreen extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
+                color: _selectedReason == null ? Colors.grey[400] : null,
+                gradient: _selectedReason == null ? null : const LinearGradient(
                   colors: [Color(0xFF8C9EFF), Color(0xFFE5A8B6)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
               ),
               child: ElevatedButton(
-                onPressed: () => context.push('/settings/security/delete-account-feedback'),
+                onPressed: _selectedReason == null ? null : () {
+                  context.push('/settings/security/delete-account-feedback?reason=${Uri.encodeComponent(_selectedReason!)}');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -73,19 +85,28 @@ class DeleteAccountReasonScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String label, {bool isSelected = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFCD868A) : Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.black87 : Colors.black87,
-          fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-          fontSize: 14,
+  Widget _buildChip(String label) {
+    final isSelected = _selectedReason == label;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedReason = label;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFCD868A) : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          border: isSelected ? null : Border.all(color: Colors.grey[300]!),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+            fontSize: 14,
+          ),
         ),
       ),
     );

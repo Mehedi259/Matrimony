@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
 
-class DeleteAccountFeedbackScreen extends StatelessWidget {
-  const DeleteAccountFeedbackScreen({super.key});
+class DeleteAccountFeedbackScreen extends StatefulWidget {
+  final String reason;
+  
+  const DeleteAccountFeedbackScreen({super.key, this.reason = ''});
+
+  @override
+  State<DeleteAccountFeedbackScreen> createState() => _DeleteAccountFeedbackScreenState();
+}
+
+class _DeleteAccountFeedbackScreenState extends State<DeleteAccountFeedbackScreen> {
+  final TextEditingController _feedbackController = TextEditingController();
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +46,7 @@ class DeleteAccountFeedbackScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             TextField(
+              controller: _feedbackController,
               maxLines: 6,
               decoration: InputDecoration(
                 hintText: 'Write a message',
@@ -119,14 +137,88 @@ class DeleteAccountFeedbackScreen extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
+      barrierDismissible: false,
+      builder: (dialogContext) => _DeleteConfirmDialog(
+        reason: widget.reason,
+        feedback: _feedbackController.text,
+      ),
+    );
+  }
+}
+
+class _DeleteConfirmDialog extends StatefulWidget {
+  final String reason;
+  final String feedback;
+
+  const _DeleteConfirmDialog({required this.reason, required this.feedback});
+
+  @override
+  State<_DeleteConfirmDialog> createState() => _DeleteConfirmDialogState();
+}
+
+class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
+  bool _isLoading = false;
+
+  Future<void> _handleDelete() async {
+    setState(() => _isLoading = true);
+    
+    final authProvider = context.read<AuthProvider>();
+    
+    // First submit why leaving
+    final whyLeavingSuccess = await authProvider.submitWhyLeaving(
+      reason: widget.reason,
+      feedback: widget.feedback,
+    );
+    
+    if (!whyLeavingSuccess) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Failed to submit feedback'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    // Then delete account
+    final deleteSuccess = await authProvider.deleteAccount();
+    
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    
+    if (deleteSuccess) {
+      context.pop(); // Close dialog
+      context.go('/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account deleted successfully.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Failed to delete account'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: _isLoading ? null : () => context.pop(),
+              child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
                   color: Color(0xFFE54B5E),
@@ -134,26 +226,29 @@ class DeleteAccountFeedbackScreen extends StatelessWidget {
                 ),
                 child: const Icon(Icons.close, color: Colors.white, size: 24),
               ),
-              const SizedBox(height: 24),
-              const Text('Delete Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE54B5E))),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.pop(); // Close dialog
-                    // Add actual deletion logic
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE54B5E),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+            const SizedBox(height: 24),
+            const Text('Delete Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE54B5E))),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleDelete,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE54B5E),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -337,7 +337,10 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       ),
       GoRoute(
         path: '/settings/security/delete-account-feedback',
-        builder: (context, state) => const DeleteAccountFeedbackScreen(),
+        builder: (context, state) {
+          final reason = state.uri.queryParameters['reason'] ?? '';
+          return DeleteAccountFeedbackScreen(reason: reason);
+        },
       ),
       GoRoute(
         path: '/pending',
