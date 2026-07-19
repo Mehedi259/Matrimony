@@ -141,7 +141,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen> {
       ),
       body: Column(
         children: [
-          // Quick Action Buttons
+        // Quick Action Buttons
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -153,12 +153,20 @@ class _SupportHelpScreenState extends State<SupportHelpScreen> {
                     onTap: () => context.push('/settings/chat-with-admin'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.feedback_outlined,
                     label: 'Submit Feedback',
                     onTap: _showFeedbackDialog,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.receipt_long_outlined,
+                    label: 'My Tickets',
+                    onTap: () => context.push('/settings/support/tickets'),
                   ),
                 ),
               ],

@@ -45,6 +45,7 @@ import 'features/main_navigation/presentation/screens/edit_profile_screen.dart';
 import 'features/main_navigation/presentation/screens/subscription_screen.dart';
 import 'features/main_navigation/presentation/screens/security_screen.dart';
 import 'features/main_navigation/presentation/screens/support_help_screen.dart';
+import 'features/main_navigation/presentation/screens/my_tickets_screen.dart';
 import 'features/main_navigation/presentation/screens/chat_with_admin_screen.dart';
 import 'features/main_navigation/presentation/screens/change_password_screen.dart';
 import 'features/main_navigation/presentation/screens/delete_account_reason_screen.dart';
@@ -256,6 +257,13 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
         },
       ),
       GoRoute(
+        path: '/matches/:matchId',
+        builder: (context, state) {
+          final matchId = state.pathParameters['matchId'] ?? '';
+          return MatchedProfileViewScreen(matchId: matchId);
+        },
+      ),
+      GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
       ),
@@ -270,10 +278,6 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       GoRoute(
         path: '/saved',
         builder: (context, state) => const SavedScreen(),
-      ),
-      GoRoute(
-        path: '/matched-profile-view',
-        builder: (context, state) => const MatchedProfileViewScreen(),
       ),
       GoRoute(
         path: '/basic-information-form',
@@ -314,6 +318,10 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       GoRoute(
         path: '/settings/support',
         builder: (context, state) => const SupportHelpScreen(),
+      ),
+      GoRoute(
+        path: '/settings/support/tickets',
+        builder: (context, state) => const MyTicketsScreen(),
       ),
       GoRoute(
         path: '/settings/chat-with-admin',

@@ -1,9 +1,142 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/matches_provider.dart';
 
-class PrivateMatchmakingScreen extends StatelessWidget {
+class PrivateMatchmakingScreen extends StatefulWidget {
   const PrivateMatchmakingScreen({super.key});
+
+  @override
+  State<PrivateMatchmakingScreen> createState() => _PrivateMatchmakingScreenState();
+}
+
+class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _matchmakingRequest;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRequestStatus();
+    });
+  }
+
+  Future<void> _loadRequestStatus() async {
+    final provider = context.read<MatchesProvider>();
+    final request = await provider.getMyMatchmakingRequest();
+    if (mounted) {
+      setState(() {
+        _matchmakingRequest = request;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _bookConsultation() async {
+    final provider = context.read<MatchesProvider>();
+    setState(() => _isLoading = true);
+    
+    final success = await provider.createMatchmakingRequest();
+    
+    if (!mounted) return;
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Consultation request sent successfully!'), backgroundColor: Colors.green),
+      );
+      await _loadRequestStatus();
+    } else {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Failed to send request'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildActionButton() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_matchmakingRequest != null) {
+      final status = _matchmakingRequest!['status'] as String? ?? 'pending';
+      Color statusColor;
+      IconData statusIcon;
+      String statusText;
+
+      switch (status.toLowerCase()) {
+        case 'approved':
+          statusColor = Colors.green;
+          statusIcon = Icons.check_circle_outline;
+          statusText = 'Request Approved';
+          break;
+        case 'completed':
+          statusColor = Colors.blue;
+          statusIcon = Icons.done_all;
+          statusText = 'Service Completed';
+          break;
+        case 'rejected':
+          statusColor = Colors.red;
+          statusIcon = Icons.cancel_outlined;
+          statusText = 'Request Rejected';
+          break;
+        case 'pending':
+        default:
+          statusColor = Colors.orange;
+          statusIcon = Icons.hourglass_bottom;
+          statusText = 'Request Pending Review';
+      }
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        decoration: BoxDecoration(
+          color: statusColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: statusColor.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(statusIcon, color: statusColor, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              statusText,
+              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF6E3),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.amber[300]!),
+      ),
+      child: TextButton.icon(
+        onPressed: _bookConsultation,
+        icon: Icon(Icons.calendar_month, color: Colors.amber[700]),
+        label: Text(
+          'Book Consultation',
+          style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,24 +198,8 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                 .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
             const SizedBox(height: 24),
 
-            // ── Book Consultation Button ──────────────────────────────────
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDF6E3),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.amber[300]!),
-              ),
-              child: TextButton.icon(
-                onPressed: () {},
-                icon: Icon(Icons.calendar_month, color: Colors.amber[700]),
-                label: Text(
-                  'Book Consultation',
-                  style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ).animate()
+            // ── Dynamic Action Button ─────────────────────────────────────
+            _buildActionButton().animate()
                 .fadeIn(duration: 600.ms, delay: 550.ms)
                 .shimmer(duration: 1800.ms, delay: 1200.ms, color: Colors.amber[100]),
             const SizedBox(height: 24),
@@ -291,48 +408,49 @@ class PrivateMatchmakingScreen extends StatelessWidget {
                 .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 40),
 
-            // ── Bottom CTA ────────────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDF6E3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.amber[200]!),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Ready to Start Your Journey?',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Book a free consultation today',
-                    style: TextStyle(fontSize: 12, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.amber[400]!),
+            // ── Bottom CTA (Hide if request exists) ───────────────────────
+            if (_matchmakingRequest == null && !_isLoading)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDF6E3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber[200]!),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Ready to Start Your Journey?',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
-                    child: TextButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.calendar_month, color: Colors.amber[700], size: 20),
-                      label: Text(
-                        'Book Consultation',
-                        style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Book a free consultation today',
+                      style: TextStyle(fontSize: 12, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.amber[400]!),
+                      ),
+                      child: TextButton.icon(
+                        onPressed: _bookConsultation,
+                        icon: Icon(Icons.calendar_month, color: Colors.amber[700], size: 20),
+                        label: Text(
+                          'Book Consultation',
+                          style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ).animate()
-                .fadeIn(duration: 700.ms, delay: 1900.ms)
-                .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
+                  ],
+                ),
+              ).animate()
+                  .fadeIn(duration: 700.ms, delay: 1900.ms)
+                  .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
             const SizedBox(height: 40),
           ],
         ),
@@ -379,3 +497,4 @@ class _FeatureItem extends StatelessWidget {
         .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack);
   }
 }
+
