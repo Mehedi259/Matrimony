@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/matches_provider.dart';
 
-class ProfileViewsScreen extends StatelessWidget {
+class ProfileViewsScreen extends StatefulWidget {
   const ProfileViewsScreen({super.key});
+
+  @override
+  State<ProfileViewsScreen> createState() => _ProfileViewsScreenState();
+}
+
+class _ProfileViewsScreenState extends State<ProfileViewsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MatchesProvider>().loadProfileViewers();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +32,7 @@ class ProfileViewsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
-            onPressed: () {},
+            onPressed: () => context.push('/settings'),
           ),
           IconButton(
             icon: Stack(
@@ -34,32 +49,66 @@ class ProfileViewsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            onPressed: () {},
+            onPressed: () => context.push('/notifications'),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          _ProfileViewCard(
-            username: 'Mk009',
-            subtitle: 'Zaima Khan has shown interest in your profile.',
-            onViewProfile: () => context.push('/profile-view-details'),
-          ),
-          const SizedBox(height: 16),
-          _ProfileViewCard(
-            username: 'Mm001',
-            subtitle: 'Sasha Islam has shown interest in your profile.',
-            onViewProfile: () => context.push('/profile-view-details'),
-          ),
-          const SizedBox(height: 16),
-          _ProfileViewCard(
-            username: 'Mj0024',
-            subtitle: 'Suraiya Fatema has shown interest in your profile.',
-            onViewProfile: () => context.push('/profile-view-details'),
-          ),
-        ],
+      body: Consumer<MatchesProvider>(
+        builder: (context, matchesProvider, _) {
+          if (matchesProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (matchesProvider.errorMessage != null && matchesProvider.errorMessage!.isNotEmpty) {
+            return Center(
+              child: Text(
+                matchesProvider.errorMessage!,
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          final viewers = matchesProvider.profileViewers;
+
+          if (viewers.isEmpty) {
+            return const Center(
+              child: Text(
+                'No one has viewed your profile yet.',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(24),
+            itemCount: viewers.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final viewer = viewers[index];
+              final profile = viewer['profile'] ?? {};
+              
+              final userId = profile['user_id'] ?? profile['id']?.toString() ?? profile['username'] ?? '';
+              final username = profile['username'] ?? 'Unknown User';
+              final firstName = profile['first_name'] ?? '';
+              final lastName = profile['last_name'] ?? '';
+              final fullName = firstName.isNotEmpty || lastName.isNotEmpty 
+                  ? '$firstName $lastName'.trim() 
+                  : username;
+
+              return _ProfileViewCard(
+                username: username,
+                subtitle: '$fullName has shown interest in your profile.',
+                onViewProfile: () {
+                  if (userId.isNotEmpty) {
+                    context.push('/profile-view-details/$userId');
+                  }
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

@@ -11,6 +11,7 @@ class MatchesProvider extends ChangeNotifier {
   List<ConnectionRequestModel> _receivedRequests = [];
   List<MatchModel> _matches = [];
   List<dynamic> _wishlists = [];
+  List<dynamic> _profileViewers = [];
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -21,6 +22,7 @@ class MatchesProvider extends ChangeNotifier {
   List<ConnectionRequestModel> get receivedRequests => _receivedRequests;
   List<MatchModel> get matches => _matches;
   List<dynamic> get wishlists => _wishlists;
+  List<dynamic> get profileViewers => _profileViewers;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -192,6 +194,21 @@ class MatchesProvider extends ChangeNotifier {
 
     try {
       _wishlists = await _matchesRepository.getWishlists();
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> loadProfileViewers() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      _profileViewers = await _matchesRepository.getProfileViewers();
       _setLoading(false);
       notifyListeners();
       return true;

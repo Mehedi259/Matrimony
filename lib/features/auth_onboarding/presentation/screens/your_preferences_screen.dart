@@ -12,6 +12,7 @@ import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
 import '../../../../core/constants/choice_mappings.dart';
 import '../../../../providers/profile_provider.dart';
+import 'package:get/get.dart';
 
 class YourPreferencesScreen extends StatefulWidget {
   const YourPreferencesScreen({super.key});
@@ -105,9 +106,13 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
     if (success) {
       context.push('/onboarding/about-expectations');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save data'),
           backgroundColor: Colors.red,
         ),
       );

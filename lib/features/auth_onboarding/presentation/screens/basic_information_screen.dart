@@ -13,6 +13,7 @@ import '../../../../core/constants/choice_mappings.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
+import 'package:get/get.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   final String? profileType; // 'brother', 'sister', or 'wali'
@@ -120,8 +121,13 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
   Future<void> _saveAndContinue() async {
     // Validate required fields
     if (_howDidYouFindUs == null || _howDidYouFindUs!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select how you found us')),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Please select how you found us')),
       );
       return;
     }
@@ -133,8 +139,13 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
         _dobController.text.isEmpty ||
         _cityController.text.isEmpty ||
         _selectedCountry == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Please fill all required fields')),
       );
       return;
     }
@@ -177,9 +188,13 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
         '/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}',
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save data'),
           backgroundColor: Colors.red,
         ),
       );

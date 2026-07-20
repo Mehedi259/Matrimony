@@ -73,6 +73,7 @@ class ApiConstants {
 
   // Wishlists
   static const String wishlists = '$apiPrefix/wishlists/';
+  static const String profileViewers = '$apiPrefix/wishlists/viewers/';
 
   // WebSocket
   static const String wsBaseUrl = 'wss://api.amuslimmatchmaker.com';

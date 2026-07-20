@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../auth_onboarding/presentation/widgets/common/gradient_button.dart';
 import '../../../../providers/profile_provider.dart';
+import 'package:get/get.dart';
 
 class AboutExpectationsFormScreen extends StatefulWidget {
   const AboutExpectationsFormScreen({super.key});
@@ -87,14 +88,23 @@ class _AboutExpectationsFormScreenState extends State<AboutExpectationsFormScree
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updated successfully!'), backgroundColor: Colors.green),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Updated successfully!'), backgroundColor: Colors.green),
       );
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save data'),
           backgroundColor: Colors.red,
         ),
       );

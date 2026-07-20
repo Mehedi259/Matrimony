@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../data/repositories/support_repository.dart';
 import '../../../../data/models/support/support_models.dart';
+import 'package:get/get.dart';
 
 class SupportHelpScreen extends StatefulWidget {
   const SupportHelpScreen({super.key});
@@ -80,9 +81,13 @@ class _SupportHelpScreenState extends State<SupportHelpScreen> {
             onPressed: () async {
               if (subjectController.text.isEmpty ||
                   messageController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please fill all fields'),
+                Get.showSnackbar(
+                  const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Please fill all fields'),
                   ),
                 );
                 return;
@@ -97,18 +102,26 @@ class _SupportHelpScreenState extends State<SupportHelpScreen> {
                 if (!mounted) return;
 
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Feedback submitted successfully!'),
+                Get.showSnackbar(
+                  const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Feedback submitted successfully!'),
                     backgroundColor: Colors.green,
                   ),
                 );
               } catch (e) {
                 if (!mounted) return;
                 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to submit: $e'),
+                Get.showSnackbar(
+                  GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Failed to submit: $e'),
                     backgroundColor: Colors.red,
                   ),
                 );

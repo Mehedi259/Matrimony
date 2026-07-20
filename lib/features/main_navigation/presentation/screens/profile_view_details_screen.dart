@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
+import 'package:get/get.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
   final String userId;
@@ -79,16 +80,24 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Interest sent successfully!'),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Interest sent successfully!'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
           backgroundColor: Colors.red,
         ),
       );
@@ -211,8 +220,13 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                 ),
                 onSelected: (value) {
                   // Handle menu actions
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('$value selected')),
+                  Get.showSnackbar(
+                    GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('$value selected')),
                   );
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[

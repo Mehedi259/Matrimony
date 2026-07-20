@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
+import 'package:get/get.dart';
 
 class BrowseScreen extends StatefulWidget {
   const BrowseScreen({super.key});
@@ -63,16 +64,24 @@ class _BrowseScreenState extends State<BrowseScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Interest sent successfully!'),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Interest sent successfully!'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
           backgroundColor: Colors.red,
         ),
       );
@@ -143,8 +152,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   suffixIcon: GestureDetector(
                     onTap: () {
                       // TODO: Open filter dialog
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Advanced filters coming soon')));
+                      Get.showSnackbar(
+                          const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Advanced filters coming soon')));
                     },
                     child: Icon(Icons.tune_rounded, color: Colors.grey[400], size: 20),
                   ),

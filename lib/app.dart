@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
@@ -98,6 +99,7 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
 
   GoRouter _createRouter(bool isAuthenticated) {
     return GoRouter(
+      navigatorKey: Get.key,
       initialLocation: isAuthenticated ? '/home' : '/welcome',
       routes: [
       GoRoute(
@@ -364,10 +366,12 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
         // Recreating the router dynamically breaks the navigation stack (like context.push)
         // Navigation after login/logout is handled manually in the respective screens.
 
-        return MaterialApp.router(
+        return GetMaterialApp.router(
           title: 'Matrimony Matchmaker',
           theme: AppTheme.lightTheme,
-          routerConfig: _router,
+          routeInformationProvider: _router.routeInformationProvider,
+          routeInformationParser: _router.routeInformationParser,
+          routerDelegate: _router.routerDelegate,
           debugShowCheckedModeBanner: false,
         );
       },

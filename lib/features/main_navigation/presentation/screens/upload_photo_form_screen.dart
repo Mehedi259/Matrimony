@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../../../providers/profile_provider.dart';
 import '../../../../data/models/profile/basic_info_model.dart';
+import 'package:get/get.dart';
 
 class UploadPhotoFormScreen extends StatefulWidget {
   const UploadPhotoFormScreen({super.key});
@@ -51,8 +52,13 @@ class _UploadPhotoFormScreenState extends State<UploadPhotoFormScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e'), backgroundColor: Colors.red),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Failed to pick image: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -87,13 +93,23 @@ class _UploadPhotoFormScreenState extends State<UploadPhotoFormScreen> {
     if (!mounted) return;
 
     if (failCount == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$successCount photo(s) uploaded successfully!'), backgroundColor: Colors.green),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('$successCount photo(s) uploaded successfully!'), backgroundColor: Colors.green),
       );
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$successCount uploaded, $failCount failed'), backgroundColor: Colors.orange),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('$successCount uploaded, $failCount failed'), backgroundColor: Colors.orange),
       );
     }
   }
@@ -115,9 +131,13 @@ class _UploadPhotoFormScreenState extends State<UploadPhotoFormScreen> {
       final profileProvider = context.read<ProfileProvider>();
       final success = await profileProvider.deletePhoto(photoId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'Photo deleted' : 'Failed to delete photo'),
+        Get.showSnackbar(
+          GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(success ? 'Photo deleted' : 'Failed to delete photo'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );

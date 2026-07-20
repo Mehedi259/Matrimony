@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
+import 'package:get/get.dart';
 
 class DeleteAccountFeedbackScreen extends StatefulWidget {
   final String reason;
@@ -173,9 +174,13 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
     if (!whyLeavingSuccess) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Failed to submit feedback'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(authProvider.errorMessage ?? 'Failed to submit feedback'),
           backgroundColor: Colors.red,
         ),
       );
@@ -191,16 +196,24 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
     if (deleteSuccess) {
       context.pop(); // Close dialog
       context.go('/login');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account deleted successfully.'),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Account deleted successfully.'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Failed to delete account'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(authProvider.errorMessage ?? 'Failed to delete account'),
           backgroundColor: Colors.red,
         ),
       );

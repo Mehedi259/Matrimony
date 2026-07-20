@@ -7,6 +7,7 @@ import '../../../../providers/matches_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import 'package:get/get.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,16 +47,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Interest sent successfully!'),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Interest sent successfully!'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
           backgroundColor: Colors.red,
         ),
       );

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
+import 'package:get/get.dart';
 
 class PrivateMatchmakingScreen extends StatefulWidget {
   const PrivateMatchmakingScreen({super.key});
@@ -43,15 +44,24 @@ class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
     if (!mounted) return;
     
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Consultation request sent successfully!'), backgroundColor: Colors.green),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Consultation request sent successfully!'), backgroundColor: Colors.green),
       );
       await _loadRequestStatus();
     } else {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Failed to send request'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(provider.errorMessage ?? 'Failed to send request'),
           backgroundColor: Colors.red,
         ),
       );

@@ -6,6 +6,7 @@ import 'dart:io';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/onboarding/step_progress_indicator.dart';
 import '../../../../providers/profile_provider.dart';
+import 'package:get/get.dart';
 
 class UploadPhotosScreen extends StatefulWidget {
   const UploadPhotosScreen({super.key});
@@ -48,9 +49,13 @@ class _UploadPhotosScreenState extends State<UploadPhotosScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to pick image: $e'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Failed to pick image: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -88,17 +93,25 @@ class _UploadPhotosScreenState extends State<UploadPhotosScreen> {
     if (!mounted) return;
 
     if (failCount == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$successCount photo(s) uploaded successfully!'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('$successCount photo(s) uploaded successfully!'),
           backgroundColor: Colors.green,
         ),
       );
       context.push('/subscription-plans');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$successCount uploaded, $failCount failed'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('$successCount uploaded, $failCount failed'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -118,16 +131,24 @@ class _UploadPhotosScreenState extends State<UploadPhotosScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Photo deleted successfully'),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Photo deleted successfully'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(profileProvider.errorMessage ?? 'Failed to delete photo'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to delete photo'),
           backgroundColor: Colors.red,
         ),
       );

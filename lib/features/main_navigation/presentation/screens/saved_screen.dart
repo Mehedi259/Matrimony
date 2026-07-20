@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
+import 'package:get/get.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
@@ -109,16 +110,24 @@ class _SavedScreenState extends State<SavedScreen> {
                             if (!mounted) return;
 
                             if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Interest sent!'),
+                              Get.showSnackbar(
+                                const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Interest sent!'),
                                   backgroundColor: Colors.green,
                                 ),
                               );
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
+                              Get.showSnackbar(
+                                GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(
                                     matchesProvider.errorMessage ??
                                         'Failed to send',
                                   ),

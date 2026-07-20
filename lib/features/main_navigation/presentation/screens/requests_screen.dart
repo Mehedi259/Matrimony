@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import 'package:get/get.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -53,13 +54,22 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     if (!mounted) return;
     
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match Accepted!'), backgroundColor: Colors.green),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Match Accepted!'), backgroundColor: Colors.green),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to accept'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to accept'),
           backgroundColor: Colors.red,
         ),
       );
@@ -73,13 +83,22 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     if (!mounted) return;
     
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request Declined'), backgroundColor: Colors.orange),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Request Declined'), backgroundColor: Colors.orange),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to decline'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to decline'),
           backgroundColor: Colors.red,
         ),
       );
@@ -93,13 +112,22 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     if (!mounted) return;
     
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request Cancelled!'), backgroundColor: Colors.orange),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Request Cancelled!'), backgroundColor: Colors.orange),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(matchesProvider.errorMessage ?? 'Failed to cancel'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(matchesProvider.errorMessage ?? 'Failed to cancel'),
           backgroundColor: Colors.red,
         ),
       );

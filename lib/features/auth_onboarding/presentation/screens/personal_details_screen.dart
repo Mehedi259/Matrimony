@@ -10,6 +10,7 @@ import '../widgets/common/radio_group.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
 import '../../../../providers/profile_provider.dart';
+import 'package:get/get.dart';
 
 class PersonalDetailsScreen extends StatefulWidget {
   final String? profileType;
@@ -85,8 +86,13 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
   Future<void> _saveAndContinue() async {
     // Validate required fields
     if (_selectedSect == null || _selectedMaritalStatus == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Please fill all required fields')),
       );
       return;
     }
@@ -117,9 +123,13 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     if (success) {
       context.push('/onboarding/preferences');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(profileProvider.errorMessage ?? 'Failed to save data'),
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save data'),
           backgroundColor: Colors.red,
         ),
       );

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../../data/models/chat/chat_models.dart';
 import '../../../../providers/auth_provider.dart';
+import 'package:get/get.dart';
 
 class ChatWithAdminScreen extends StatefulWidget {
   const ChatWithAdminScreen({super.key});
@@ -108,9 +109,13 @@ class _ChatWithAdminScreenState extends State<ChatWithAdminScreen> {
       if (mounted) {
         setState(() => _isSending = false);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send message: $e'),
+        Get.showSnackbar(
+          GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Failed to send message: $e'),
             backgroundColor: Colors.red,
           ),
         );

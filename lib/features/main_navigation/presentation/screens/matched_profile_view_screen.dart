@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
+import 'package:get/get.dart';
 
 class MatchedProfileViewScreen extends StatefulWidget {
   final String matchId;
@@ -321,8 +322,13 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                         onPressed: () {
                           // TODO: Call unmatch API if available
                           Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Unmatch feature coming soon!')),
+                          Get.showSnackbar(
+                            const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text('Unmatch feature coming soon!')),
                           );
                         },
                         style: ElevatedButton.styleFrom(
