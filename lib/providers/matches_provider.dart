@@ -233,12 +233,12 @@ class MatchesProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> removeFromWishlist(String wishlistId) async {
+  Future<bool> removeFromWishlist(String targetUserId) async {
     _setLoading(true);
     _clearError();
-
     try {
-      await _matchesRepository.removeFromWishlist(wishlistId);
+      if (_matchesRepository == null) throw Exception('MatchesRepository not provided');
+      await _matchesRepository.removeFromWishlist(targetUserId);
       await loadWishlists(); // Refresh wishlists
       _setLoading(false);
       return true;

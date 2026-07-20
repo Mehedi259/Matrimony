@@ -147,13 +147,16 @@ class MatchesRepository {
 
   Future<Map<String, dynamic>> addToWishlist(String targetUserId) async {
     final response = await _apiClient.post(
-      ApiConstants.wishlists,
+      ApiConstants.wishlistToggle,
       data: {'target_user_id': targetUserId},
     );
     return response.data;
   }
 
-  Future<void> removeFromWishlist(String wishlistId) async {
-    await _apiClient.delete('${ApiConstants.wishlists}$wishlistId/');
+  Future<void> removeFromWishlist(String targetUserId) async {
+    await _apiClient.post(
+      ApiConstants.wishlistToggle,
+      data: {'target_user_id': targetUserId},
+    );
   }
 }

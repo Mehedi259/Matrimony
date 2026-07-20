@@ -19,6 +19,8 @@ class MatchCard extends StatelessWidget {
   final String? matchedButtonText;
   final VoidCallback? onMatchedButtonPressed;
   final bool isBlurred;
+  final bool isWishlisted;
+  final VoidCallback? onWishlistToggle;
 
   const MatchCard({
     super.key,
@@ -40,6 +42,8 @@ class MatchCard extends StatelessWidget {
     this.matchedButtonText,
     this.onMatchedButtonPressed,
     this.isBlurred = true,
+    this.isWishlisted = false,
+    this.onWishlistToggle,
   });
 
   @override
@@ -103,7 +107,14 @@ class MatchCard extends StatelessWidget {
                           ),
                         )
                       else if (!isMatched)
-                        const Icon(Icons.favorite, color: Colors.white, size: 28)
+                        GestureDetector(
+                          onTap: onWishlistToggle,
+                          child: Icon(
+                            Icons.favorite, 
+                            color: isWishlisted ? Colors.redAccent : Colors.white, 
+                            size: 28,
+                          ),
+                        )
                       else
                         const SizedBox(), // Empty for match
                       

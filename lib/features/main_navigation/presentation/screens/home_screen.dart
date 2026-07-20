@@ -302,6 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
               else
                 ...matchesProvider.directoryProfiles.take(5).map((profile) {
                   final index = matchesProvider.directoryProfiles.indexOf(profile);
+                  final isSaved = matchesProvider.wishlists.any((w) => (w['user_id'] ?? w['id']) == profile.id);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
@@ -314,6 +315,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? 'Photos will be revealed after mutual interest'
                           : '',
                       isLocked: profile.photoBlurred,
+                      isWishlisted: isSaved,
+                      onWishlistToggle: () async {
+                        if (isSaved) {
+                          await matchesProvider.removeFromWishlist(profile.id);
+                        } else {
+                          await matchesProvider.addToWishlist(profile.id);
+                        }
+                      },
                       onViewProfile: () {
                         // Navigate to profile details with userId
                         context.push('/matches/directory/${profile.id}');

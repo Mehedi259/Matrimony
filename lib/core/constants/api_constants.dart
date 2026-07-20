@@ -72,7 +72,8 @@ class ApiConstants {
   static const String notifications = '$apiPrefix/notification/';
 
   // Wishlists
-  static const String wishlists = '$apiPrefix/wishlists/';
+  static const String wishlists = '$apiPrefix/wishlists/saved/';
+  static const String wishlistToggle = '$apiPrefix/wishlists/saved/toggle/';
   static const String profileViewers = '$apiPrefix/wishlists/viewers/';
 
   // WebSocket
