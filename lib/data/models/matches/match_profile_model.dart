@@ -128,6 +128,8 @@ class MatchModel {
   final String status;
   final Map<String, dynamic> otherUser;
   final bool photosCurrentlyVisible;
+  final String photoRequestStatus;
+  final bool photoRequestedByOtherUser;
   final String waliRequestStatus;
   final DateTime? acceptedAt;
   final DateTime updatedAt;
@@ -138,6 +140,8 @@ class MatchModel {
     required this.status,
     required this.otherUser,
     required this.photosCurrentlyVisible,
+    required this.photoRequestStatus,
+    required this.photoRequestedByOtherUser,
     required this.waliRequestStatus,
     this.acceptedAt,
     required this.updatedAt,
@@ -157,6 +161,8 @@ class MatchModel {
       status: json['status'] as String,
       otherUser: json['other_user'] as Map<String, dynamic>,
       photosCurrentlyVisible: json['photos_currently_visible'] as bool? ?? false,
+      photoRequestStatus: json['photo_request_status'] as String? ?? 'none',
+      photoRequestedByOtherUser: json['photo_requested_by_other_user'] as bool? ?? false,
       waliRequestStatus: json['wali_request_status'] as String? ?? 'none',
       acceptedAt: json['accepted_at'] != null ? DateTime.parse(json['accepted_at'] as String) : null,
       updatedAt: DateTime.parse(json['updated_at'] as String),

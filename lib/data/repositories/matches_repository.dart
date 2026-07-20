@@ -114,6 +114,33 @@ class MatchesRepository {
     return [];
   }
 
+  // ========== MATCH PHOTOS ==========
+
+  Future<Map<String, dynamic>> requestPhotoView(String matchId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.requestPhotoView}$matchId/photos/request/',
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> respondToPhotoRequest({
+    required String matchId,
+    required String action, // 'approve' or 'decline'
+  }) async {
+    final response = await _apiClient.patch(
+      '${ApiConstants.respondPhotoRequest}$matchId/photos/respond/',
+      queryParameters: {'action': action},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> markPhotosViewed(String matchId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.markPhotosViewed}$matchId/photos/mark-viewed/',
+    );
+    return response.data;
+  }
+
   // ========== MATCHMAKING ==========
 
   Future<Map<String, dynamic>> createMatchmakingRequest() async {

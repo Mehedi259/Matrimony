@@ -14,6 +14,8 @@ class MatchedProfileViewScreen extends StatefulWidget {
 }
 
 class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
+  bool _hasMarkedViewed = false;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +58,14 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     final String? profession = otherUser['occupation'];
     final String? bio = otherUser['bio'];
     final bool isBlurred = !match.photosCurrentlyVisible;
+
+    // Mark photos as viewed if they are currently visible and haven't been marked yet
+    if (!isBlurred && !_hasMarkedViewed) {
+      _hasMarkedViewed = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<MatchesProvider>().markPhotosViewed(match.id);
+      });
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -173,20 +183,85 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'View photos once. To see them again, send a request.',
-                            style: TextStyle(color: Colors.black87, fontSize: 13),
+                          Text(
+                            match.photoRequestStatus == 'requested' && !match.photoRequestedByOtherUser
+                                ? 'Photo request sent. Waiting for approval.'
+                                : 'View photos once. To see them again, send a request.',
+                            style: const TextStyle(color: Colors.black87, fontSize: 13),
                           ),
                           const SizedBox(height: 4),
-                          GestureDetector(
-                            onTap: () {},
-                            child: const Text(
-                              'Request Photo',
-                              style: TextStyle(color: Color(0xFF5A75F1), fontWeight: FontWeight.bold, fontSize: 13, decoration: TextDecoration.underline),
+                          if (match.photoRequestStatus != 'requested' || match.photoRequestedByOtherUser)
+                            GestureDetector(
+                              onTap: () async {
+                                final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
+                                if (success && context.mounted) {
+                                  Get.showSnackbar(const GetSnackBar(
+                                    messageText: Text('Photo request sent successfully'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 3),
+                                  ));
+                                }
+                              },
+                              child: const Text(
+                                'Request Photo',
+                                style: TextStyle(color: Color(0xFF5A75F1), fontWeight: FontWeight.bold, fontSize: 13, decoration: TextDecoration.underline),
+                              ),
                             ),
-                          ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              
+            // Approve/Decline Photo Request Banner
+            if (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.photo_camera_front, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Text('Photo Request', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$name has requested to view your photos again.',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              await context.read<MatchesProvider>().respondToPhotoRequest(matchId: match.id, accept: false);
+                            },
+                            style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                            child: const Text('Decline'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await context.read<MatchesProvider>().respondToPhotoRequest(matchId: match.id, accept: true);
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                            child: const Text('Approve'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -201,6 +201,55 @@ class MatchesProvider extends ChangeNotifier {
     }
   }
 
+  // ========== MATCH PHOTOS ==========
+
+  Future<bool> requestPhotoView(String matchId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.requestPhotoView(matchId);
+      await loadMatches(); // Refresh matches to get updated status
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> respondToPhotoRequest({
+    required String matchId,
+    required bool accept,
+  }) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.respondToPhotoRequest(
+        matchId: matchId,
+        action: accept ? 'approve' : 'decline',
+      );
+      await loadMatches(); // Refresh matches to get updated status
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> markPhotosViewed(String matchId) async {
+    // Silently mark as viewed without loading indicator
+    try {
+      await _matchesRepository.markPhotosViewed(matchId);
+      return true;
+    } catch (e) {
+      debugPrint('Failed to mark photos viewed: $e');
+      return false;
+    }
+  }
+
   // ========== WISHLISTS ==========
 
   Future<bool> loadWishlists() async {

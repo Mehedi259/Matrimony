@@ -51,6 +51,11 @@ class ApiConstants {
   static const String respondRequest = '$apiPrefix/matches/requests/'; // + id + /respond/
   static const String cancelRequest = '$apiPrefix/matches/requests/'; // + id + /cancel/
 
+  // Match Photos
+  static const String requestPhotoView = '$apiPrefix/matches/'; // + id + /photos/request/
+  static const String respondPhotoRequest = '$apiPrefix/matches/'; // + id + /photos/respond/
+  static const String markPhotosViewed = '$apiPrefix/matches/'; // + id + /photos/mark-viewed/
+
   // Matchmaking
   static const String myMatchmakingRequest = '$apiPrefix/matchmaking/my-request/';
 

@@ -152,6 +152,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         icon = Icons.visibility;
         iconColor = Colors.orange;
         break;
+      case 'photo_request_received':
+      case 'photo_request_approved':
+      case 'photo_request_declined':
+        icon = Icons.camera_alt_outlined;
+        iconColor = Colors.purple;
+        break;
       default:
         icon = Icons.notifications;
         iconColor = Colors.grey;
@@ -222,6 +228,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               break;
             case 'profile':
               context.push('/profile-views');
+              break;
+            case 'photo_request_received':
+            case 'photo_request_approved':
+            case 'photo_request_declined':
+              context.push('/requests');
               break;
           }
         },

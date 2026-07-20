@@ -140,11 +140,15 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     final secondaryColor = Theme.of(context).colorScheme.secondary;
     final matchesProvider = context.watch<MatchesProvider>();
 
+    final photoRequests = matchesProvider.matches.where(
+      (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
+    ).toList();
+
     final tabs = [
       _TabItem(
         label: 'Received',
         icon: Icons.move_to_inbox_outlined,
-        count: matchesProvider.receivedRequests.length,
+        count: matchesProvider.receivedRequests.length + photoRequests.length,
       ),
       _TabItem(
         label: 'Sent',
@@ -226,8 +230,12 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     if (matchesProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
+    
+    final photoRequests = matchesProvider.matches.where(
+      (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
+    ).toList();
 
-    if (matchesProvider.receivedRequests.isEmpty) {
+    if (matchesProvider.receivedRequests.isEmpty && photoRequests.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -241,7 +249,10 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     }
 
     return RefreshIndicator(
-      onRefresh: () => matchesProvider.loadReceivedRequests(),
+      onRefresh: () async {
+        await matchesProvider.loadReceivedRequests();
+        await matchesProvider.loadMatches();
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: [
@@ -249,6 +260,30 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               .animate()
               .fadeIn(duration: 600.ms, delay: 400.ms),
           const SizedBox(height: 20),
+          
+          // Show Photo Requests
+          ...photoRequests.map((match) {
+            final index = photoRequests.indexOf(match);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: MatchCard(
+                username: match.matchedUserCodename,
+                age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
+                height: match.matchedUserHeight ?? 'N/A',
+                profession: match.matchedUserCity ?? 'N/A',
+                imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
+                photos: match.matchedUserPhotos,
+                lockMessage: '',
+                isLocked: false,
+                isMatched: true,
+                isBlurred: true,
+                matchedButtonText: 'Review Photo Request',
+                onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
+              ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
+            );
+          }).toList(),
+          
+          // Show Connection Requests
           ...matchesProvider.receivedRequests.map((request) {
             final index = matchesProvider.receivedRequests.indexOf(request);
             return Padding(
@@ -357,7 +392,9 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               isLocked: false,
               isMatched: true,
               isBlurred: false,
-              matchedButtonText: 'View photos',
+              matchedButtonText: (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser) 
+                  ? 'Review Photo Request' 
+                  : 'View photos',
               onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
             ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           );
