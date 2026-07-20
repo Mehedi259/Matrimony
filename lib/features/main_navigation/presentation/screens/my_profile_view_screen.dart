@@ -119,7 +119,7 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
               background: _MyHeroImageSection(
                 primaryColor: primaryColor,
                 photoUrl: primaryPhotoUrl,
-                photoCount: photos.length,
+                photos: photos,
               ),
             ),
           ),
@@ -478,13 +478,47 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
 class _MyHeroImageSection extends StatelessWidget {
   final Color primaryColor;
   final String? photoUrl;
-  final int photoCount;
+  final List<dynamic> photos;
 
   const _MyHeroImageSection({
     required this.primaryColor,
     this.photoUrl,
-    required this.photoCount,
+    required this.photos,
   });
+
+  void _showPhotoGallery(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black,
+      barrierDismissible: true,
+      barrierLabel: 'Close',
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: Text(
+              '${photos.length} Photos',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          body: PageView.builder(
+            itemCount: photos.length,
+            itemBuilder: (context, index) {
+              return Image.network(
+                photos[index].imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(Icons.error_outline, color: Colors.white, size: 40),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -547,19 +581,26 @@ class _MyHeroImageSection extends StatelessWidget {
         Positioned(
           top: kToolbarHeight + MediaQuery.of(context).padding.top - 4,
           right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.photo_library_outlined, color: Colors.white, size: 14),
-                const SizedBox(width: 4),
-                Text('$photoCount', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
+          child: GestureDetector(
+            onTap: () {
+              if (photos.isNotEmpty) {
+                _showPhotoGallery(context);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.photo_library_outlined, color: Colors.white, size: 14),
+                  const SizedBox(width: 4),
+                  Text('${photos.length}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
           ),
         ),

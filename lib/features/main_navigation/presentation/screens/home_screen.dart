@@ -37,6 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
     
     // Load sent requests for pending count
     await matchesProvider.loadSentRequests();
+
+    // Load profile viewers for view count
+    await matchesProvider.loadProfileViewers();
   }
 
   Future<void> _handleSendInterest(String userId) async {
@@ -200,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _StatCard(
                       icon: Icons.visibility_outlined,
                       iconColor: Colors.blue,
-                      count: '12', // TODO: Get from API
+                      count: '${matchesProvider.profileViewers.length.toString().padLeft(2, '0')}',
                       label: 'Profile View',
                       onTap: () => context.push('/profile-views'),
                     )
