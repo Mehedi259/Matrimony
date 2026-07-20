@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
@@ -236,13 +237,24 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     ).toList();
 
     if (matchesProvider.receivedRequests.isEmpty && photoRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text('No received requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+      return RefreshIndicator(
+        onRefresh: () async {
+          await matchesProvider.loadReceivedRequests();
+          await matchesProvider.loadMatches();
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text('No received requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -254,6 +266,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
         await matchesProvider.loadMatches();
       },
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: [
           const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
@@ -312,13 +325,21 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     }
 
     if (matchesProvider.sentRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.send_outlined, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text('No sent requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+      return RefreshIndicator(
+        onRefresh: () => matchesProvider.loadSentRequests(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.send_outlined, size: 64, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text('No sent requests', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -327,6 +348,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     return RefreshIndicator(
       onRefresh: () => matchesProvider.loadSentRequests(),
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: [
           const PrivacyBanner(subtitle: 'Photos are hidden and contact details are shared only after mutual approval')
@@ -361,13 +383,21 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     }
 
     if (matchesProvider.matches.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.favorite_outline, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text('No matches yet', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+      return RefreshIndicator(
+        onRefresh: () => matchesProvider.loadMatches(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.favorite_outline, size: 64, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text('No matches yet', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -376,9 +406,14 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     return RefreshIndicator(
       onRefresh: () => matchesProvider.loadMatches(),
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: matchesProvider.matches.map((match) {
           final index = matchesProvider.matches.indexOf(match);
+          final user = context.watch<AuthProvider>().currentUser;
+          final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+          final isActuallyLocked = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
+          
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: MatchCard(
@@ -389,12 +424,12 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
               photos: match.matchedUserPhotos,
               lockMessage: '',
-              isLocked: false,
+              isLocked: isActuallyLocked,
               isMatched: true,
-              isBlurred: false,
+              isBlurred: isActuallyLocked,
               matchedButtonText: (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser) 
                   ? 'Review Photo Request' 
-                  : 'View photos',
+                  : (isActuallyLocked ? 'Request Photo' : 'View photos'),
               onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
             ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           );

@@ -47,13 +47,13 @@ class ChatMessageModel {
 
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
     return ChatMessageModel(
-      id: json['id'],
-      senderId: json['sender_id'],
-      senderRole: json['sender_role'],
-      message: json['message'],
-      attachment: json['attachment'],
+      id: json['id'] ?? '',
+      senderId: json['sender_id'] ?? '',
+      senderRole: json['sender_is_admin'] == true ? 'admin' : (json['sender_role'] ?? 'user'),
+      message: json['text'] ?? json['message'] ?? '',
+      attachment: json['attachment_url'] ?? json['attachment'],
       isRead: json['is_read'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
     );
   }
 }

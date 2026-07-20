@@ -16,6 +16,7 @@ class MatchedProfileViewScreen extends StatefulWidget {
 
 class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
   bool _hasMarkedViewed = false;
+  int _currentPhotoIndex = 0;
 
   @override
   void initState() {
@@ -114,39 +115,52 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
         child: Column(
           children: [
             // Top Image Card
-            Container(
+            SizedBox(
               height: 350,
               width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                image: DecorationImage(
-                  image: match.matchedUserPhotos.isNotEmpty
-                      ? NetworkImage(match.matchedUserPhotos.first['image']) as ImageProvider
-                      : AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/placeholder_profile.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
               child: Stack(
                 children: [
-                  Positioned(
-                    top: 20,
-                    right: 20,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
-                          SizedBox(width: 4),
-                          Text('1', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ],
+                  PageView.builder(
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPhotoIndex = index;
+                      });
+                    },
+                    itemCount: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.length : 1,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          image: DecorationImage(
+                            image: match.matchedUserPhotos.isNotEmpty
+                                ? NetworkImage(match.matchedUserPhotos[index]['image']) as ImageProvider
+                                : AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/placeholder_profile.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  if (match.matchedUserPhotos.isNotEmpty)
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
+                            Text('${_currentPhotoIndex + 1}/${match.matchedUserPhotos.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

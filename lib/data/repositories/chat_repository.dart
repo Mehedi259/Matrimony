@@ -49,13 +49,13 @@ class ChatRepository {
         ApiConstants.myChatMessages,
         filePath: attachmentPath,
         fieldName: 'attachment',
-        additionalData: {'message': message},
+        additionalData: {'text': message},
       );
       return ChatMessageModel.fromJson(response.data);
     } else {
       final response = await _apiClient.post(
         ApiConstants.myChatMessages,
-        data: {'message': message},
+        data: {'text': message},
       );
       return ChatMessageModel.fromJson(response.data);
     }

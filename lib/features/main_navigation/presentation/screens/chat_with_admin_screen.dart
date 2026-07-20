@@ -62,7 +62,7 @@ class _ChatWithAdminScreenState extends State<ChatWithAdminScreen> {
       
       if (mounted) {
         setState(() {
-          _messages = messages.reversed.toList(); // Reverse to show newest at bottom
+          _messages = messages.reversed.toList(); // Reverse to show newest at bottom with reverse: true
           _isLoading = false;
         });
         
@@ -70,7 +70,7 @@ class _ChatWithAdminScreenState extends State<ChatWithAdminScreen> {
         if (_scrollController.hasClients) {
           Future.delayed(const Duration(milliseconds: 100), () {
             _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
+              0.0, // With reverse: true, 0.0 is the bottom
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
             );
@@ -233,6 +233,7 @@ class _ChatWithAdminScreenState extends State<ChatWithAdminScreen> {
                             ),
                           )
                         : ListView.builder(
+                            reverse: true, // This puts index 0 at the bottom
                             controller: _scrollController,
                             padding: const EdgeInsets.all(16),
                             itemCount: _messages.length,
