@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 import 'package:get/get.dart';
@@ -258,10 +259,18 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 ...matchesProvider.directoryProfiles.map((profile) {
                   final index =
                       matchesProvider.directoryProfiles.indexOf(profile);
+                  
+                  final user = context.watch<AuthProvider>().currentUser;
+                  final isMale = profile.role == 'male';
+                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+                  final shouldOverrideLock = isMale && isFemaleOrWali;
+                  final isActuallyLocked = shouldOverrideLock ? false : profile.photoBlurred;
+                  final canSendRequest = user?.role == 'male';
+                  
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
-                      username: profile.codename,
+                      username: profile.firstName != null ? '${profile.firstName} ${profile.lastName ?? ''}'.trim() : profile.codename,
                       age: profile.age != null
                           ? '${profile.age} Years old'
                           : 'N/A',
@@ -269,14 +278,15 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       profession: profile.city ?? 'N/A',
                       imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
                       photos: profile.photos,
-                      lockMessage: profile.photoBlurred
+                      lockMessage: isActuallyLocked
                           ? 'Photos will be revealed after mutual interest'
                           : '',
-                      isLocked: profile.photoBlurred,
+                      isLocked: isActuallyLocked,
+                      isBlurred: isActuallyLocked,
                       onViewProfile: () {
                         context.push('/matches/directory/${profile.id}');
                       },
-                      onSendInterest: () => _handleSendInterest(profile.id),
+                      onSendInterest: canSendRequest ? () => _handleSendInterest(profile.id) : null,
                     )
                         .animate()
                         .fadeIn(

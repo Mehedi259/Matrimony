@@ -28,6 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     final matchesProvider = context.read<MatchesProvider>();
+    final authProvider = context.read<AuthProvider>();
+    final profileProvider = context.read<ProfileProvider>();
+    
+    // Refresh user profile and photos for the avatar
+    await authProvider.refreshProfile();
+    await profileProvider.loadPhotos();
     
     // Load matches for home screen (suggested profiles)
     await matchesProvider.loadDirectory(page: 1);
@@ -306,6 +312,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ...matchesProvider.directoryProfiles.take(5).map((profile) {
                   final index = matchesProvider.directoryProfiles.indexOf(profile);
                   final isSaved = matchesProvider.wishlists.any((w) => (w['user_id'] ?? w['id']) == profile.id);
+                  
+                  final isMale = profile.role == 'male';
+                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+                  final shouldOverrideLock = isMale && isFemaleOrWali;
+                  final isActuallyLocked = shouldOverrideLock ? false : profile.photoBlurred;
+                  final canSendRequest = user?.role == 'male';
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
@@ -315,10 +328,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       profession: profile.city ?? 'N/A',
                       imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
                       photos: profile.photos,
-                      lockMessage: profile.photoBlurred
+                      lockMessage: isActuallyLocked
                           ? 'Photos will be revealed after mutual interest'
                           : '',
-                      isLocked: profile.photoBlurred,
+                      isLocked: isActuallyLocked,
+                      isBlurred: isActuallyLocked,
                       isWishlisted: isSaved,
                       onWishlistToggle: () async {
                         if (isSaved) {
@@ -331,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Navigate to profile details with userId
                         context.push('/matches/directory/${profile.id}');
                       },
-                      onSendInterest: () => _handleSendInterest(profile.id),
+                      onSendInterest: canSendRequest ? () => _handleSendInterest(profile.id) : null,
                     )
                         .animate()
                         .fadeIn(duration: 700.ms, delay: (700 + index * 200).ms)

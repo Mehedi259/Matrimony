@@ -114,6 +114,10 @@ class MatchesRepository {
     return [];
   }
 
+  Future<void> cancelMatch(String matchId) async {
+    await _apiClient.post('${ApiConstants.cancelMatch}$matchId/cancel/');
+  }
+
   // ========== MATCH PHOTOS ==========
 
   Future<Map<String, dynamic>> requestPhotoView(String matchId) async {

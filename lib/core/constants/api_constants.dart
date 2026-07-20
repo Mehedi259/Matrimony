@@ -43,6 +43,7 @@ class ApiConstants {
   static const String matchesDirectory = '$apiPrefix/matches/directory/';
   static const String matchesDirectoryProfile = '$apiPrefix/matches/directory/'; // + userId
   static const String matches = '$apiPrefix/matches/';
+  static const String cancelMatch = '$apiPrefix/matches/'; // + id + /cancel/
   
   static const String sendRequest = '$apiPrefix/matches/requests/send/';
   static const String resendRequest = '$apiPrefix/matches/requests/resend/';

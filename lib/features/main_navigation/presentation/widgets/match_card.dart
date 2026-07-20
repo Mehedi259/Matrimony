@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class MatchCard extends StatelessWidget {
   final String username;
@@ -104,6 +105,17 @@ class MatchCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          if (isBlurred)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+            ),
+            
           // Dark blur overlay mock
           Container(
             decoration: BoxDecoration(
@@ -358,6 +370,20 @@ class MatchCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                      )
+                    else if (onViewProfile != null && onSendInterest == null)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: onViewProfile,
+                          icon: const Icon(Icons.fit_screen, size: 16, color: Colors.white),
+                          label: const Text('View Profile', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
                       )
                     else if (isLocked && username.isEmpty)
                       // Blurred buttons for "Suggested for you" generic locked card

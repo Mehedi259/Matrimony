@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import 'package:get/get.dart';
@@ -119,7 +120,9 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 image: DecorationImage(
-                  image: AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/placeholder_profile.png'),
+                  image: match.matchedUserPhotos.isNotEmpty
+                      ? NetworkImage(match.matchedUserPhotos.first['image']) as ImageProvider
+                      : AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/placeholder_profile.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -153,7 +156,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _showCancelConnectionDialog(context),
+                onPressed: () => _showCancelConnectionDialog(context, match.id),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE54B5E), // Reddish pink
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -165,7 +168,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
             const SizedBox(height: 16),
             
             // Info Banner
-            if (isBlurred)
+            if (isBlurred && (context.read<AuthProvider>().currentUser?.role != 'female' && context.read<AuthProvider>().currentUser?.role != 'wali'))
               Container(
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -366,7 +369,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     );
   }
 
-  void _showCancelConnectionDialog(BuildContext context) {
+  void _showCancelConnectionDialog(BuildContext context, String matchId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -394,17 +397,25 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Call unmatch API if available
+                        onPressed: () async {
                           Navigator.of(context).pop();
-                          Get.showSnackbar(
-                            const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Unmatch feature coming soon!')),
-                          );
+                          final success = await context.read<MatchesProvider>().cancelMatch(matchId);
+                          if (success) {
+                            if (context.mounted) context.pop();
+                            Get.showSnackbar(const GetSnackBar(
+                              messageText: Text('Connection cancelled successfully'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ));
+                          } else {
+                            if (context.mounted) {
+                              Get.showSnackbar(GetSnackBar(
+                                messageText: Text(context.read<MatchesProvider>().errorMessage ?? 'Failed to cancel connection'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ));
+                            }
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFDF8B8F),

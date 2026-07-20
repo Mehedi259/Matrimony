@@ -36,6 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await Future.wait([
       matchesProvider.loadWishlists(),
       matchesProvider.loadSentRequests(),
+      matchesProvider.loadProfileViewers(),
       profileProvider.loadPhotos(),
     ]);
   }
@@ -96,7 +97,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
-                  _StatPill(icon: Icons.visibility_outlined, label: 'Profile Views', value: '24', color: Colors.blue), // TODO: Get from API
+                  _StatPill(
+                    icon: Icons.visibility_outlined,
+                    label: 'Profile Views',
+                    value: '${matchesProvider.profileViewers.length.toString().padLeft(2, '0')}',
+                    color: Colors.blue,
+                  ),
                   const SizedBox(width: 10),
                   _StatPill(
                     icon: Icons.favorite_border,
@@ -207,19 +213,9 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Calculate profile completion percentage
-    double completionPercentage = 0.5; // Default
+    double completionPercentage = 0.0;
     if (user != null) {
-      int completedFields = 0;
-      int totalFields = 5; // Adjusted to match available fields
-
-      if (user.firstName != null && user.firstName!.isNotEmpty) completedFields++;
-      if (user.email != null && user.email!.isNotEmpty) completedFields++;
-      // Note: dateOfBirth, city, height, etc. are in profile data, not UserModel
-      if (user.profilePicture != null) completedFields++;
-      if (user.lastName != null && user.lastName!.isNotEmpty) completedFields++;
-      if (user.role != null && user.role!.isNotEmpty) completedFields++;
-
-      completionPercentage = completedFields / totalFields;
+      completionPercentage = user.profileCompletionPercentage / 100.0;
     }
 
     return Container(

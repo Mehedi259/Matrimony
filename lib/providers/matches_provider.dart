@@ -76,8 +76,21 @@ class MatchesProvider extends ChangeNotifier {
       final profileData = await _matchesRepository.getDirectoryProfile(userId);
       
       // API returns {"profile": {...}, "basic_info": {...}}
-      // Extract the profile section for the MatchProfileModel
-      final profileJson = profileData['profile'] as Map<String, dynamic>? ?? profileData;
+      // Extract the profile section and merge with basic_info
+      final profileJson = Map<String, dynamic>.from(profileData['profile'] as Map<String, dynamic>? ?? profileData);
+      
+      if (profileData.containsKey('basic_info') && profileData['basic_info'] != null) {
+        final basicInfo = profileData['basic_info'] as Map<String, dynamic>;
+        profileJson['photos'] = basicInfo['photos'];
+        profileJson['ethnicity'] = (basicInfo['ethnicity'] as List?)?.join(', ');
+        profileJson['education'] = basicInfo['education'];
+        profileJson['occupation'] = basicInfo['employment'];
+        profileJson['bio'] = basicInfo['about_yourself'];
+        profileJson['languages'] = (basicInfo['languages_spoken'] as List?)?.join(', ');
+        
+        if (profileJson['height'] == null) profileJson['height'] = basicInfo['height'];
+      }
+      
       _selectedProfile = MatchProfileModel.fromJson(profileJson);
       
       _setLoading(false);
@@ -194,6 +207,21 @@ class MatchesProvider extends ChangeNotifier {
       _matches = await _matchesRepository.getMatches(status: status);
       _setLoading(false);
       notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> cancelMatch(String matchId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.cancelMatch(matchId);
+      await loadMatches(); // Refresh matches to get updated status
+      _setLoading(false);
       return true;
     } catch (e) {
       _setError(e.toString());

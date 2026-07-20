@@ -17,6 +17,7 @@ class UserModel {
   final String? lastActiveDisplay;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double profileCompletionPercentage;
 
   UserModel({
     required this.id,
@@ -37,6 +38,7 @@ class UserModel {
     this.lastActiveDisplay,
     required this.createdAt,
     required this.updatedAt,
+    this.profileCompletionPercentage = 0.0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,7 @@ class UserModel {
       lastActiveDisplay: json['last_active_display'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+      profileCompletionPercentage: (json['profile_completion_percentage'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -88,6 +91,7 @@ class UserModel {
       'last_active_display': lastActiveDisplay,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'profile_completion_percentage': profileCompletionPercentage,
     };
   }
 
@@ -110,6 +114,7 @@ class UserModel {
     String? lastActiveDisplay,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? profileCompletionPercentage,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -130,6 +135,7 @@ class UserModel {
       lastActiveDisplay: lastActiveDisplay ?? this.lastActiveDisplay,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      profileCompletionPercentage: profileCompletionPercentage ?? this.profileCompletionPercentage,
     );
   }
 }

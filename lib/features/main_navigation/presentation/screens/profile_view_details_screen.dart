@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import 'package:get/get.dart';
 
@@ -237,10 +238,20 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
               ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: _HeroImageSection(
-                primaryColor: primaryColor,
-                photoBlurred: _profile!.photoBlurred,
-                codename: _profile!.codename,
+              background: Builder(
+                builder: (context) {
+                  final user = context.watch<AuthProvider>().currentUser;
+                  final isMale = _profile!.role == 'male';
+                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+                  final isActuallyLocked = (isMale && isFemaleOrWali) ? false : _profile!.photoBlurred;
+
+                  return _HeroImageSection(
+                    primaryColor: primaryColor,
+                    photoBlurred: isActuallyLocked,
+                    codename: _profile!.codename,
+                    photos: _profile!.photos,
+                  );
+                },
               ),
             ),
           ),
@@ -342,29 +353,37 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   const SizedBox(height: 20),
 
                   // Send Interest Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      onPressed: _handleSendInterest,
-                      icon: const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
-                      label: const Text(
-                        'Send Interest',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                  Builder(
+                    builder: (context) {
+                      final canSendRequest = context.watch<AuthProvider>().currentUser?.role == 'male';
+                      
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: canSendRequest ? _handleSendInterest : null,
+                          icon: const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
+                          label: const Text(
+                            'Send Interest',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            disabledBackgroundColor: primaryColor.withValues(alpha: 0.5),
+                            disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0),
+                      ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
+                    }
+                  ),
                   const SizedBox(height: 24),
 
                   // Privacy notice
@@ -506,21 +525,32 @@ class _HeroImageSection extends StatelessWidget {
   final Color primaryColor;
   final bool photoBlurred;
   final String codename;
+  final List<dynamic> photos;
 
   const _HeroImageSection({
     required this.primaryColor,
     required this.photoBlurred,
     required this.codename,
+    required this.photos,
   });
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider imageProvider;
+    if (photos.isNotEmpty) {
+      imageProvider = NetworkImage(photos.first['image']);
+    } else {
+      imageProvider = AssetImage(
+        photoBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png',
+      );
+    }
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Profile image (blurred if needed)
-        Image.asset(
-          photoBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png',
+        // Profile image
+        Image(
+          image: imageProvider,
           fit: BoxFit.cover,
         ),
         
