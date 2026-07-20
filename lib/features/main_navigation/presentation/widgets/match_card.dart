@@ -5,7 +5,8 @@ class MatchCard extends StatelessWidget {
   final String age;
   final String height;
   final String profession;
-  final int photoCount;
+  final String? imageUrl;
+  final List<dynamic> photos;
   final bool isLocked;
   final String lockMessage;
   final VoidCallback? onViewProfile;
@@ -28,7 +29,8 @@ class MatchCard extends StatelessWidget {
     required this.age,
     required this.height,
     required this.profession,
-    this.photoCount = 0,
+    this.imageUrl,
+    this.photos = const [],
     this.isLocked = true,
     required this.lockMessage,
     this.onViewProfile,
@@ -46,6 +48,42 @@ class MatchCard extends StatelessWidget {
     this.onWishlistToggle,
   });
 
+  void _showPhotoGallery(BuildContext context) {
+    if (photos.isEmpty) return;
+    
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black,
+      barrierDismissible: true,
+      barrierLabel: 'Close',
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: Text(
+              '${photos.length} Photos',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          body: PageView.builder(
+            itemCount: photos.length,
+            itemBuilder: (context, index) {
+              return Image.network(
+                photos[index]['image'] ?? photos[index].imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(Icons.error_outline, color: Colors.white, size: 40),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -55,11 +93,12 @@ class MatchCard extends StatelessWidget {
         color: Colors.grey[300], // Placeholder for image
         borderRadius: BorderRadius.circular(24),
         image: DecorationImage(
-          image: AssetImage(
-            isBlurred 
-              ? 'assets/blurredProfile1.png' 
-              : 'assets/blurredProfile1.png' // Use blurredProfile2 for matched profiles
-          ),
+          image: imageUrl != null
+              ? NetworkImage(imageUrl!) as ImageProvider
+              : AssetImage(
+                  isBlurred
+                      ? 'assets/blurredProfile1.png'
+                      : 'assets/blurredProfile1.png'), // Use blurredProfile2 for matched profiles
           fit: BoxFit.cover,
         ),
       ),
@@ -118,20 +157,23 @@ class MatchCard extends StatelessWidget {
                       else
                         const SizedBox(), // Empty for match
                       
-                      if (photoCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
-                              const SizedBox(width: 4),
-                              Text('$photoCount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ],
+                      if (photos.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => _showPhotoGallery(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
+                                Text('${photos.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                           ),
                         ),
                     ],

@@ -91,7 +91,8 @@ class _SavedScreenState extends State<SavedScreen> {
                               : 'N/A',
                           height: wishlist['height'] ?? 'N/A',
                           profession: wishlist['city'] ?? 'N/A',
-                          photoCount: 5,
+                          imageUrl: (wishlist['photos'] as List?)?.isNotEmpty == true ? wishlist['photos'].first['image'] : null,
+                          photos: (wishlist['photos'] as List?) ?? [],
                           lockMessage: wishlist['photo_blurred'] == true
                               ? 'Photos will be revealed after mutual interest'
                               : '',

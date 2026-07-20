@@ -267,7 +267,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
                           : 'N/A',
                       height: profile.height ?? 'N/A',
                       profession: profile.city ?? 'N/A',
-                      photoCount: 5,
+                      imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
+                      photos: profile.photos,
                       lockMessage: profile.photoBlurred
                           ? 'Photos will be revealed after mutual interest'
                           : '',

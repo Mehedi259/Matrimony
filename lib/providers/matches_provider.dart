@@ -30,6 +30,21 @@ class MatchesProvider extends ChangeNotifier {
   MatchProfileModel? _selectedProfile;
   MatchProfileModel? get selectedProfile => _selectedProfile;
 
+  // ========== CLEAR DATA ==========
+
+  void clearData() {
+    _directoryProfiles = [];
+    _sentRequests = [];
+    _receivedRequests = [];
+    _matches = [];
+    _wishlists = [];
+    _profileViewers = [];
+    _selectedProfile = null;
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   // ========== DIRECTORY ==========
 
   Future<bool> loadDirectory({

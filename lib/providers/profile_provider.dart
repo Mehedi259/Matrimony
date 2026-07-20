@@ -23,6 +23,16 @@ class ProfileProvider with ChangeNotifier {
     return profileCompletionPercentage >= 80;
   }
 
+  // ========== CLEAR DATA ==========
+
+  void clearData() {
+    _basicInfo = null;
+    _photos = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   // ========== BASIC INFO ==========
 
   Future<bool> loadBasicInfo() async {

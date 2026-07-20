@@ -229,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _StatCard(
                       icon: Icons.mail_outline,
                       iconColor: Colors.amber,
-                      count: '${matchesProvider.sentRequests.length.toString().padLeft(2, '0')}',
+                      count: '${(matchesProvider.sentRequests.length + matchesProvider.receivedRequests.length).toString().padLeft(2, '0')}',
                       label: 'Pending',
                       onTap: () => context.go('/requests'),
                     )
@@ -313,7 +313,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       age: profile.age != null ? '${profile.age} Years old' : 'N/A',
                       height: profile.height ?? 'N/A',
                       profession: profile.city ?? 'N/A',
-                      photoCount: 5,
+                      imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
+                      photos: profile.photos,
                       lockMessage: profile.photoBlurred
                           ? 'Photos will be revealed after mutual interest'
                           : '',

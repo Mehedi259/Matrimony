@@ -23,6 +23,7 @@ class MatchProfileModel {
   final String? education;
   final String? bio;
   final String? languages;
+  final List<dynamic> photos;
 
   MatchProfileModel({
     required this.id,
@@ -49,6 +50,7 @@ class MatchProfileModel {
     this.education,
     this.bio,
     this.languages,
+    this.photos = const [],
   });
 
   factory MatchProfileModel.fromJson(Map<String, dynamic> json) {
@@ -77,6 +79,7 @@ class MatchProfileModel {
       education: json['education'] as String?,
       bio: json['bio'] as String?,
       languages: json['languages'] as String?,
+      photos: json['photos'] as List<dynamic>? ?? [],
     );
   }
 }
@@ -106,6 +109,7 @@ class ConnectionRequestModel {
   String? get receiverHeight => otherUser['height'];
   String? get receiverCity => otherUser['city'];
   String get receiverId => otherUser['id'] ?? '';
+  List<dynamic> get otherUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
 
   factory ConnectionRequestModel.fromJson(Map<String, dynamic> json) {
     return ConnectionRequestModel(
@@ -144,6 +148,7 @@ class MatchModel {
   String? get matchedUserHeight => otherUser['height'];
   String? get matchedUserCity => otherUser['city'];
   String get matchedUserId => otherUser['id'] ?? '';
+  List<dynamic> get matchedUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
     return MatchModel(

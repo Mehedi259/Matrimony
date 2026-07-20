@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _StatPill(
                     icon: Icons.mail_outline,
                     label: 'Pending',
-                    value: '${matchesProvider.sentRequests.length.toString().padLeft(2, '0')}',
+                    value: '${(matchesProvider.sentRequests.length + matchesProvider.receivedRequests.length).toString().padLeft(2, '0')}',
                     color: Colors.amber,
                   ),
                 ],

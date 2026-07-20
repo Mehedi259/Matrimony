@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../providers/profile_provider.dart';
+import '../../../../providers/matches_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -97,10 +99,16 @@ class SettingsScreen extends StatelessWidget {
                     // Capture GoRouter instance before the modal context is destroyed
                     final router = GoRouter.of(context);
                     final authProvider = context.read<AuthProvider>();
+                    final profileProvider = context.read<ProfileProvider>();
+                    final matchesProvider = context.read<MatchesProvider>();
                     
                     // Close the modal
                     Navigator.of(context).pop();
                     
+                    // Clear state in other providers
+                    profileProvider.clearData();
+                    matchesProvider.clearData();
+
                     // Call logout from auth provider
                     await authProvider.logout();
                     
