@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 
 class BrowseScreen extends StatefulWidget {
@@ -65,16 +66,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
     if (!mounted) return;
 
     if (success) {
-      Get.showSnackbar(
-        const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Interest sent successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SnackBarHelper.showRequestSent(context);
     } else {
       Get.showSnackbar(
         GetSnackBar(

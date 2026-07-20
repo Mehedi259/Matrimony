@@ -7,6 +7,7 @@ import '../../../../providers/matches_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -56,16 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     
     if (success) {
-      Get.showSnackbar(
-        const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Interest sent successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SnackBarHelper.showRequestSent(context);
     } else {
       Get.showSnackbar(
         GetSnackBar(

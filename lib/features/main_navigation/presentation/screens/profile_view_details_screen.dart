@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
@@ -81,16 +82,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     if (!mounted) return;
 
     if (success) {
-      Get.showSnackbar(
-        const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Interest sent successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SnackBarHelper.showRequestSent(context);
     } else {
       Get.showSnackbar(
         GetSnackBar(

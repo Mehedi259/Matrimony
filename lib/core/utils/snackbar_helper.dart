@@ -18,6 +18,23 @@ class SnackBarHelper {
     });
   }
 
+  /// Shows an animated pink heart popup for request sent
+  static void showRequestSent(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
+      builder: (context) => const _AnimatedRequestSentPopup(),
+    );
+    
+    // Auto dismiss after 2 seconds
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (context.mounted && Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   /// Shows an animated error popup in the center of screen
   static void showError(BuildContext context, String message) {
     showDialog(
@@ -166,6 +183,145 @@ class _AnimatedSuccessPopupState extends State<_AnimatedSuccessPopup>
                         widget.message,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Request Sent Popup with Pink Heart Animation
+class _AnimatedRequestSentPopup extends StatefulWidget {
+  const _AnimatedRequestSentPopup();
+
+  @override
+  State<_AnimatedRequestSentPopup> createState() => _AnimatedRequestSentPopupState();
+}
+
+class _AnimatedRequestSentPopupState extends State<_AnimatedRequestSentPopup>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _heartPulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.1)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 40.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.1, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 20.0,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 40.0,
+      ),
+    ]).animate(_controller);
+
+    _heartPulseAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 60.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.3)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 20.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.3, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 20.0,
+      ),
+    ]).animate(_controller);
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Opacity(
+              opacity: _fadeAnimation.value,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: _heartPulseAnimation.value,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE54B5E).withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: Color(0xFFE54B5E), // Pink color
+                            size: 64,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Request sent',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
