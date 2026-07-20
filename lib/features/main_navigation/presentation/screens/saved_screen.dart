@@ -96,6 +96,12 @@ class _SavedScreenState extends State<SavedScreen> {
                               ? 'Photos will be revealed after mutual interest'
                               : '',
                           isLocked: wishlist['photo_blurred'] == true,
+                          isWishlisted: true,
+                          onWishlistToggle: () async {
+                            await matchesProvider.removeFromWishlist(
+                              wishlist['user_id'] ?? wishlist['id'],
+                            );
+                          },
                           onViewProfile: () {
                             context.push(
                               '/profile-view-details/${wishlist['user_id'] ?? wishlist['id']}',

@@ -189,60 +189,57 @@ class MatchesProvider extends ChangeNotifier {
   // ========== WISHLISTS ==========
 
   Future<bool> loadWishlists() async {
-    _setLoading(true);
-    _clearError();
-
     try {
       _wishlists = await _matchesRepository.getWishlists();
-      _setLoading(false);
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
       return false;
     }
   }
 
   Future<bool> loadProfileViewers() async {
-    _setLoading(true);
-    _clearError();
-
     try {
       _profileViewers = await _matchesRepository.getProfileViewers();
-      _setLoading(false);
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
       return false;
     }
   }
 
   Future<bool> addToWishlist(String targetUserId) async {
-    _setLoading(true);
     _clearError();
+    final fakeWishlist = {'user_id': targetUserId, 'id': targetUserId};
+    _wishlists.add(fakeWishlist);
+    notifyListeners();
 
     try {
       await _matchesRepository.addToWishlist(targetUserId);
-      await loadWishlists(); // Refresh wishlists
-      _setLoading(false);
+      await loadWishlists(); // Refresh wishlists silently
       return true;
     } catch (e) {
+      _wishlists.remove(fakeWishlist);
+      notifyListeners();
       _setError(e.toString());
       return false;
     }
   }
 
   Future<bool> removeFromWishlist(String targetUserId) async {
-    _setLoading(true);
     _clearError();
+    final removedItems = _wishlists.where((w) => (w['user_id'] ?? w['id']) == targetUserId).toList();
+    _wishlists.removeWhere((w) => (w['user_id'] ?? w['id']) == targetUserId);
+    notifyListeners();
+
     try {
       if (_matchesRepository == null) throw Exception('MatchesRepository not provided');
       await _matchesRepository.removeFromWishlist(targetUserId);
-      await loadWishlists(); // Refresh wishlists
-      _setLoading(false);
+      await loadWishlists(); // Refresh wishlists silently
       return true;
     } catch (e) {
+      _wishlists.addAll(removedItems);
+      notifyListeners();
       _setError(e.toString());
       return false;
     }

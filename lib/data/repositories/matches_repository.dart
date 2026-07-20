@@ -134,7 +134,13 @@ class MatchesRepository {
 
   Future<List<dynamic>> getWishlists() async {
     final response = await _apiClient.get(ApiConstants.wishlists);
-    return response.data as List;
+    final data = response.data as List;
+    return data.map((item) {
+      if (item is Map<String, dynamic> && item.containsKey('profile')) {
+        return item['profile'];
+      }
+      return item;
+    }).toList();
   }
 
   Future<List<dynamic>> getProfileViewers() async {
