@@ -140,6 +140,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     final primaryColor = Theme.of(context).primaryColor;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
     final matchesProvider = context.watch<MatchesProvider>();
+    final user = context.watch<AuthProvider>().currentUser;
+    final isFemaleOrWali = user?.role.toLowerCase() == 'female' || user?.role.toLowerCase() == 'wali' || user?.gender?.toLowerCase() == 'female';
 
     final photoRequests = matchesProvider.matches.where(
       (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
@@ -219,15 +221,15 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildReceivedTab(context, primaryColor, matchesProvider),
-          _buildSentTab(context, matchesProvider),
-          _buildMatchesTab(context, matchesProvider),
+          _buildReceivedTab(context, primaryColor, matchesProvider, isFemaleOrWali),
+          _buildSentTab(context, matchesProvider, isFemaleOrWali),
+          _buildMatchesTab(context, matchesProvider, isFemaleOrWali),
         ],
       ),
     );
   }
 
-  Widget _buildReceivedTab(BuildContext context, Color primaryColor, MatchesProvider matchesProvider) {
+  Widget _buildReceivedTab(BuildContext context, Color primaryColor, MatchesProvider matchesProvider, bool isFemaleOrWali) {
     if (matchesProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -289,7 +291,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 lockMessage: '',
                 isLocked: false,
                 isMatched: true,
-                isBlurred: true,
+                isBlurred: !isFemaleOrWali,
                 matchedButtonText: 'Review Photo Request',
                 onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
               ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -309,6 +311,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
+                isLocked: !isFemaleOrWali,
+                isBlurred: !isFemaleOrWali,
                 onDecline: () => _showDeclineDialog(context, request.id),
                 onAccept: () => _handleAcceptRequest(request.id),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -319,7 +323,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildSentTab(BuildContext context, MatchesProvider matchesProvider) {
+  Widget _buildSentTab(BuildContext context, MatchesProvider matchesProvider, bool isFemaleOrWali) {
     if (matchesProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -367,6 +371,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
+                isLocked: !isFemaleOrWali,
+                isBlurred: !isFemaleOrWali,
                 onCancelRequest: () => _showCancelDialog(context, request.id),
                 onViewProfile: () => context.push('/matches/directory/${request.receiverId}'),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -377,7 +383,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildMatchesTab(BuildContext context, MatchesProvider matchesProvider) {
+  Widget _buildMatchesTab(BuildContext context, MatchesProvider matchesProvider, bool isFemaleOrWali) {
     if (matchesProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -410,8 +416,6 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: matchesProvider.matches.map((match) {
           final index = matchesProvider.matches.indexOf(match);
-          final user = context.watch<AuthProvider>().currentUser;
-          final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
           final isActuallyLocked = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
           
           return Padding(

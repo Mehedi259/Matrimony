@@ -62,8 +62,11 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     final String? profession = otherUser['occupation'];
     final String? bio = otherUser['bio'];
     
+    final authUser = context.watch<AuthProvider>().currentUser;
+    final isFemaleOrWali = authUser?.role.toLowerCase() == 'female' || authUser?.role.toLowerCase() == 'wali' || authUser?.gender?.toLowerCase() == 'female';
+    
     if (_initialIsBlurred == null) {
-      _initialIsBlurred = !match.photosCurrentlyVisible;
+      _initialIsBlurred = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
     }
     final bool isBlurred = _initialIsBlurred!;
 

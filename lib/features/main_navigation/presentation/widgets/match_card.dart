@@ -49,42 +49,6 @@ class MatchCard extends StatelessWidget {
     this.onWishlistToggle,
   });
 
-  void _showPhotoGallery(BuildContext context) {
-    if (photos.isEmpty) return;
-    
-    showGeneralDialog(
-      context: context,
-      barrierColor: Colors.black,
-      barrierDismissible: true,
-      barrierLabel: 'Close',
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            iconTheme: const IconThemeData(color: Colors.white),
-            title: Text(
-              '${photos.length} Photos',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          body: PageView.builder(
-            itemCount: photos.length,
-            itemBuilder: (context, index) {
-              return Image.network(
-                photos[index]['image'] ?? photos[index].imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.error_outline, color: Colors.white, size: 40),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -170,22 +134,19 @@ class MatchCard extends StatelessWidget {
                         const SizedBox(), // Empty for match
                       
                       if (photos.isNotEmpty)
-                        GestureDetector(
-                          onTap: () => _showPhotoGallery(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
-                                const SizedBox(width: 4),
-                                Text('${photos.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.photo_library_outlined, color: Colors.white, size: 16),
+                              const SizedBox(width: 4),
+                              Text('${photos.length}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ],
                           ),
                         ),
                     ],
