@@ -353,7 +353,7 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     if (basicInfo?.weight != null) fields.add(['Weight', basicInfo!.weight!]);
     if (basicInfo?.pray5x != null) fields.add(['Prayer 5x a day?', _formatText(basicInfo!.pray5x!)]);
     if (basicInfo?.openToRelocate != null) fields.add(['Open to relocating?', _formatText(basicInfo!.openToRelocate!)]);
-    if (basicInfo?.preferredDress != null) fields.add(['How do you dress?', _formatText(basicInfo!.preferredDress!)]);
+    if (basicInfo?.dress != null) fields.add(['How do you dress?', _formatText(basicInfo!.dress!)]);
     if (basicInfo?.employment != null) fields.add(['Employment', _formatText(basicInfo!.employment!)]);
     if (basicInfo?.education != null) fields.add(['Education', _formatText(basicInfo!.education!)]);
     if (basicInfo?.income != null) fields.add(['Income', basicInfo!.income!]);
