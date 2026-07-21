@@ -18,11 +18,13 @@ import 'package:get/get.dart';
 class BasicInformationScreen extends StatefulWidget {
   final String? profileType; // 'brother', 'sister', or 'wali'
   final String? gender; // 'Male' or 'Female'
+  final bool isEditing;
   
   const BasicInformationScreen({
     super.key,
     this.profileType,
     this.gender,
+    this.isEditing = false,
   });
 
   @override
@@ -183,10 +185,24 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
     if (!mounted) return;
 
     if (success) {
-      // Navigate to next screen
-      context.push(
-        '/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}',
-      );
+      if (widget.isEditing) {
+        Get.showSnackbar(
+          const GetSnackBar(
+            snackPosition: SnackPosition.TOP,
+            margin: EdgeInsets.all(16),
+            borderRadius: 8,
+            duration: Duration(seconds: 2),
+            messageText: Text('Basic information updated successfully', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop();
+      } else {
+        // Navigate to next screen
+        context.push(
+          '/onboarding/personal-details?profileType=${widget.profileType}&gender=${widget.gender}',
+        );
+      }
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -464,7 +480,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: GradientButton(
-                  text: _isLoading ? 'Saving...' : 'Next',
+                  text: _isLoading ? 'Saving...' : (widget.isEditing ? 'Save' : 'Next'),
                   onPressed: _isLoading ? null : _saveAndContinue,
                 ),
               ),

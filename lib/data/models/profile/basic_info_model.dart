@@ -20,7 +20,10 @@ class BasicInfoModel {
   final String? income;
   final String? frame;
   final List<String> languagesSpoken;
-  final String? preferredDress;
+  final String? dress;
+  final String? waliName;
+  final String? waliRelation;
+  final String? waliNumber;
   final int? prefAgeMin;
   final int? prefAgeMax;
   final List<String> prefMaritalStatus;
@@ -63,7 +66,10 @@ class BasicInfoModel {
     this.income,
     this.frame,
     required this.languagesSpoken,
-    this.preferredDress,
+    this.dress,
+    this.waliName,
+    this.waliRelation,
+    this.waliNumber,
     this.prefAgeMin,
     this.prefAgeMax,
     required this.prefMaritalStatus,
@@ -108,7 +114,10 @@ class BasicInfoModel {
       income: json['income'],
       frame: json['frame'],
       languagesSpoken: (json['languages_spoken'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      preferredDress: json['preferred_dress'],
+      dress: json['dress'] ?? json['preferred_dress'],
+      waliName: json['wali_name'],
+      waliRelation: json['wali_relation'],
+      waliNumber: json['wali_number'],
       prefAgeMin: json['pref_age_min'],
       prefAgeMax: json['pref_age_max'],
       prefMaritalStatus: (json['pref_marital_status'] as List?)?.map((e) => e.toString()).toList() ?? [],
@@ -154,7 +163,10 @@ class BasicInfoModel {
       'income': income,
       'frame': frame,
       'languages_spoken': languagesSpoken,
-      'preferred_dress': preferredDress,
+      'dress': dress,
+      'wali_name': waliName,
+      'wali_relation': waliRelation,
+      'wali_number': waliNumber,
       'pref_age_min': prefAgeMin,
       'pref_age_max': prefAgeMax,
       'pref_marital_status': prefMaritalStatus,

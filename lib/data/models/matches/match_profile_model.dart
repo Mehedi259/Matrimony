@@ -147,6 +147,32 @@ class MatchModel {
     required this.updatedAt,
   });
 
+  MatchModel copyWith({
+    String? id,
+    String? matchId,
+    String? status,
+    Map<String, dynamic>? otherUser,
+    bool? photosCurrentlyVisible,
+    String? photoRequestStatus,
+    bool? photoRequestedByOtherUser,
+    String? waliRequestStatus,
+    DateTime? acceptedAt,
+    DateTime? updatedAt,
+  }) {
+    return MatchModel(
+      id: id ?? this.id,
+      matchId: matchId ?? this.matchId,
+      status: status ?? this.status,
+      otherUser: otherUser ?? this.otherUser,
+      photosCurrentlyVisible: photosCurrentlyVisible ?? this.photosCurrentlyVisible,
+      photoRequestStatus: photoRequestStatus ?? this.photoRequestStatus,
+      photoRequestedByOtherUser: photoRequestedByOtherUser ?? this.photoRequestedByOtherUser,
+      waliRequestStatus: waliRequestStatus ?? this.waliRequestStatus,
+      acceptedAt: acceptedAt ?? this.acceptedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   String get matchedUserCodename => otherUser['codename'] ?? '';
   int? get matchedUserAge => otherUser['age'];
   String? get matchedUserHeight => otherUser['height'];

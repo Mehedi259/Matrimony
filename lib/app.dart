@@ -283,15 +283,27 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       ),
       GoRoute(
         path: '/basic-information-form',
-        builder: (context, state) => const BasicInformationFormScreen(),
+        builder: (context, state) => Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+          body: const SafeArea(child: BasicInformationScreen(isEditing: true)),
+        ),
       ),
       GoRoute(
         path: '/personal-details-form',
-        builder: (context, state) => const PersonalDetailsFormScreen(),
+        builder: (context, state) => Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+          body: const SafeArea(child: PersonalDetailsScreenNew(isEditing: true)),
+        ),
       ),
       GoRoute(
         path: '/preferences-form',
-        builder: (context, state) => const PreferencesFormScreen(),
+        builder: (context, state) => Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+          body: const SafeArea(child: YourPreferencesScreen(isEditing: true)),
+        ),
       ),
       GoRoute(
         path: '/upload-photo-form',
@@ -299,7 +311,11 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
       ),
       GoRoute(
         path: '/about-expectations-form',
-        builder: (context, state) => const AboutExpectationsFormScreen(),
+        builder: (context, state) => Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+          body: const SafeArea(child: AboutExpectationsScreen(isEditing: true)),
+        ),
       ),
       GoRoute(
         path: '/settings',

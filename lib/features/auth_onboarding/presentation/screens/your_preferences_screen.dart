@@ -15,7 +15,12 @@ import '../../../../providers/profile_provider.dart';
 import 'package:get/get.dart';
 
 class YourPreferencesScreen extends StatefulWidget {
-  const YourPreferencesScreen({super.key});
+  final bool isEditing;
+
+  const YourPreferencesScreen({
+    super.key,
+    this.isEditing = false,
+  });
 
   @override
   State<YourPreferencesScreen> createState() => _YourPreferencesScreenState();
@@ -104,7 +109,21 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
     if (!mounted) return;
 
     if (success) {
-      context.push('/onboarding/about-expectations');
+      if (widget.isEditing) {
+        Get.showSnackbar(
+          const GetSnackBar(
+            snackPosition: SnackPosition.TOP,
+            margin: EdgeInsets.all(16),
+            borderRadius: 8,
+            duration: Duration(seconds: 2),
+            messageText: Text('Preferences updated successfully', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop();
+      } else {
+        context.push('/onboarding/about-expectations');
+      }
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -282,7 +301,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: GradientButton(
-                  text: _isLoading ? 'Saving...' : 'Next',
+                  text: _isLoading ? 'Saving...' : (widget.isEditing ? 'Save' : 'Next'),
                   onPressed: _isLoading ? null : _saveAndContinue,
                 ),
               ),

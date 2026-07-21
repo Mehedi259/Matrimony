@@ -9,7 +9,12 @@ import '../../../../providers/profile_provider.dart';
 import 'package:get/get.dart';
 
 class AboutExpectationsScreen extends StatefulWidget {
-  const AboutExpectationsScreen({super.key});
+  final bool isEditing;
+
+  const AboutExpectationsScreen({
+    super.key,
+    this.isEditing = false,
+  });
 
   @override
   State<AboutExpectationsScreen> createState() => _AboutExpectationsScreenState();
@@ -83,6 +88,10 @@ class _AboutExpectationsScreenState extends State<AboutExpectationsScreen> {
       'other_preferences': _otherPreferencesController.text.isNotEmpty ? _otherPreferencesController.text : null,
     };
 
+    print('=== SAVING EXPECTATIONS ===');
+    print(data);
+    print('===========================');
+
     final profileProvider = context.read<ProfileProvider>();
     final success = await profileProvider.updateBasicInfo(data);
 
@@ -91,7 +100,21 @@ class _AboutExpectationsScreenState extends State<AboutExpectationsScreen> {
     if (!mounted) return;
 
     if (success) {
-      context.push('/onboarding/upload-photos');
+      if (widget.isEditing) {
+        Get.showSnackbar(
+          const GetSnackBar(
+            snackPosition: SnackPosition.TOP,
+            margin: EdgeInsets.all(16),
+            borderRadius: 8,
+            duration: Duration(seconds: 2),
+            messageText: Text('Expectations updated successfully', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop();
+      } else {
+        context.push('/onboarding/upload-photos');
+      }
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -234,7 +257,7 @@ class _AboutExpectationsScreenState extends State<AboutExpectationsScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: GradientButton(
-                  text: _isLoading ? 'Saving...' : 'Next',
+                  text: _isLoading ? 'Saving...' : (widget.isEditing ? 'Save' : 'Next'),
                   onPressed: _isLoading ? null : _saveAndContinue,
                 ),
               ),

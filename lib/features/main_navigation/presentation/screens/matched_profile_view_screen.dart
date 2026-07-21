@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as dart_ui;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
@@ -16,6 +17,7 @@ class MatchedProfileViewScreen extends StatefulWidget {
 
 class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
   bool _hasMarkedViewed = false;
+  bool? _initialIsBlurred;
   int _currentPhotoIndex = 0;
 
   @override
@@ -59,7 +61,11 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     final String? height = otherUser['height'];
     final String? profession = otherUser['occupation'];
     final String? bio = otherUser['bio'];
-    final bool isBlurred = !match.photosCurrentlyVisible;
+    
+    if (_initialIsBlurred == null) {
+      _initialIsBlurred = !match.photosCurrentlyVisible;
+    }
+    final bool isBlurred = _initialIsBlurred!;
 
     // Mark photos as viewed if they are currently visible and haven't been marked yet
     if (!isBlurred && !_hasMarkedViewed) {
@@ -128,17 +134,48 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                     },
                     itemCount: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.length : 1,
                     itemBuilder: (context, index) {
-                      return Container(
+                      Widget imageContainer = Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           image: DecorationImage(
                             image: match.matchedUserPhotos.isNotEmpty
                                 ? NetworkImage(match.matchedUserPhotos[index]['image']) as ImageProvider
-                                : AssetImage(isBlurred ? 'assets/blurredProfile1.png' : 'assets/placeholder_profile.png'),
+                                : const AssetImage('assets/placeholder_profile.png'),
                             fit: BoxFit.cover,
                           ),
                         ),
                       );
+                      
+                      if (isBlurred) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              imageContainer,
+                              BackdropFilter(
+                                filter: ColorFilter.mode(
+                                  Colors.white.withOpacity(0.1),
+                                  BlendMode.srcOver,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                  ),
+                                ),
+                              ),
+                              BackdropFilter(
+                                filter: dart_ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                                child: Container(
+                                  color: Colors.transparent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      
+                      return imageContainer;
                     },
                   ),
                   if (match.matchedUserPhotos.isNotEmpty)

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/common/dropdown_field.dart';
 import '../widgets/common/searchable_dropdown.dart';
 import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/multi_select_field.dart';
 import '../../../../core/constants/dropdown_options.dart';
 import '../../../../core/utils/snackbar_helper.dart';
+import '../../../../providers/profile_provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../core/constants/choice_mappings.dart';
 
 /// Step 2: About You - Personal Details Screen
 /// This screen collects detailed demographic and personal information
@@ -13,11 +18,13 @@ import '../../../../core/utils/snackbar_helper.dart';
 class PersonalDetailsScreenNew extends StatefulWidget {
   final String? userType; // 'brother', 'sister', or 'wali'
   final String? gender; // 'Male' or 'Female'
+  final bool isEditing;
 
   const PersonalDetailsScreenNew({
     super.key,
     this.userType,
     this.gender,
+    this.isEditing = false,
   });
 
   @override
@@ -36,6 +43,14 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
   String? _weight;
   String? _prayerFrequency;
   String? _openToRelocating;
+
+  // New fields
+  String? _education;
+  final TextEditingController _employmentController = TextEditingController();
+  String? _income;
+  String? _frame;
+  List<String> _languagesSpoken = [];
+  final TextEditingController _healthConcernsController = TextEditingController();
   
   // Sister-specific fields
   String? _dressStyle;
@@ -44,15 +59,57 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
   final TextEditingController _waliNumberController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadExistingData();
+  }
+
+  void _loadExistingData() {
+    final info = Provider.of<ProfileProvider>(context, listen: false).basicInfo;
+    if (info != null) {
+      _religionSect = info.sect != null ? ChoiceMappings.keyToDisplay(info.sect!, ChoiceMappings.sectKeyToDisplay) : null;
+      _maritalStatus = info.maritalStatus != null ? ChoiceMappings.keyToDisplay(info.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : null;
+      if (info.ethnicity.isNotEmpty) {
+        _ethnicity = ChoiceMappings.keyToDisplay(info.ethnicity.first, ChoiceMappings.ethnicityKeyToDisplay);
+      }
+      if (info.nationality.isNotEmpty) {
+        _nationality = ChoiceMappings.keyToDisplay(info.nationality.first, ChoiceMappings.nationalityKeyToDisplay);
+      }
+      if (info.hasChildren != null) {
+        _hasChildren = info.hasChildren! ? 'Yes' : 'No';
+      }
+      _numberOfChildren = info.childrenCount != null ? ChoiceMappings.keyToDisplay(info.childrenCount!, ChoiceMappings.childrenCountKeyToDisplay) : null;
+      _height = info.height;
+      _weight = info.weight;
+      _prayerFrequency = info.pray5x != null ? ChoiceMappings.keyToDisplay(info.pray5x!, ChoiceMappings.prayerKeyToDisplay) : null;
+      _openToRelocating = info.openToRelocate != null ? ChoiceMappings.keyToDisplay(info.openToRelocate!, ChoiceMappings.relocationKeyToDisplay) : null;
+      
+      _education = info.education != null ? ChoiceMappings.keyToDisplay(info.education!, ChoiceMappings.educationKeyToDisplay) : null;
+      _employmentController.text = info.employment ?? '';
+      _income = info.income != null ? ChoiceMappings.keyToDisplay(info.income!, ChoiceMappings.incomeKeyToDisplay) : null;
+      _frame = info.frame != null ? ChoiceMappings.keyToDisplay(info.frame!, ChoiceMappings.frameKeyToDisplay) : null;
+      _healthConcernsController.text = info.healthConcerns ?? '';
+      if (info.languagesSpoken.isNotEmpty) {
+        _languagesSpoken = ChoiceMappings.keysToDisplays(info.languagesSpoken, ChoiceMappings.languageKeyToDisplay);
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _waliNameController.dispose();
     _waliRelationController.dispose();
     _waliNumberController.dispose();
+    _employmentController.dispose();
+    _healthConcernsController.dispose();
     super.dispose();
   }
 
-  bool get isSister => widget.gender == 'Female' || widget.userType == 'sister';
-  bool get isBrother => widget.gender == 'Male' || widget.userType == 'brother';
+  bool get isSister {
+    if (widget.gender == 'Female' || widget.userType == 'sister') return true;
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    return user?.role == 'female' || user?.gender == 'female';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +120,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
         children: [
           const SizedBox(height: 8),
           
-          // Header
           const Center(
             child: Text(
               'About You',
@@ -78,9 +134,51 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Education',
+            value: _education,
+            items: ChoiceMappings.educationDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _education = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'Employment / Profession',
+            hint: 'What do you do for work?',
+            controller: _employmentController,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Income',
+            value: _income,
+            items: ChoiceMappings.incomeDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _income = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Frame / Build',
+            value: _frame,
+            items: ChoiceMappings.frameDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _frame = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          MultiSelectField(
+            label: 'Languages Spoken',
+            options: ChoiceMappings.languageDisplayToKey.keys.toList(),
+            selectedValues: _languagesSpoken,
+            onChanged: (values) => setState(() => _languagesSpoken = values),
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'Health Concerns',
+            hint: 'Any health concerns? (Optional, write None if NA)',
+            controller: _healthConcernsController,
+          ),
+          const SizedBox(height: 16),
           
-          // Religion/Sect
           _buildDropdown(
             label: 'Religion/Sect',
             value: _religionSect,
@@ -90,7 +188,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Marital Status
           _buildDropdown(
             label: 'Marital Status',
             value: _maritalStatus,
@@ -102,7 +199,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Ethnicity (Searchable)
           SearchableDropdown(
             label: 'Ethnicity',
             value: _ethnicity,
@@ -112,7 +208,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Nationality/Citizenship (Searchable)
           SearchableDropdown(
             label: 'Nationality / Citizenship',
             value: _nationality,
@@ -123,7 +218,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Do you have children?
           _buildDropdown(
             label: 'Do you have children?',
             value: _hasChildren,
@@ -140,7 +234,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // How many children? (conditional)
           if (_hasChildren == 'Yes') ...[
             _buildDropdown(
               label: 'How many children do you have?',
@@ -152,7 +245,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
             const SizedBox(height: 24),
           ],
           
-          // Height
           _buildDropdown(
             label: 'Height',
             value: _height,
@@ -162,7 +254,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Weight
           _buildDropdown(
             label: 'Weight',
             value: _weight,
@@ -172,7 +263,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Pray 5x a day?
           _buildDropdown(
             label: 'Pray 5x a day?',
             value: _prayerFrequency,
@@ -182,7 +272,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Are you open to relocating?
           _buildDropdown(
             label: 'Are you open to relocating?',
             value: _openToRelocating,
@@ -192,9 +281,7 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          // Sister-specific fields
           if (isSister) ...[
-            // How do you dress?
             _buildDropdown(
               label: 'How do you dress?',
               value: _dressStyle,
@@ -204,7 +291,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
             ),
             const SizedBox(height: 32),
             
-            // Wali Information Section
             const Divider(thickness: 2),
             const SizedBox(height: 16),
             const Text(
@@ -243,7 +329,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           
           const SizedBox(height: 32),
           
-          // Navigation Buttons
           Row(
             children: [
               Expanded(
@@ -269,8 +354,8 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
               const SizedBox(width: 16),
               Expanded(
                 child: GradientButton(
-                  text: 'Next',
-                  onPressed: _validateAndProceed,
+                  text: widget.isEditing ? 'Save Changes' : 'Continue',
+                  onPressed: _saveAndContinue,
                 ),
               ),
             ],
@@ -281,7 +366,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     );
   }
 
-  // Helper method to build dropdown fields
   Widget _buildDropdown({
     required String label,
     required String? value,
@@ -339,7 +423,7 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     );
   }
 
-  void _validateAndProceed() {
+  void _saveAndContinue() async {
     // Validate required fields
     if (_religionSect == null ||
         _maritalStatus == null ||
@@ -354,7 +438,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
       return;
     }
 
-    // Sister-specific validation
     if (isSister) {
       if (_dressStyle == null ||
           _waliNameController.text.isEmpty ||
@@ -371,8 +454,47 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
       return;
     }
 
-    // TODO: Save data to state management
-    // Navigate to next step
-    context.push('/onboarding/preferences');
+    Map<String, dynamic> data = {
+      'sect': ChoiceMappings.displayToKey(_religionSect!, ChoiceMappings.sectDisplayToKey),
+      'marital_status': ChoiceMappings.displayToKey(_maritalStatus!, ChoiceMappings.maritalStatusDisplayToKey),
+      'ethnicity': [ChoiceMappings.displayToKey(_ethnicity!, ChoiceMappings.ethnicityDisplayToKey)],
+      'nationality': [ChoiceMappings.displayToKey(_nationality!, ChoiceMappings.nationalityDisplayToKey)],
+      'has_children': _hasChildren == 'Yes',
+      'children_count': _hasChildren == 'Yes' ? ChoiceMappings.displayToKey(_numberOfChildren!, ChoiceMappings.childrenCountDisplayToKey) : null,
+      'height': _height,
+      'weight': _weight,
+      'pray_5x': ChoiceMappings.displayToKey(_prayerFrequency!, ChoiceMappings.prayerDisplayToKey),
+      'open_to_relocate': ChoiceMappings.displayToKey(_openToRelocating!, ChoiceMappings.relocationDisplayToKey),
+    };
+
+    if (_education != null) data['education'] = ChoiceMappings.displayToKey(_education!, ChoiceMappings.educationDisplayToKey);
+    if (_employmentController.text.isNotEmpty) data['employment'] = _employmentController.text;
+    if (_income != null) data['income'] = ChoiceMappings.displayToKey(_income!, ChoiceMappings.incomeDisplayToKey);
+    if (_frame != null) data['frame'] = ChoiceMappings.displayToKey(_frame!, ChoiceMappings.frameDisplayToKey);
+    if (_healthConcernsController.text.isNotEmpty) data['health_concerns'] = _healthConcernsController.text;
+    if (_languagesSpoken.isNotEmpty) {
+      data['languages_spoken'] = ChoiceMappings.displaysToKeys(_languagesSpoken, ChoiceMappings.languageDisplayToKey);
+    }
+
+    if (isSister) {
+      data['dress'] = ChoiceMappings.displayToKey(_dressStyle!, ChoiceMappings.dressDisplayToKey);
+      data['wali_name'] = _waliNameController.text;
+      data['wali_relation'] = _waliRelationController.text;
+      data['wali_number'] = _waliNumberController.text;
+    }
+
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final success = await profileProvider.updateBasicInfo(data);
+    
+    if (success && mounted) {
+      SnackBarHelper.showSuccess(context, 'Personal Details saved successfully');
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.push('/onboarding/preferences');
+      }
+    } else if (mounted) {
+      SnackBarHelper.showError(context, profileProvider.errorMessage ?? 'Failed to save Personal Details');
+    }
   }
 }

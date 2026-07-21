@@ -78,7 +78,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
         _selectedWeight = info.weight;
         _pray5x = info.pray5x ?? 'Mostly';
         _openToRelocate = info.openToRelocate ?? 'Maybe';
-        _preferredDress = info.preferredDress;
+        _preferredDress = info.dress;
       });
     }
   }

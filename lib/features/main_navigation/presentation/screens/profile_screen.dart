@@ -38,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       matchesProvider.loadSentRequests(),
       matchesProvider.loadProfileViewers(),
       profileProvider.loadPhotos(),
+      profileProvider.loadBasicInfo(),
     ]);
   }
 
@@ -68,6 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   secondaryColor: secondaryColor,
                   user: user,
                   photos: context.watch<ProfileProvider>().photos,
+                  dynamicCompletionPercentage: context.watch<ProfileProvider>().basicInfo?.completionPercentage,
                 ),
               ),
             actions: [
@@ -152,6 +154,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileCard(BuildContext context, Color primaryColor, Color secondaryColor, user) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final basicInfo = profileProvider.basicInfo;
+    final authProvider = context.watch<AuthProvider>();
+    final currentUser = authProvider.currentUser;
+    bool isSister = currentUser?.role == 'female' || currentUser?.gender == 'female';
+
+    bool isBasicInfoComplete = basicInfo != null && 
+        basicInfo.howFound.isNotEmpty &&
+        basicInfo.phone != null && basicInfo.phone!.isNotEmpty && 
+        basicInfo.city != null && basicInfo.city!.isNotEmpty &&
+        basicInfo.country != null && basicInfo.country!.isNotEmpty &&
+        basicInfo.dateOfBirth != null && basicInfo.dateOfBirth!.isNotEmpty;
+
+    bool isPersonalDetailsComplete = basicInfo != null && 
+        basicInfo.sect != null && 
+        basicInfo.maritalStatus != null && 
+        basicInfo.ethnicity.isNotEmpty &&
+        basicInfo.nationality.isNotEmpty &&
+        basicInfo.hasChildren != null &&
+        (basicInfo.hasChildren == false || (basicInfo.hasChildren == true && basicInfo.childrenCount != null)) &&
+        basicInfo.height != null &&
+        basicInfo.weight != null &&
+        basicInfo.pray5x != null &&
+        basicInfo.openToRelocate != null &&
+        basicInfo.education != null &&
+        basicInfo.employment != null && basicInfo.employment!.isNotEmpty &&
+        basicInfo.income != null &&
+        basicInfo.frame != null &&
+        basicInfo.languagesSpoken.isNotEmpty &&
+        basicInfo.healthConcerns != null && basicInfo.healthConcerns!.isNotEmpty &&
+        (!isSister || (basicInfo.dress != null && basicInfo.waliName != null && basicInfo.waliName!.isNotEmpty && basicInfo.waliRelation != null && basicInfo.waliRelation!.isNotEmpty && basicInfo.waliNumber != null && basicInfo.waliNumber!.isNotEmpty));
+
+    bool isPreferencesComplete = basicInfo != null && 
+        basicInfo.prefAgeMin != null && 
+        basicInfo.prefAgeMax != null &&
+        basicInfo.prefMaritalStatus.isNotEmpty &&
+        basicInfo.prefEthnicity.isNotEmpty &&
+        basicInfo.prefCountryOfResidence.isNotEmpty;
+
+    bool isAboutExpectationsComplete = basicInfo != null && 
+        basicInfo.relationshipWithIslam != null && basicInfo.relationshipWithIslam!.isNotEmpty &&
+        basicInfo.roleAsSpouse != null && basicInfo.roleAsSpouse!.isNotEmpty &&
+        basicInfo.aboutYourself != null && basicInfo.aboutYourself!.isNotEmpty &&
+        basicInfo.envisionSpouse != null && basicInfo.envisionSpouse!.isNotEmpty &&
+        basicInfo.envisionMarriage != null && basicInfo.envisionMarriage!.isNotEmpty &&
+        basicInfo.spouseReligiousStatusPref != null && basicInfo.spouseReligiousStatusPref!.isNotEmpty &&
+        basicInfo.openToRelocateDetails != null && basicInfo.openToRelocateDetails!.isNotEmpty &&
+        basicInfo.otherPreferences != null && basicInfo.otherPreferences!.isNotEmpty;
+
     final items = [
       _ItemData(
         icon: Icons.verified_outlined, 
@@ -159,13 +210,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: 'Verify Profile', 
         subtitle: 'Identity verified', 
         isCompleted: false, // Set to false if not verified
-        onTap: () => context.push('/chat-with-admin'),
+        onTap: () => context.push('/settings/chat-with-admin'),
       ),
-      _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: true, onTap: () => context.push('/basic-information-form')),
-      _ItemData(icon: Icons.location_on_outlined, iconColor: Colors.orange, title: 'Personal Information', subtitle: 'Lifestyle, values, hobbies, about you', isCompleted: true, onTap: () => context.push('/personal-details-form')),
-      _ItemData(icon: Icons.favorite_border, iconColor: Colors.pink, title: 'Preferences', subtitle: 'Partner preferences and expectations', isCompleted: true, onTap: () => context.push('/preferences-form')),
-      _ItemData(icon: Icons.camera_alt_outlined, iconColor: primaryColor, title: 'Photos', subtitle: '${context.watch<ProfileProvider>().photos.length} of 6 photos added', isCompleted: context.watch<ProfileProvider>().photos.length >= 6, statusText: '${context.watch<ProfileProvider>().photos.length}/6', onTap: () => context.push('/upload-photo-form')),
-      _ItemData(icon: Icons.people_outline, iconColor: Colors.purple, title: 'About You & Expectations', subtitle: 'What you are looking for', isCompleted: true, onTap: () => context.push('/about-expectations-form')),
+      _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: isBasicInfoComplete, onTap: () => context.push('/basic-information-form')),
+      _ItemData(icon: Icons.location_on_outlined, iconColor: Colors.orange, title: 'Personal Information', subtitle: 'Lifestyle, values, hobbies, about you', isCompleted: isPersonalDetailsComplete, onTap: () => context.push('/personal-details-form')),
+      _ItemData(icon: Icons.favorite_border, iconColor: Colors.pink, title: 'Preferences', subtitle: 'Partner preferences and expectations', isCompleted: isPreferencesComplete, onTap: () => context.push('/preferences-form')),
+      _ItemData(icon: Icons.camera_alt_outlined, iconColor: primaryColor, title: 'Photos', subtitle: '${profileProvider.photos.length} of 6 photos added', isCompleted: profileProvider.photos.length >= 6, statusText: '${profileProvider.photos.length}/6', onTap: () => context.push('/upload-photo-form')),
+      _ItemData(icon: Icons.people_outline, iconColor: Colors.purple, title: 'About You & Expectations', subtitle: 'What you are looking for', isCompleted: isAboutExpectationsComplete, onTap: () => context.push('/about-expectations-form')),
       _ItemData(icon: Icons.settings_outlined, iconColor: Colors.grey, title: 'Settings', subtitle: 'Privacy, notifications, security', isCompleted: null, onTap: () => context.push('/settings')),
     ];
 
@@ -202,19 +253,23 @@ class _ProfileHeader extends StatelessWidget {
   final Color secondaryColor;
   final dynamic user;
   final List<dynamic> photos;
+  final int? dynamicCompletionPercentage;
 
   const _ProfileHeader({
     required this.primaryColor,
     required this.secondaryColor,
     required this.user,
     required this.photos,
+    this.dynamicCompletionPercentage,
   });
 
   @override
   Widget build(BuildContext context) {
     // Calculate profile completion percentage
     double completionPercentage = 0.0;
-    if (user != null) {
+    if (dynamicCompletionPercentage != null) {
+      completionPercentage = dynamicCompletionPercentage! / 100.0;
+    } else if (user != null) {
       completionPercentage = user.profileCompletionPercentage / 100.0;
     }
 

@@ -271,6 +271,17 @@ class MatchesProvider extends ChangeNotifier {
     // Silently mark as viewed without loading indicator
     try {
       await _matchesRepository.markPhotosViewed(matchId);
+      
+      // Update local state
+      final index = _matches.indexWhere((m) => m.id == matchId);
+      if (index != -1) {
+        _matches[index] = _matches[index].copyWith(
+          photosCurrentlyVisible: false,
+          photoRequestStatus: 'none',
+        );
+        notifyListeners();
+      }
+      
       return true;
     } catch (e) {
       debugPrint('Failed to mark photos viewed: $e');
