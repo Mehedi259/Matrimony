@@ -11,6 +11,7 @@ import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../core/constants/choice_mappings.dart';
+import 'package:get/get.dart';
 
 /// Step 2: About You - Personal Details Screen
 /// This screen collects detailed demographic and personal information
@@ -487,14 +488,32 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     final success = await profileProvider.updateBasicInfo(data);
     
     if (success && mounted) {
-      SnackBarHelper.showSuccess(context, 'Personal Details saved successfully');
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 3),
+          messageText: Text('Personal Details saved successfully', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+        ),
+      );
       if (widget.isEditing) {
         context.pop();
       } else {
         context.push('/onboarding/preferences');
       }
     } else if (mounted) {
-      SnackBarHelper.showError(context, profileProvider.errorMessage ?? 'Failed to save Personal Details');
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save Personal Details', style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }
