@@ -9,6 +9,7 @@ import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -241,7 +242,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Private Matchmaking Button
               GestureDetector(
-                onTap: () => context.push('/private-matchmaking'),
+                onTap: () async {
+                  final Uri url = Uri.parse('https://link.amuslimmatchmaker.com/widget/bookings/privatematchmaking');
+                  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                    Get.showSnackbar(
+                      const GetSnackBar(
+                        snackPosition: SnackPosition.TOP,
+                        margin: EdgeInsets.all(16),
+                        borderRadius: 8,
+                        duration: Duration(seconds: 3),
+                        messageText: Text('Could not launch booking page', style: TextStyle(color: Colors.white)),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
