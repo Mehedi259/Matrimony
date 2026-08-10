@@ -63,7 +63,7 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -97,7 +97,7 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       _selectedProfile = null;
       notifyListeners();
       return false;
@@ -116,7 +116,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -138,7 +138,7 @@ class MatchesProvider extends ChangeNotifier {
         notifyListeners();
         return true;
       }
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -153,7 +153,7 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -177,7 +177,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -192,7 +192,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -209,7 +209,7 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -224,7 +224,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -241,7 +241,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -262,7 +262,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -324,7 +324,7 @@ class MatchesProvider extends ChangeNotifier {
     } catch (e) {
       _wishlists.remove(fakeWishlist);
       notifyListeners();
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -343,7 +343,7 @@ class MatchesProvider extends ChangeNotifier {
     } catch (e) {
       _wishlists.addAll(removedItems);
       notifyListeners();
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -359,7 +359,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return false;
     }
   }
@@ -373,7 +373,7 @@ class MatchesProvider extends ChangeNotifier {
       _setLoading(false);
       return request;
     } catch (e) {
-      _setError(e.toString());
+      _handleError(e);
       return null;
     }
   }
@@ -382,6 +382,27 @@ class MatchesProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
+    notifyListeners();
+  }
+
+  void _handleError(dynamic e) {
+    if (e is DioException && e.response?.data != null) {
+      final data = e.response!.data;
+      if (data is Map) {
+        if (data.containsKey('detail')) {
+          _errorMessage = data['detail'].toString();
+        } else if (data.containsKey('message')) {
+          _errorMessage = data['message'].toString();
+        } else {
+          _errorMessage = e.message ?? e.toString();
+        }
+      } else {
+        _errorMessage = e.message ?? e.toString();
+      }
+    } else {
+      _errorMessage = e.toString();
+    }
+    _isLoading = false;
     notifyListeners();
   }
 

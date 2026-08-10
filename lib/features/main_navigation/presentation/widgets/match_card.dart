@@ -4,8 +4,8 @@ import 'dart:ui';
 class MatchCard extends StatelessWidget {
   final String username;
   final String age;
-  final String height;
-  final String profession;
+  final String ethnicity;
+  final String country;
   final String? imageUrl;
   final List<dynamic> photos;
   final bool isLocked;
@@ -23,13 +23,14 @@ class MatchCard extends StatelessWidget {
   final bool isBlurred;
   final bool isWishlisted;
   final VoidCallback? onWishlistToggle;
+  final bool isRequestSent;
 
   const MatchCard({
     super.key,
     required this.username,
     required this.age,
-    required this.height,
-    required this.profession,
+    required this.ethnicity,
+    required this.country,
     this.imageUrl,
     this.photos = const [],
     this.isLocked = true,
@@ -47,6 +48,7 @@ class MatchCard extends StatelessWidget {
     this.isBlurred = true,
     this.isWishlisted = false,
     this.onWishlistToggle,
+    this.isRequestSent = false,
   });
 
   @override
@@ -205,13 +207,13 @@ class MatchCard extends StatelessWidget {
                             children: [
                               Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              Text('• $age  • $height', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                              Text('• $age  • $ethnicity', style: const TextStyle(color: Colors.white, fontSize: 12)),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(Icons.work, color: Colors.white, size: 12),
+                                  const Icon(Icons.location_on, color: Colors.white, size: 12),
                                   const SizedBox(width: 4),
-                                  Text(profession, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                  Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
                                 ],
                               ),
                             ],
@@ -232,13 +234,13 @@ class MatchCard extends StatelessWidget {
                   else if (username.isNotEmpty) ...[
                     Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text('• $age  • $height', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    Text('• $age  • $ethnicity', style: const TextStyle(color: Colors.white, fontSize: 12)),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.work, color: Colors.white, size: 12),
+                        const Icon(Icons.location_on, color: Colors.white, size: 12),
                         const SizedBox(width: 4),
-                        Text(profession, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -320,11 +322,22 @@ class MatchCard extends StatelessWidget {
                           const SizedBox(width: 16),
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: onSendInterest,
-                              icon: Icon(Icons.favorite, size: 16, color: Theme.of(context).primaryColor),
-                              label: Text('Send Interest', style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: isRequestSent ? null : onSendInterest,
+                              icon: Icon(
+                                isRequestSent ? Icons.check : Icons.favorite, 
+                                size: 16, 
+                                color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor
+                              ),
+                              label: Text(
+                                isRequestSent ? 'Request sent' : 'Send Interest', 
+                                style: TextStyle(
+                                  color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor, 
+                                  fontSize: 12, 
+                                  fontWeight: FontWeight.bold
+                                )
+                              ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor: isRequestSent ? Colors.grey[200] : Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                               ),

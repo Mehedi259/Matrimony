@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PrivateMatchmakingScreen extends StatefulWidget {
   const PrivateMatchmakingScreen({super.key});
@@ -36,32 +37,15 @@ class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
   }
 
   Future<void> _bookConsultation() async {
-    final provider = context.read<MatchesProvider>();
-    setState(() => _isLoading = true);
-    
-    final success = await provider.createMatchmakingRequest();
-    
-    if (!mounted) return;
-    
-    if (success) {
+    final Uri url = Uri.parse('https://link.amuslimmatchmaker.com/widget/bookings/privatematchmaking');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       Get.showSnackbar(
         const GetSnackBar(
           snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.all(16),
           borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Consultation request sent successfully!'), backgroundColor: Colors.green),
-      );
-      await _loadRequestStatus();
-    } else {
-      setState(() => _isLoading = false);
-      Get.showSnackbar(
-        GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(provider.errorMessage ?? 'Failed to send request'),
+          duration: Duration(seconds: 3),
+          messageText: Text('Could not launch booking page', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red,
         ),
       );
@@ -141,7 +125,7 @@ class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
         onPressed: _bookConsultation,
         icon: Icon(Icons.calendar_month, color: Colors.amber[700]),
         label: Text(
-          'Book Consultation',
+          'Schedule with Admin',
           style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
@@ -371,96 +355,48 @@ class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
             ),
             const SizedBox(height: 40),
 
-            // ── Matchmaker Card ───────────────────────────────────────────
+            // ── Bottom CTA ────────────────────────────────────────────────
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFFDF6E3),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
-                ],
+                border: Border.all(color: Colors.amber[200]!),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/profileImage.png'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                  const Text(
+                    'Ready to Start Your Journey?',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Personal\nMatchmaker Support',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Work one-on-one with a dedicated matchmaker who understands your unique needs and personally finds compatible matches for you.',
-                          style: TextStyle(fontSize: 10, color: Colors.black54),
-                        ),
-                      ],
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Book a free consultation today',
+                    style: TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.amber[400]!),
+                    ),
+                    child: TextButton.icon(
+                      onPressed: _bookConsultation,
+                      icon: Icon(Icons.calendar_month, color: Colors.amber[700], size: 20),
+                      label: Text(
+                        'Book Consultation',
+                        style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
               ),
             ).animate()
                 .fadeIn(duration: 700.ms, delay: 1800.ms)
-                .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-            const SizedBox(height: 40),
-
-            // ── Bottom CTA (Hide if request exists) ───────────────────────
-            if (_matchmakingRequest == null && !_isLoading)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDF6E3),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber[200]!),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Ready to Start Your Journey?',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Book a free consultation today',
-                      style: TextStyle(fontSize: 12, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.amber[400]!),
-                      ),
-                      child: TextButton.icon(
-                        onPressed: _bookConsultation,
-                        icon: Icon(Icons.calendar_month, color: Colors.amber[700], size: 20),
-                        label: Text(
-                          'Book Consultation',
-                          style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate()
-                  .fadeIn(duration: 700.ms, delay: 1900.ms)
-                  .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
+                .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
             const SizedBox(height: 40),
           ],
         ),

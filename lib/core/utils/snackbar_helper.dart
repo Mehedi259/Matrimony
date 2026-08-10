@@ -3,85 +3,90 @@ import 'package:flutter/material.dart';
 class SnackBarHelper {
   /// Shows an animated success popup in the center of screen
   static void showSuccess(BuildContext context, String message) {
+    bool isDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (context) => _AnimatedSuccessPopup(message: message),
-    );
+    ).then((_) => isDialogOpen = false);
     
     // Auto dismiss after 2 seconds
     Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (isDialogOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
     });
   }
 
   /// Shows an animated pink heart popup for request sent
   static void showRequestSent(BuildContext context) {
+    bool isDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (context) => const _AnimatedRequestSentPopup(),
-    );
+    ).then((_) => isDialogOpen = false);
     
     // Auto dismiss after 2 seconds
     Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (isDialogOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
     });
   }
 
   /// Shows an animated error popup in the center of screen
   static void showError(BuildContext context, String message) {
+    bool isDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (context) => _AnimatedErrorPopup(message: message),
-    );
+    ).then((_) => isDialogOpen = false);
     
     // Auto dismiss after 2 seconds
     Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (isDialogOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
     });
   }
 
   /// Shows an animated info popup in the center of screen
   static void showInfo(BuildContext context, String message) {
+    bool isDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (context) => _AnimatedInfoPopup(message: message),
-    );
+    ).then((_) => isDialogOpen = false);
     
     // Auto dismiss after 2 seconds
     Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (isDialogOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
     });
   }
 
   /// Shows an animated warning popup in the center of screen
   static void showWarning(BuildContext context, String message) {
+    bool isDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (context) => _AnimatedWarningPopup(message: message),
-    );
+    ).then((_) => isDialogOpen = false);
     
     // Auto dismiss after 2 seconds
     Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (isDialogOpen && context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
       }
     });
   }

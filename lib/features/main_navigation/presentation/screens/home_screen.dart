@@ -242,21 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Private Matchmaking Button
               GestureDetector(
-                onTap: () async {
-                  final Uri url = Uri.parse('https://link.amuslimmatchmaker.com/widget/bookings/privatematchmaking');
-                  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-                    Get.showSnackbar(
-                      const GetSnackBar(
-                        snackPosition: SnackPosition.TOP,
-                        margin: EdgeInsets.all(16),
-                        borderRadius: 8,
-                        duration: Duration(seconds: 3),
-                        messageText: Text('Could not launch booking page', style: TextStyle(color: Colors.white)),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
+                onTap: () => context.push('/private-matchmaking'),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -319,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ...matchesProvider.directoryProfiles.take(5).map((profile) {
                   final index = matchesProvider.directoryProfiles.indexOf(profile);
                   final isSaved = matchesProvider.wishlists.any((w) => (w['user_id'] ?? w['id']) == profile.id);
+                  final isRequestSent = matchesProvider.sentRequests.any((req) => req.receiverId == profile.id);
                   
                   final isMale = profile.role == 'male';
                   final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
@@ -329,10 +316,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
-                      username: profile.firstName != null ? '${profile.firstName} ${profile.lastName ?? ''}'.trim() : profile.codename,
+                      username: profile.codename,
                       age: profile.age != null ? '${profile.age} Years old' : 'N/A',
-                      height: profile.height ?? 'N/A',
-                      profession: profile.city ?? 'N/A',
+                      ethnicity: profile.ethnicity ?? 'N/A',
+                      country: profile.country ?? 'N/A',
                       imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
                       photos: profile.photos,
                       lockMessage: isActuallyLocked
@@ -341,6 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       isLocked: isActuallyLocked,
                       isBlurred: isActuallyLocked,
                       isWishlisted: isSaved,
+                      isRequestSent: isRequestSent,
                       onWishlistToggle: () async {
                         if (isSaved) {
                           await matchesProvider.removeFromWishlist(profile.id);

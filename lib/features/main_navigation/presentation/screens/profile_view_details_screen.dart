@@ -7,6 +7,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
+import 'package:screen_protector/screen_protector.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
   final String userId;
@@ -43,10 +44,16 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfileData();
     });
+    _preventScreenshots();
+  }
+
+  Future<void> _preventScreenshots() async {
+    await ScreenProtector.preventScreenshotOn();
   }
 
   @override
   void dispose() {
+    ScreenProtector.preventScreenshotOff();
     _tabController.dispose();
     super.dispose();
   }
@@ -232,10 +239,8 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
             flexibleSpace: FlexibleSpaceBar(
               background: Builder(
                 builder: (context) {
-                  final user = context.watch<AuthProvider>().currentUser;
-                  final isMale = _profile!.role == 'male';
-                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
-                  final isActuallyLocked = (isMale && isFemaleOrWali) ? false : _profile!.photoBlurred;
+                  final isMatch = context.watch<MatchesProvider>().matches.any((m) => m.matchedUserId == _profile!.id);
+                  final isActuallyLocked = !isMatch && _profile!.photoBlurred;
 
                   return _HeroImageSection(
                     primaryColor: primaryColor,
@@ -347,17 +352,39 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   // Send Interest Button
                   Builder(
                     builder: (context) {
+                      final matchesProvider = context.watch<MatchesProvider>();
+                      final hasSent = matchesProvider.sentRequests.any((req) => req.receiverId == _profile!.id);
+                      final hasReceived = matchesProvider.receivedRequests.any((req) => req.otherUser['id'] == _profile!.id);
+                      final isMatch = matchesProvider.matches.any((m) => m.matchedUserId == _profile!.id);
                       final canSendRequest = context.watch<AuthProvider>().currentUser?.role == 'male';
+
+                      String buttonText = 'Send Interest';
+                      IconData buttonIcon = Icons.favorite_rounded;
+                      bool isEnabled = canSendRequest;
+
+                      if (isMatch) {
+                        buttonText = 'Connected';
+                        buttonIcon = Icons.handshake;
+                        isEnabled = false;
+                      } else if (hasSent) {
+                        buttonText = 'Pending';
+                        buttonIcon = Icons.access_time;
+                        isEnabled = false;
+                      } else if (hasReceived) {
+                        buttonText = 'Accept Request';
+                        buttonIcon = Icons.check_circle_outline;
+                        isEnabled = true; 
+                      }
                       
                       return SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton.icon(
-                          onPressed: canSendRequest ? _handleSendInterest : null,
-                          icon: const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
-                          label: const Text(
-                            'Send Interest',
-                            style: TextStyle(
+                          onPressed: isEnabled ? (hasReceived ? () => context.push('/requests') : _handleSendInterest) : null,
+                          icon: Icon(buttonIcon, size: 18, color: Colors.white),
+                          label: Text(
+                            buttonText,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -529,7 +556,7 @@ class _HeroImageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImageProvider imageProvider;
-    if (photos.isNotEmpty) {
+    if (photos.isNotEmpty && !photoBlurred) {
       imageProvider = NetworkImage(photos.first['image']);
     } else {
       imageProvider = AssetImage(

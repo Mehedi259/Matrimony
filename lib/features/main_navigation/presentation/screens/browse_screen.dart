@@ -262,12 +262,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
-                      username: profile.firstName != null ? '${profile.firstName} ${profile.lastName ?? ''}'.trim() : profile.codename,
+                      username: profile.codename,
                       age: profile.age != null
                           ? '${profile.age} Years old'
                           : 'N/A',
-                      height: profile.height ?? 'N/A',
-                      profession: profile.city ?? 'N/A',
+                      ethnicity: profile.ethnicity ?? 'N/A',
+                      country: profile.country ?? 'N/A',
                       imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
                       photos: profile.photos,
                       lockMessage: isActuallyLocked

@@ -73,6 +73,7 @@ dependencies:
   google_fonts: ^8.1.0
   get: ^4.7.3
   url_launcher: ^6.3.2
+  screen_protector: ^1.5.3
 
 dev_dependencies:
   flutter_test:
