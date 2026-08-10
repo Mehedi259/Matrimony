@@ -711,7 +711,7 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.primaryColor,
-    this.multiLine = false,
+    this.multiLine = true,
   });
 
   @override

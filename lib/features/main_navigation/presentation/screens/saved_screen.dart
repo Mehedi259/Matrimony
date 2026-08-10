@@ -89,8 +89,8 @@ class _SavedScreenState extends State<SavedScreen> {
                           age: wishlist['age'] != null
                               ? '${wishlist['age']} Years old'
                               : 'N/A',
-                          height: wishlist['height'] ?? 'N/A',
-                          profession: wishlist['city'] ?? 'N/A',
+                          ethnicity: wishlist['ethnicity'] ?? 'N/A',
+                          country: wishlist['country'] ?? 'N/A',
                           imageUrl: (wishlist['photos'] as List?)?.isNotEmpty == true ? wishlist['photos'].first['image'] : null,
                           photos: (wishlist['photos'] as List?) ?? [],
                           lockMessage: wishlist['photo_blurred'] == true

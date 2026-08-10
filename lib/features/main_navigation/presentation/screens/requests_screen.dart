@@ -284,8 +284,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               child: MatchCard(
                 username: match.matchedUserCodename,
                 age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
-                height: match.matchedUserHeight ?? 'N/A',
-                profession: match.matchedUserCity ?? 'N/A',
+                ethnicity: match.matchedUserEthnicity ?? 'N/A',
+                country: match.matchedUserCountry ?? 'N/A',
                 imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
                 photos: match.matchedUserPhotos,
                 lockMessage: '',
@@ -306,8 +306,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               child: MatchCard(
                 username: request.senderCodename,
                 age: request.senderAge != null ? '${request.senderAge} Years old' : 'N/A',
-                height: request.senderHeight ?? 'N/A',
-                profession: request.senderCity ?? 'N/A',
+                ethnicity: request.senderEthnicity ?? 'N/A',
+                country: request.senderCountry ?? 'N/A',
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
@@ -366,8 +366,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               child: MatchCard(
                 username: request.receiverCodename,
                 age: request.receiverAge != null ? '${request.receiverAge} Years old' : 'N/A',
-                height: request.receiverHeight ?? 'N/A',
-                profession: request.receiverCity ?? 'N/A',
+                ethnicity: request.receiverEthnicity ?? 'N/A',
+                country: request.receiverCountry ?? 'N/A',
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
@@ -423,8 +423,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
             child: MatchCard(
               username: match.matchedUserCodename,
               age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
-              height: match.matchedUserHeight ?? 'N/A',
-              profession: match.matchedUserCity ?? 'N/A',
+              ethnicity: match.matchedUserEthnicity ?? 'N/A',
+              country: match.matchedUserCountry ?? 'N/A',
               imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
               photos: match.matchedUserPhotos,
               lockMessage: '',
@@ -448,10 +448,12 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          child: Padding(
-            padding: const EdgeInsets.all(28.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -494,9 +496,19 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                     child: const Text('No, go back', style: TextStyle(color: Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
         );
       },
     );
@@ -508,10 +520,12 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          child: Padding(
-            padding: const EdgeInsets.all(28.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -554,9 +568,19 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                     child: const Text('No, go back', style: TextStyle(color: Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
         );
       },
     );

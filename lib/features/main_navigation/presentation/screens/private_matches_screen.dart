@@ -73,8 +73,8 @@ class PrivateMatchesScreen extends StatelessWidget {
             MatchCard(
               username: 'mm0025',
               age: '28 Years',
-              height: '5\'6"',
-              profession: 'Software Engineer',
+              ethnicity: 'South Asian',
+              country: 'UK',
               lockMessage: 'Photos will be revealed after mutual interest',
               isExclusive: true,
               onDecline: () {},
@@ -84,8 +84,8 @@ class PrivateMatchesScreen extends StatelessWidget {
             MatchCard(
               username: 'Mk0032',
               age: '22 Years',
-              height: '5\'4"',
-              profession: 'Student',
+              ethnicity: 'Arab',
+              country: 'UAE',
               lockMessage: 'Photos will be revealed after mutual interest',
               isExclusive: true,
               exclusiveOverlayText: 'This match was personally recommended by our matchmakers for a premium member. If you\'re interested, our team will reach out to arrange the next steps.',

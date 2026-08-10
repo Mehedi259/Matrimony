@@ -103,11 +103,15 @@ class ConnectionRequestModel {
   int? get senderAge => otherUser['age'];
   String? get senderHeight => otherUser['height'];
   String? get senderCity => otherUser['city'];
+  String? get senderEthnicity => otherUser['ethnicity'];
+  String? get senderCountry => otherUser['country'];
   
   String get receiverCodename => otherUser['codename'] ?? '';
   int? get receiverAge => otherUser['age'];
   String? get receiverHeight => otherUser['height'];
   String? get receiverCity => otherUser['city'];
+  String? get receiverEthnicity => otherUser['ethnicity'];
+  String? get receiverCountry => otherUser['country'];
   String get receiverId => otherUser['id'] ?? '';
   List<dynamic> get otherUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
 
@@ -177,6 +181,8 @@ class MatchModel {
   int? get matchedUserAge => otherUser['age'];
   String? get matchedUserHeight => otherUser['height'];
   String? get matchedUserCity => otherUser['city'];
+  String? get matchedUserEthnicity => otherUser['ethnicity'];
+  String? get matchedUserCountry => otherUser['country'];
   String get matchedUserId => otherUser['id'] ?? '';
   List<dynamic> get matchedUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
 

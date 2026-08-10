@@ -429,10 +429,12 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.error_outline, color: Color(0xFFE54B5E), size: 48),
                 const SizedBox(height: 16),
@@ -493,9 +495,19 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                     ),
                   ],
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
         );
       },
     );
