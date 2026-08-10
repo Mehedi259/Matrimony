@@ -104,6 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Profile Views',
                     value: '${matchesProvider.profileViewers.length.toString().padLeft(2, '0')}',
                     color: Colors.blue,
+                    onTap: () => context.push('/profile-views'),
                   ),
                   const SizedBox(width: 10),
                   _StatPill(
@@ -111,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Saved',
                     value: '${matchesProvider.wishlists.length.toString().padLeft(2, '0')}',
                     color: Colors.pink,
+                    onTap: () => context.push('/saved'),
                   ),
                   const SizedBox(width: 10),
                   _StatPill(
@@ -118,6 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Pending',
                     value: '${(matchesProvider.sentRequests.length + matchesProvider.receivedRequests.length).toString().padLeft(2, '0')}',
                     color: Colors.amber,
+                    onTap: () => context.go('/requests'),
                   ),
                 ],
               ).animate().fadeIn(duration: 600.ms, delay: 300.ms).slideY(begin: 0.3, end: 0),
@@ -445,13 +448,16 @@ class _StatPill extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
 
-  const _StatPill({required this.icon, required this.label, required this.value, required this.color});
+  const _StatPill({required this.icon, required this.label, required this.value, required this.color, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
           color: Colors.white,
