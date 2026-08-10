@@ -116,7 +116,7 @@ class _PreferencesFormScreenState extends State<PreferencesFormScreen> {
             // Preferred Ethnicity
             MultiSelectField(
               label: 'Preferred Ethnicity',
-              options: DropdownOptions.ethnicities,
+              options: ['Open to other ethnicities', ...DropdownOptions.ethnicities],
               selectedValues: _selectedEthnicities,
               searchHint: 'Search ethnicity',
               onChanged: (values) {

@@ -262,7 +262,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
           _buildMultiSelect(
             'Preferred Ethnicity',
             _selectedEthnicities,
-            DropdownOptions.ethnicities,
+            ['Open to other ethnicities', ...DropdownOptions.ethnicities],
             (values) {
               setState(() {
                 _selectedEthnicities = values;
@@ -274,7 +274,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
           _buildMultiSelect(
             'Preference to country of residence (or region)',
             _selectedCountries,
-            DropdownOptions.nationalities,
+            DropdownOptions.countries,
             (values) {
               setState(() {
                 _selectedCountries = values;

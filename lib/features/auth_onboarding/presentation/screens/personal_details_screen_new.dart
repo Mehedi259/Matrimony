@@ -51,7 +51,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
   String? _income;
   String? _frame;
   List<String> _languagesSpoken = [];
-  final TextEditingController _healthConcernsController = TextEditingController();
   
   // Sister-specific fields
   String? _dressStyle;
@@ -89,7 +88,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
       _employmentController.text = info.employment ?? '';
       _income = info.income != null ? ChoiceMappings.keyToDisplay(info.income!, ChoiceMappings.incomeKeyToDisplay) : null;
       _frame = info.frame != null ? ChoiceMappings.keyToDisplay(info.frame!, ChoiceMappings.frameKeyToDisplay) : null;
-      _healthConcernsController.text = info.healthConcerns ?? '';
       if (info.languagesSpoken.isNotEmpty) {
         _languagesSpoken = ChoiceMappings.keysToDisplays(info.languagesSpoken, ChoiceMappings.languageKeyToDisplay);
       }
@@ -102,7 +100,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     _waliRelationController.dispose();
     _waliNumberController.dispose();
     _employmentController.dispose();
-    _healthConcernsController.dispose();
     super.dispose();
   }
 
@@ -173,12 +170,7 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
             onChanged: (values) => setState(() => _languagesSpoken = values),
           ),
           const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Health Concerns',
-            hint: 'Any health concerns? (Optional, write None if NA)',
-            controller: _healthConcernsController,
-          ),
-          const SizedBox(height: 16),
+
           
           _buildDropdown(
             label: 'Religion/Sect',
@@ -472,7 +464,7 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     if (_employmentController.text.isNotEmpty) data['employment'] = _employmentController.text;
     if (_income != null) data['income'] = ChoiceMappings.displayToKey(_income!, ChoiceMappings.incomeDisplayToKey);
     if (_frame != null) data['frame'] = ChoiceMappings.displayToKey(_frame!, ChoiceMappings.frameDisplayToKey);
-    if (_healthConcernsController.text.isNotEmpty) data['health_concerns'] = _healthConcernsController.text;
+    data['health_concerns'] = 'None';
     if (_languagesSpoken.isNotEmpty) {
       data['languages_spoken'] = ChoiceMappings.displaysToKeys(_languagesSpoken, ChoiceMappings.languageDisplayToKey);
     }

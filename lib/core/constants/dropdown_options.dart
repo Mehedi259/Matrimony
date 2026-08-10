@@ -17,6 +17,7 @@ class DropdownOptions {
   static const List<String> religionSect = [
     'Sunni',
     'Salafi',
+    'Other Sect',
   ];
 
   // Marital Status - Brother
