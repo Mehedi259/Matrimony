@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CountryPhoneField extends StatefulWidget {
   final TextEditingController controller;
@@ -122,6 +123,7 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
                   controller: widget.controller,
                   validator: widget.validator,
                   keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     hintText: 'Phone number',
                     hintStyle: TextStyle(color: Color(0xFFBDBDBD)),

@@ -329,7 +329,7 @@ class MatchCard extends StatelessWidget {
                                 color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor
                               ),
                               label: Text(
-                                isRequestSent ? 'Request sent' : 'Send Interest', 
+                                isRequestSent ? 'Connection is pending' : 'Send Interest', 
                                 style: TextStyle(
                                   color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor, 
                                   fontSize: 12, 

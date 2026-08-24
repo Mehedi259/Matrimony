@@ -367,7 +367,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                         buttonIcon = Icons.handshake;
                         isEnabled = false;
                       } else if (hasSent) {
-                        buttonText = 'Pending';
+                        buttonText = 'Connection is pending';
                         buttonIcon = Icons.access_time;
                         isEnabled = false;
                       } else if (hasReceived) {

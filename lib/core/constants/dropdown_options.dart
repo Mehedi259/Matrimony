@@ -132,6 +132,7 @@ class DropdownOptions {
 
   // Countries list for location
   static const List<String> countries = [
+    'No preference', 'Hijrah to a Muslim country',
     'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
     'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas',
     'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../widgets/common/gradient_button.dart';
@@ -36,8 +37,8 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
   // Form controllers and values
   String? _religionSect;
   String? _maritalStatus;
-  String? _ethnicity;
-  String? _nationality;
+  List<String> _ethnicity = [];
+  List<String> _nationality = [];
   String? _hasChildren;
   String? _numberOfChildren;
   String? _height;
@@ -70,10 +71,10 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
       _religionSect = info.sect != null ? ChoiceMappings.keyToDisplay(info.sect!, ChoiceMappings.sectKeyToDisplay) : null;
       _maritalStatus = info.maritalStatus != null ? ChoiceMappings.keyToDisplay(info.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : null;
       if (info.ethnicity.isNotEmpty) {
-        _ethnicity = ChoiceMappings.keyToDisplay(info.ethnicity.first, ChoiceMappings.ethnicityKeyToDisplay);
+        _ethnicity = ChoiceMappings.keysToDisplays(info.ethnicity, ChoiceMappings.ethnicityKeyToDisplay);
       }
       if (info.nationality.isNotEmpty) {
-        _nationality = ChoiceMappings.keyToDisplay(info.nationality.first, ChoiceMappings.nationalityKeyToDisplay);
+        _nationality = ChoiceMappings.keysToDisplays(info.nationality, ChoiceMappings.nationalityKeyToDisplay);
       }
       if (info.hasChildren != null) {
         _hasChildren = info.hasChildren! ? 'Yes' : 'No';
@@ -134,45 +135,6 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 16),
           _buildDropdown(
-            label: 'Education',
-            value: _education,
-            items: ChoiceMappings.educationDisplayToKey.keys.toList(),
-            onChanged: (value) => setState(() => _education = value),
-            isRequired: false,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Employment / Profession',
-            hint: 'What do you do for work?',
-            controller: _employmentController,
-          ),
-          const SizedBox(height: 16),
-          _buildDropdown(
-            label: 'Income',
-            value: _income,
-            items: ChoiceMappings.incomeDisplayToKey.keys.toList(),
-            onChanged: (value) => setState(() => _income = value),
-            isRequired: false,
-          ),
-          const SizedBox(height: 16),
-          _buildDropdown(
-            label: 'Frame / Build',
-            value: _frame,
-            items: ChoiceMappings.frameDisplayToKey.keys.toList(),
-            onChanged: (value) => setState(() => _frame = value),
-            isRequired: false,
-          ),
-          const SizedBox(height: 16),
-          MultiSelectField(
-            label: 'Languages Spoken',
-            options: ChoiceMappings.languageDisplayToKey.keys.toList(),
-            selectedValues: _languagesSpoken,
-            onChanged: (values) => setState(() => _languagesSpoken = values),
-          ),
-          const SizedBox(height: 16),
-
-          
-          _buildDropdown(
             label: 'Religion/Sect',
             value: _religionSect,
             items: DropdownOptions.religionSect,
@@ -192,22 +154,19 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
           ),
           const SizedBox(height: 24),
           
-          SearchableDropdown(
+          MultiSelectField(
             label: 'Ethnicity',
-            value: _ethnicity,
-            items: DropdownOptions.ethnicities,
-            onChanged: (value) => setState(() => _ethnicity = value),
-            isRequired: true,
+            options: DropdownOptions.ethnicities,
+            selectedValues: _ethnicity,
+            onChanged: (values) => setState(() => _ethnicity = values),
           ),
           const SizedBox(height: 24),
           
-          SearchableDropdown(
+          MultiSelectField(
             label: 'Nationality / Citizenship',
-            value: _nationality,
-            items: DropdownOptions.nationalities,
-            onChanged: (value) => setState(() => _nationality = value),
-            hint: 'This is referring to the Passport(s) you hold',
-            isRequired: true,
+            options: DropdownOptions.nationalities,
+            selectedValues: _nationality,
+            onChanged: (values) => setState(() => _nationality = values),
           ),
           const SizedBox(height: 24),
           
@@ -284,42 +243,72 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
             ),
             const SizedBox(height: 32),
             
-            const Divider(thickness: 2),
-            const SizedBox(height: 16),
             const Text(
               'Wali (Guardian) Information',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Your guardian\'s contact information',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 24),
             
             CustomTextField(
               label: 'Wali Name',
-              hint: 'Full name',
+              hint: 'Enter your guardian\'s full name',
               controller: _waliNameController,
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 16),
             CustomTextField(
-              label: 'Wali Relation',
+              label: 'Relationship to you',
               hint: 'e.g., Father, Brother, Uncle',
               controller: _waliRelationController,
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 16),
             CustomTextField(
-              label: 'Wali Number',
-              hint: 'Phone number',
+              label: 'Wali Contact Number',
+              hint: 'Include country code',
               controller: _waliNumberController,
               keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             const SizedBox(height: 24),
+            const Divider(thickness: 2),
+            const SizedBox(height: 16),
           ],
           
+          _buildDropdown(
+            label: 'Education',
+            value: _education,
+            items: ChoiceMappings.educationDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _education = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'Employment / Profession',
+            hint: 'What do you do for work?',
+            controller: _employmentController,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Income',
+            value: _income,
+            items: ChoiceMappings.incomeDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _income = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Frame / Build',
+            value: _frame,
+            items: ChoiceMappings.frameDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _frame = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          MultiSelectField(
+            label: 'Languages Spoken',
+            options: ChoiceMappings.languageDisplayToKey.keys.toList(),
+            selectedValues: _languagesSpoken,
+            onChanged: (values) => setState(() => _languagesSpoken = values),
+          ),
           const SizedBox(height: 32),
           
           Row(
@@ -418,16 +407,14 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
 
   void _saveAndContinue() async {
     // Validate required fields
-    if (_religionSect == null ||
-        _maritalStatus == null ||
-        _ethnicity == null ||
-        _nationality == null ||
-        _hasChildren == null ||
-        _height == null ||
-        _weight == null ||
-        _prayerFrequency == null ||
-        _openToRelocating == null) {
-      SnackBarHelper.showError(context, 'Please fill all required fields');
+    if (_religionSect == null || _maritalStatus == null || _ethnicity.isEmpty || _nationality.isEmpty || _hasChildren == null) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          messageText: Text('Please fill all required fields', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
       return;
     }
 
@@ -450,8 +437,8 @@ class _PersonalDetailsScreenNewState extends State<PersonalDetailsScreenNew> {
     Map<String, dynamic> data = {
       'sect': ChoiceMappings.displayToKey(_religionSect!, ChoiceMappings.sectDisplayToKey),
       'marital_status': ChoiceMappings.displayToKey(_maritalStatus!, ChoiceMappings.maritalStatusDisplayToKey),
-      'ethnicity': [ChoiceMappings.displayToKey(_ethnicity!, ChoiceMappings.ethnicityDisplayToKey)],
-      'nationality': [ChoiceMappings.displayToKey(_nationality!, ChoiceMappings.nationalityDisplayToKey)],
+      'ethnicity': ChoiceMappings.displaysToKeys(_ethnicity, ChoiceMappings.ethnicityDisplayToKey),
+      'nationality': ChoiceMappings.displaysToKeys(_nationality, ChoiceMappings.nationalityDisplayToKey),
       'has_children': _hasChildren == 'Yes',
       'children_count': _hasChildren == 'Yes' ? ChoiceMappings.displayToKey(_numberOfChildren!, ChoiceMappings.childrenCountDisplayToKey) : null,
       'height': _height,

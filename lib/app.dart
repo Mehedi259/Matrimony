@@ -383,7 +383,7 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
         // Navigation after login/logout is handled manually in the respective screens.
 
         return GetMaterialApp.router(
-          title: 'Matrimony Matchmaker',
+          title: 'A Muslim Matchmaker',
           theme: AppTheme.lightTheme,
           routeInformationProvider: _router.routeInformationProvider,
           routeInformationParser: _router.routeInformationParser,

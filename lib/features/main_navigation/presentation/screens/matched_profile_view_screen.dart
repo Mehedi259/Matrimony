@@ -6,6 +6,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import 'package:get/get.dart';
+import 'dart:async';
 
 class MatchedProfileViewScreen extends StatefulWidget {
   final String matchId;
@@ -19,6 +20,16 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
   bool _hasMarkedViewed = false;
   bool? _initialIsBlurred;
   int _currentPhotoIndex = 0;
+  
+  bool _hasViewedOnce = false;
+  int _secondsLeft = 60;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -243,25 +254,37 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                           Text(
                             match.photoRequestStatus == 'requested' && !match.photoRequestedByOtherUser
                                 ? 'Photo request sent. Waiting for approval.'
-                                : 'View photos once. To see them again, send a request.',
+                                : (!_hasViewedOnce ? 'You can view photos once for 60 seconds.' : 'View time expired. To see them again, send a request.'),
                             style: const TextStyle(color: Colors.black87, fontSize: 13),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           if (match.photoRequestStatus != 'requested' || match.photoRequestedByOtherUser)
-                            GestureDetector(
-                              onTap: () async {
-                                final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
-                                if (success && context.mounted) {
-                                  Get.showSnackbar(const GetSnackBar(
-                                    messageText: Text('Photo request sent successfully'),
-                                    backgroundColor: Colors.green,
-                                    duration: Duration(seconds: 3),
-                                  ));
+                            ElevatedButton(
+                              onPressed: () async {
+                                if (!_hasViewedOnce) {
+                                  if (match.matchedUserPhotos.isNotEmpty) {
+                                    _startPhotoTimer(match.matchedUserPhotos);
+                                  } else {
+                                    Get.showSnackbar(const GetSnackBar(messageText: Text('No photos available'), duration: Duration(seconds: 2)));
+                                  }
+                                } else {
+                                  final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
+                                  if (success && context.mounted) {
+                                    Get.showSnackbar(const GetSnackBar(
+                                      messageText: Text('Photo request sent successfully'),
+                                      backgroundColor: Colors.green,
+                                      duration: Duration(seconds: 3),
+                                    ));
+                                  }
                                 }
                               },
-                              child: const Text(
-                                'Request Photo',
-                                style: TextStyle(color: Color(0xFF5A75F1), fontWeight: FontWeight.bold, fontSize: 13, decoration: TextDecoration.underline),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.secondary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: Text(
+                                !_hasViewedOnce ? 'Click here to view photo' : 'Request to view photo one more time',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                             ),
                         ],
@@ -421,6 +444,75 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
         ),
       ),
     );
+  }
+
+  void _startPhotoTimer(List<dynamic> photos) {
+    setState(() {
+      _hasViewedOnce = true;
+      _secondsLeft = 60;
+    });
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            if (_timer == null || !_timer!.isActive) {
+              _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                if (_secondsLeft > 0) {
+                  setStateDialog(() {
+                    _secondsLeft--;
+                  });
+                } else {
+                  timer.cancel();
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              });
+            }
+            
+            return Dialog.fullscreen(
+              backgroundColor: Colors.black,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    itemCount: photos.length,
+                    itemBuilder: (context, index) {
+                      return Image.network(photos[index]['image'], fit: BoxFit.contain);
+                    },
+                  ),
+                  Positioned(
+                    top: 40,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(20)),
+                      child: Text('Time left: $_secondsLeft s', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  Positioned(
+                    top: 40,
+                    left: 20,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                      onPressed: () {
+                        _timer?.cancel();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      _timer?.cancel();
+      setState(() {});
+    });
   }
 
   void _showCancelConnectionDialog(BuildContext context, String matchId) {
