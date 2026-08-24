@@ -183,6 +183,7 @@ class _DeactivateDialogState extends State<_DeactivateDialog> {
                         width: 20, 
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                       )
+                    : const Text('Deactivate', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
             const SizedBox(height: 16),

@@ -62,9 +62,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
         _selectedEthnicities = ChoiceMappings.keysToDisplays(
           info.prefEthnicity, ChoiceMappings.ethnicityKeyToDisplay,
         );
-        _selectedCountries = ChoiceMappings.keysToDisplays(
-          info.prefCountryOfResidence, ChoiceMappings.nationalityKeyToDisplay,
-        );
+        _selectedCountries = info.prefCountryOfResidence;
         
         // Update marital status preferences (convert keys to display labels)
         for (var statusKey in info.prefMaritalStatus) {
@@ -96,9 +94,7 @@ class _YourPreferencesScreenState extends State<YourPreferencesScreen> {
       'pref_ethnicity': ChoiceMappings.displaysToKeys(
         _selectedEthnicities, ChoiceMappings.ethnicityDisplayToKey,
       ),
-      'pref_country_of_residence': ChoiceMappings.displaysToKeys(
-        _selectedCountries, ChoiceMappings.nationalityDisplayToKey,
-      ),
+      'pref_country_of_residence': _selectedCountries,
     };
 
     final profileProvider = context.read<ProfileProvider>();

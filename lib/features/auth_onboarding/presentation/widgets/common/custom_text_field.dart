@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -11,6 +12,7 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final bool isRequired;
   final bool enabled;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -24,6 +26,7 @@ class CustomTextField extends StatefulWidget {
     this.onChanged,
     this.isRequired = false,
     this.enabled = true,
+    this.inputFormatters,
   });
 
   @override
@@ -55,6 +58,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           validator: widget.validator,
           keyboardType: widget.keyboardType,
           enabled: widget.enabled,
+          inputFormatters: widget.inputFormatters,
           maxLength: widget.maxLength,
           onChanged: widget.onChanged,
           decoration: InputDecoration(
