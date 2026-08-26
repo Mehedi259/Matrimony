@@ -17,11 +17,9 @@ class MatchedProfileViewScreen extends StatefulWidget {
 }
 
 class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
-  bool _hasMarkedViewed = false;
   bool? _initialIsBlurred;
   int _currentPhotoIndex = 0;
   
-  bool _hasViewedOnce = false;
   int _secondsLeft = 60;
   Timer? _timer;
 
@@ -77,17 +75,9 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     final isFemaleOrWali = authUser?.role.toLowerCase() == 'female' || authUser?.role.toLowerCase() == 'wali' || authUser?.gender?.toLowerCase() == 'female';
     
     if (_initialIsBlurred == null) {
-      _initialIsBlurred = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
+      _initialIsBlurred = isFemaleOrWali ? false : true;
     }
     final bool isBlurred = _initialIsBlurred!;
-
-    // Mark photos as viewed if they are currently visible and haven't been marked yet
-    if (!isBlurred && !_hasMarkedViewed) {
-      _hasMarkedViewed = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<MatchesProvider>().markPhotosViewed(match.id);
-      });
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -233,7 +223,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
             const SizedBox(height: 16),
             
             // Info Banner
-            if (isBlurred && (context.read<AuthProvider>().currentUser?.role != 'female' && context.read<AuthProvider>().currentUser?.role != 'wali'))
+            if (isBlurred && !isFemaleOrWali)
               Container(
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -251,42 +241,9 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            match.photoRequestStatus == 'requested' && !match.photoRequestedByOtherUser
-                                ? 'Photo request sent. Waiting for approval.'
-                                : (!_hasViewedOnce ? 'You can view photos once for 60 seconds.' : 'View time expired. To see them again, send a request.'),
-                            style: const TextStyle(color: Colors.black87, fontSize: 13),
-                          ),
+                          _buildMaleInfoText(match),
                           const SizedBox(height: 8),
-                          if (match.photoRequestStatus != 'requested' || match.photoRequestedByOtherUser)
-                            ElevatedButton(
-                              onPressed: () async {
-                                if (!_hasViewedOnce) {
-                                  if (match.matchedUserPhotos.isNotEmpty) {
-                                    _startPhotoTimer(match.matchedUserPhotos);
-                                  } else {
-                                    Get.showSnackbar(const GetSnackBar(messageText: Text('No photos available'), duration: Duration(seconds: 2)));
-                                  }
-                                } else {
-                                  final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
-                                  if (success && context.mounted) {
-                                    Get.showSnackbar(const GetSnackBar(
-                                      messageText: Text('Photo request sent successfully'),
-                                      backgroundColor: Colors.green,
-                                      duration: Duration(seconds: 3),
-                                    ));
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.secondary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: Text(
-                                !_hasViewedOnce ? 'Click here to view photo' : 'Request to view photo one more time',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                            ),
+                          _buildMaleActionButton(context, match),
                         ],
                       ),
                     ),
@@ -316,7 +273,9 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$name has requested to view your photos again.',
+                      match.secondPhotoRequestStatus == 'pending' 
+                        ? '$name has requested a second and final 60-second window to view your photos.'
+                        : '$name has requested to view your photos for 60 seconds.',
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 12),
@@ -446,9 +405,72 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     );
   }
 
-  void _startPhotoTimer(List<dynamic> photos) {
+  Widget _buildMaleInfoText(MatchModel match) {
+    if (match.photoViewCount == 0) {
+      if (match.photosCurrentlyVisible) return const Text('Photos unlocked! You have 60 seconds to view them.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      if (match.photoRequestStatus == 'requested') return const Text('Photo request sent. Waiting for approval.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      if (match.photoRequestStatus == 'rejected') return const Text('Your photo request was declined.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      return const Text('Request to view photos for 60 seconds.', style: TextStyle(color: Colors.black87, fontSize: 13));
+    }
+    
+    if (match.photoViewCount == 1) {
+      if (match.photosCurrentlyVisible) return const Text('Photos unlocked! This is your final 60-second view.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      if (match.secondPhotoRequestStatus == 'pending') return const Text('Second photo request sent. Waiting for approval.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      if (match.secondPhotoRequestStatus == 'rejected') return const Text('Your second photo request was declined.', style: TextStyle(color: Colors.black87, fontSize: 13));
+      return const Text('Your initial viewing time has expired.', style: TextStyle(color: Colors.black87, fontSize: 13));
+    }
+    
+    return const Text('You have used both of your photo viewing opportunities.', style: TextStyle(color: Colors.black87, fontSize: 13));
+  }
+
+  Widget _buildMaleActionButton(BuildContext context, MatchModel match) {
+    String buttonText = '';
+    VoidCallback? onPressed;
+
+    if (match.photosCurrentlyVisible) {
+      buttonText = match.photoViewCount == 0 ? 'View Photos (60s)' : 'View Photos (Final 60s)';
+      onPressed = () {
+        if (match.matchedUserPhotos.isNotEmpty) {
+          _startPhotoTimer(match.matchedUserPhotos, match.id);
+        } else {
+          Get.showSnackbar(const GetSnackBar(messageText: Text('No photos available'), duration: Duration(seconds: 2)));
+        }
+      };
+    } else if (match.photoViewCount == 0 && match.photoRequestStatus == 'none') {
+      buttonText = 'Request to view photos';
+      onPressed = () async {
+        final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
+        if (success && context.mounted) {
+          Get.showSnackbar(const GetSnackBar(messageText: Text('Photo request sent successfully'), backgroundColor: Colors.green, duration: Duration(seconds: 3)));
+        }
+      };
+    } else if (match.photoViewCount == 1 && match.secondPhotoRequestStatus == 'none') {
+      buttonText = 'Request a second view';
+      onPressed = () async {
+        final success = await context.read<MatchesProvider>().requestPhotoView(match.id);
+        if (success && context.mounted) {
+          Get.showSnackbar(const GetSnackBar(messageText: Text('Second photo request sent successfully'), backgroundColor: Colors.green, duration: Duration(seconds: 3)));
+        }
+      };
+    }
+
+    if (buttonText.isEmpty) return const SizedBox.shrink();
+
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(buttonText, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+    );
+  }
+
+  void _startPhotoTimer(List<dynamic> photos, String matchId) {
+    // Notify backend that photos are being viewed to start the lockdown
+    context.read<MatchesProvider>().markPhotosViewed(matchId);
+    
     setState(() {
-      _hasViewedOnce = true;
       _secondsLeft = 60;
     });
     

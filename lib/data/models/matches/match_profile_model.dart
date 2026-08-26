@@ -135,6 +135,8 @@ class MatchModel {
   final String photoRequestStatus;
   final bool photoRequestedByOtherUser;
   final String waliRequestStatus;
+  final String secondPhotoRequestStatus;
+  final int photoViewCount;
   final DateTime? acceptedAt;
   final DateTime updatedAt;
 
@@ -147,6 +149,8 @@ class MatchModel {
     required this.photoRequestStatus,
     required this.photoRequestedByOtherUser,
     required this.waliRequestStatus,
+    required this.secondPhotoRequestStatus,
+    required this.photoViewCount,
     this.acceptedAt,
     required this.updatedAt,
   });
@@ -160,6 +164,8 @@ class MatchModel {
     String? photoRequestStatus,
     bool? photoRequestedByOtherUser,
     String? waliRequestStatus,
+    String? secondPhotoRequestStatus,
+    int? photoViewCount,
     DateTime? acceptedAt,
     DateTime? updatedAt,
   }) {
@@ -172,6 +178,8 @@ class MatchModel {
       photoRequestStatus: photoRequestStatus ?? this.photoRequestStatus,
       photoRequestedByOtherUser: photoRequestedByOtherUser ?? this.photoRequestedByOtherUser,
       waliRequestStatus: waliRequestStatus ?? this.waliRequestStatus,
+      secondPhotoRequestStatus: secondPhotoRequestStatus ?? this.secondPhotoRequestStatus,
+      photoViewCount: photoViewCount ?? this.photoViewCount,
       acceptedAt: acceptedAt ?? this.acceptedAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -196,6 +204,8 @@ class MatchModel {
       photoRequestStatus: json['photo_request_status'] as String? ?? 'none',
       photoRequestedByOtherUser: json['photo_requested_by_other_user'] as bool? ?? false,
       waliRequestStatus: json['wali_request_status'] as String? ?? 'none',
+      secondPhotoRequestStatus: json['second_photo_request_status'] as String? ?? 'none',
+      photoViewCount: (json['photo_view_count'] as num?)?.toInt() ?? 0,
       acceptedAt: json['accepted_at'] != null ? DateTime.parse(json['accepted_at'] as String) : null,
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
