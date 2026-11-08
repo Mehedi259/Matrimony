@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../../../providers/profile_provider.dart';
-import '../../../../data/models/profile/basic_info_model.dart';
 import 'package:get/get.dart';
 
 class UploadPhotoFormScreen extends StatefulWidget {

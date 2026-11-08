@@ -336,7 +336,6 @@ class MatchesProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_matchesRepository == null) throw Exception('MatchesRepository not provided');
       await _matchesRepository.removeFromWishlist(targetUserId);
       await loadWishlists(); // Refresh wishlists silently
       return true;
@@ -402,12 +401,6 @@ class MatchesProvider extends ChangeNotifier {
     } else {
       _errorMessage = e.toString();
     }
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    _errorMessage = message;
     _isLoading = false;
     notifyListeners();
   }

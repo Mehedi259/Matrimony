@@ -10,7 +10,6 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

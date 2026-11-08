@@ -9,7 +9,6 @@ import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -87,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final url = primary.isNotEmpty ? primary.first.imageUrl : photos.first.imageUrl;
         return NetworkImage(url);
       }
-      if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
-        return NetworkImage(user!.profilePicture!);
+      if (user?.profilePicture != null && user.profilePicture!.isNotEmpty) {
+        return NetworkImage(user.profilePicture!);
       }
       return const AssetImage('assets/profileImage.png');
     }

@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/gradient_button.dart';
-import '../widgets/onboarding/step_progress_indicator.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../widgets/common/checkbox_item.dart';
-import '../widgets/common/dropdown_field.dart';
-import '../widgets/common/multi_select_field.dart';
 import '../../../../core/utils/animation_helper.dart';
 import '../../../../core/constants/dropdown_options.dart';
 import '../../../../core/constants/choice_mappings.dart';

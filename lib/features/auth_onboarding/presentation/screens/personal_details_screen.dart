@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/gradient_button.dart';
-import '../widgets/onboarding/step_progress_indicator.dart';
-import '../widgets/common/dropdown_field.dart';
-import '../widgets/common/radio_group.dart';
-import '../../../../core/utils/animation_helper.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/multi_select_field.dart';
 import '../../../../core/constants/dropdown_options.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../providers/profile_provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../core/constants/choice_mappings.dart';
 import 'package:get/get.dart';
 
+/// Step 2: About You - Personal Details Screen
+/// This screen collects detailed demographic and personal information
+/// Different fields shown based on user type (Brother/Sister/Wali)
 class PersonalDetailsScreen extends StatefulWidget {
-  final String? profileType;
-  final String? gender;
-  
+  final String? userType; // 'brother', 'sister', or 'wali'
+  final String? gender; // 'Male' or 'Female'
+  final bool isEditing;
+
   const PersonalDetailsScreen({
     super.key,
-    this.profileType,
+    this.userType,
     this.gender,
+    this.isEditing = false,
   });
 
   @override
@@ -27,266 +32,282 @@ class PersonalDetailsScreen extends StatefulWidget {
 }
 
 class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
-  String? _selectedSect;
-  String? _selectedMaritalStatus;
-  List<String> _selectedEthnicities = [];
-  List<String> _selectedNationalities = [];
-  String? _hasChildren = 'No';
-  String? _childrenCount;
-  String? _selectedHeight;
-  String? _selectedWeight;
-  String? _pray5x = 'Mostly';
-  String? _openToRelocate = 'Maybe';
-  String? _preferredDress;
+  // Form controllers and values
+  String? _religionSect;
+  String? _maritalStatus;
+  List<String> _ethnicity = [];
+  List<String> _nationality = [];
+  String? _hasChildren;
+  String? _numberOfChildren;
+  String? _height;
+  String? _weight;
+  String? _prayerFrequency;
+  String? _openToRelocating;
+
+  // New fields
+  String? _education;
+  final TextEditingController _employmentController = TextEditingController();
+  String? _income;
+  String? _frame;
+  List<String> _languagesSpoken = [];
   
+  // Sister-specific fields
+  String? _dressStyle;
   final TextEditingController _waliNameController = TextEditingController();
   final TextEditingController _waliRelationController = TextEditingController();
-  final TextEditingController _waliContactController = TextEditingController();
-  
-  bool _isLoading = false;
+  final TextEditingController _waliNumberController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadExistingData();
-    });
+    _loadExistingData();
+  }
+
+  void _loadExistingData() {
+    final info = Provider.of<ProfileProvider>(context, listen: false).basicInfo;
+    if (info != null) {
+      _religionSect = info.sect != null ? ChoiceMappings.keyToDisplay(info.sect!, ChoiceMappings.sectKeyToDisplay) : null;
+      _maritalStatus = info.maritalStatus != null ? ChoiceMappings.keyToDisplay(info.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : null;
+      if (info.ethnicity.isNotEmpty) {
+        _ethnicity = ChoiceMappings.keysToDisplays(info.ethnicity, ChoiceMappings.ethnicityKeyToDisplay);
+      }
+      if (info.nationality.isNotEmpty) {
+        _nationality = ChoiceMappings.keysToDisplays(info.nationality, ChoiceMappings.nationalityKeyToDisplay);
+      }
+      if (info.hasChildren != null) {
+        _hasChildren = info.hasChildren! ? 'Yes' : 'No';
+      }
+      _numberOfChildren = info.childrenCount != null ? ChoiceMappings.keyToDisplay(info.childrenCount!, ChoiceMappings.childrenCountKeyToDisplay) : null;
+      _height = info.height;
+      _weight = info.weight;
+      _prayerFrequency = info.pray5x != null ? ChoiceMappings.keyToDisplay(info.pray5x!, ChoiceMappings.prayerKeyToDisplay) : null;
+      _openToRelocating = info.openToRelocate != null ? ChoiceMappings.keyToDisplay(info.openToRelocate!, ChoiceMappings.relocationKeyToDisplay) : null;
+      
+      _education = info.education != null ? ChoiceMappings.keyToDisplay(info.education!, ChoiceMappings.educationKeyToDisplay) : null;
+      _employmentController.text = info.employment ?? '';
+      _income = info.income != null ? ChoiceMappings.keyToDisplay(info.income!, ChoiceMappings.incomeKeyToDisplay) : null;
+      _frame = info.frame != null ? ChoiceMappings.keyToDisplay(info.frame!, ChoiceMappings.frameKeyToDisplay) : null;
+      if (info.languagesSpoken.isNotEmpty) {
+        _languagesSpoken = ChoiceMappings.keysToDisplays(info.languagesSpoken, ChoiceMappings.languageKeyToDisplay);
+      }
+    }
   }
 
   @override
   void dispose() {
     _waliNameController.dispose();
     _waliRelationController.dispose();
-    _waliContactController.dispose();
+    _waliNumberController.dispose();
+    _employmentController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadExistingData() async {
-    final profileProvider = context.read<ProfileProvider>();
-    await profileProvider.loadBasicInfo();
-    
-    if (profileProvider.basicInfo != null) {
-      final info = profileProvider.basicInfo!;
-      setState(() {
-        _selectedSect = info.sect;
-        _selectedMaritalStatus = info.maritalStatus;
-        _selectedEthnicities = info.ethnicity;
-        _selectedNationalities = info.nationality;
-        _hasChildren = info.hasChildren == true ? 'Yes' : 'No';
-        _childrenCount = info.childrenCount;
-        _selectedHeight = info.height;
-        _selectedWeight = info.weight;
-        _pray5x = info.pray5x ?? 'Mostly';
-        _openToRelocate = info.openToRelocate ?? 'Maybe';
-        _preferredDress = info.dress;
-      });
-    }
-  }
-
-  Future<void> _saveAndContinue() async {
-    // Validate required fields
-    if (_selectedSect == null || _selectedMaritalStatus == null) {
-      Get.showSnackbar(
-        const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Please fill all required fields')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final data = {
-      'sect': _selectedSect,
-      'marital_status': _selectedMaritalStatus,
-      'ethnicity': _selectedEthnicities,
-      'nationality': _selectedNationalities,
-      'has_children': _hasChildren == 'Yes',
-      'children_count': _hasChildren == 'Yes' ? _childrenCount : null,
-      'height': _selectedHeight,
-      'weight': _selectedWeight,
-      'pray_5x': _pray5x,
-      'open_to_relocate': _openToRelocate,
-      'preferred_dress': widget.gender == 'Female' || widget.profileType == 'wali' ? _preferredDress : null,
-    };
-
-    final profileProvider = context.read<ProfileProvider>();
-    final success = await profileProvider.updateBasicInfo(data);
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (success) {
-      context.push('/onboarding/preferences');
-    } else {
-      Get.showSnackbar(
-        GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(profileProvider.errorMessage ?? 'Failed to save data'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  bool get isSister {
+    if (widget.gender == 'Female' || widget.userType == 'sister') return true;
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    return user?.role == 'female' || user?.gender == 'female';
   }
 
   @override
   Widget build(BuildContext context) {
-    final showWaliSection = widget.gender == 'Female' || widget.profileType == 'wali';
-    
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-              
-          const Text(
-            'Personal Details',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ).animateOnboarding(index: 0),
-          const SizedBox(height: 8),
-          const Text(
-            'Tell us more about yourself.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black54),
-          ).animateOnboarding(index: 1),
-          const SizedBox(height: 16),
           
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.red[200]!),
+          const Center(
+            child: Text(
+              'About You',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.emergency, color: Colors.red[300], size: 16),
-                const SizedBox(width: 8),
-                Text('These fields are required', style: TextStyle(color: Colors.red[300])),
-              ],
-            ),
-          ).animateOnboarding(index: 2),
-          const SizedBox(height: 32),
-          
-          _buildDropdown('Sect', _selectedSect, DropdownOptions.religionSect, (value) {
-            setState(() => _selectedSect = value);
-          }, isRequired: true).animateOnboarding(index: 3),
-          const SizedBox(height: 24),
-          
-          _buildDropdown('Marital Status', _selectedMaritalStatus, DropdownOptions.maritalStatus, (value) {
-            setState(() => _selectedMaritalStatus = value);
-          }, isRequired: true).animateOnboarding(index: 4),
-          const SizedBox(height: 24),
-          
-          _buildMultiSelect('Ethnicity', _selectedEthnicities, DropdownOptions.ethnicities, (values) {
-            setState(() => _selectedEthnicities = values);
-          }).animateOnboarding(index: 5),
-          const SizedBox(height: 24),
-          
-          _buildMultiSelect('Nationality / Citizenship', _selectedNationalities, DropdownOptions.nationalities, (values) {
-            setState(() => _selectedNationalities = values);
-          }).animateOnboarding(index: 6),
-          const SizedBox(height: 32),
-          
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Family & Physical', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
-          const Divider(),
+          const SizedBox(height: 8),
+          const Center(
+            child: Text(
+              'Help us understand you better',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ),
           const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Religion/Sect',
+            value: _religionSect,
+            items: DropdownOptions.religionSect,
+            onChanged: (value) => setState(() => _religionSect = value),
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
           
-          _buildRadioGroup('Do you have children?', ['Yes', 'No'], _hasChildren!, (value) {
-            setState(() {
-              _hasChildren = value;
-              if (value == 'No') _childrenCount = null;
-            });
-          }),
+          _buildDropdown(
+            label: 'Marital Status',
+            value: _maritalStatus,
+            items: widget.gender == 'Male' 
+              ? DropdownOptions.maritalStatusBrother 
+              : DropdownOptions.maritalStatusSister,
+            onChanged: (value) => setState(() => _maritalStatus = value),
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
+          
+          MultiSelectField(
+            label: 'Ethnicity',
+            options: DropdownOptions.ethnicities,
+            selectedValues: _ethnicity,
+            onChanged: (values) => setState(() => _ethnicity = values),
+          ),
+          const SizedBox(height: 24),
+          
+          MultiSelectField(
+            label: 'Nationality / Citizenship',
+            options: DropdownOptions.nationalities,
+            selectedValues: _nationality,
+            onChanged: (values) => setState(() => _nationality = values),
+          ),
+          const SizedBox(height: 24),
+          
+          _buildDropdown(
+            label: 'Do you have children?',
+            value: _hasChildren,
+            items: DropdownOptions.yesNo,
+            onChanged: (value) {
+              setState(() {
+                _hasChildren = value;
+                if (value == 'No') {
+                  _numberOfChildren = null;
+                }
+              });
+            },
+            isRequired: true,
+          ),
           const SizedBox(height: 24),
           
           if (_hasChildren == 'Yes') ...[
-            _buildDropdown('How many children do you have?', _childrenCount, 
-              ['1', '2', '3', '4', '5', '6+'], (value) {
-              setState(() => _childrenCount = value);
-            }),
+            _buildDropdown(
+              label: 'How many children do you have?',
+              value: _numberOfChildren,
+              items: DropdownOptions.childrenCount,
+              onChanged: (value) => setState(() => _numberOfChildren = value),
+              isRequired: true,
+            ),
             const SizedBox(height: 24),
           ],
           
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdown('Height', _selectedHeight, widget.gender == 'Female' ? DropdownOptions.sisterHeights : DropdownOptions.brotherHeights, (value) {
-                  setState(() => _selectedHeight = value);
-                }),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildDropdown('Weight', _selectedWeight, widget.gender == 'Female' ? DropdownOptions.sisterWeights : DropdownOptions.brotherWeights, (value) {
-                  setState(() => _selectedWeight = value);
-                }),
-              ),
-            ],
+          _buildDropdown(
+            label: 'Height',
+            value: _height,
+            items: isSister ? DropdownOptions.sisterHeights : DropdownOptions.brotherHeights,
+            onChanged: (value) => setState(() => _height = value),
+            isRequired: true,
           ),
-          const SizedBox(height: 32),
-          
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Religious Practice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          const Divider(),
-          const SizedBox(height: 16),
-          
-          _buildRadioGroup('Prayer 5x a day?', ['Yes', 'Mostly', 'No'], _pray5x!, (value) {
-            setState(() => _pray5x = value);
-          }),
           const SizedBox(height: 24),
           
-          _buildRadioGroup('Are you open to relocating?', ['Yes', 'Maybe', 'No'], _openToRelocate!, (value) {
-            setState(() => _openToRelocate = value);
-          }),
-          const SizedBox(height: 32),
+          _buildDropdown(
+            label: 'Weight',
+            value: _weight,
+            items: isSister ? DropdownOptions.sisterWeights : DropdownOptions.brotherWeights,
+            onChanged: (value) => setState(() => _weight = value),
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
           
-          if (showWaliSection) ...[
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('For sisters only', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          _buildDropdown(
+            label: 'Pray 5x a day?',
+            value: _prayerFrequency,
+            items: DropdownOptions.prayerFrequency,
+            onChanged: (value) => setState(() => _prayerFrequency = value),
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
+          
+          _buildDropdown(
+            label: 'Are you open to relocating?',
+            value: _openToRelocating,
+            items: DropdownOptions.relocationOptions,
+            onChanged: (value) => setState(() => _openToRelocating = value),
+            isRequired: true,
+          ),
+          const SizedBox(height: 24),
+          
+          if (isSister) ...[
+            _buildDropdown(
+              label: 'How do you dress?',
+              value: _dressStyle,
+              items: DropdownOptions.dressStyle,
+              onChanged: (value) => setState(() => _dressStyle = value),
+              isRequired: true,
             ),
-            const Divider(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
             
-            _buildDropdown('How do you dress?', _preferredDress, DropdownOptions.dressStyle, (value) {
-              setState(() => _preferredDress = value);
-            }),
-            const SizedBox(height: 24),
+            const Text(
+              'Wali (Guardian) Information',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
             
             CustomTextField(
               label: 'Wali Name',
-              hint: 'Enter wali name',
+              hint: 'Enter your guardian\'s full name',
               controller: _waliNameController,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             CustomTextField(
-              label: 'Wali Relation',
-              hint: 'Enter relation',
+              label: 'Relationship to you',
+              hint: 'e.g., Father, Brother, Uncle',
               controller: _waliRelationController,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             CustomTextField(
-              label: 'Wali Contact',
-              hint: 'Enter wali number',
-              controller: _waliContactController,
+              label: 'Wali Contact Number',
+              hint: 'Include country code',
+              controller: _waliNumberController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            const Divider(thickness: 2),
+            const SizedBox(height: 16),
           ],
           
+          _buildDropdown(
+            label: 'Education',
+            value: _education,
+            items: ChoiceMappings.educationDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _education = value),
+            isRequired: false,
+          ),
           const SizedBox(height: 16),
+          CustomTextField(
+            label: 'Employment / Profession',
+            hint: 'What do you do for work?',
+            controller: _employmentController,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Income',
+            value: _income,
+            items: ChoiceMappings.incomeDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _income = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          _buildDropdown(
+            label: 'Frame / Build',
+            value: _frame,
+            items: ChoiceMappings.frameDisplayToKey.keys.toList(),
+            onChanged: (value) => setState(() => _frame = value),
+            isRequired: false,
+          ),
+          const SizedBox(height: 16),
+          MultiSelectField(
+            label: 'Languages Spoken',
+            options: ChoiceMappings.languageDisplayToKey.keys.toList(),
+            selectedValues: _languagesSpoken,
+            onChanged: (values) => setState(() => _languagesSpoken = values),
+          ),
+          const SizedBox(height: 32),
           
           Row(
             children: [
@@ -295,39 +316,61 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
                   height: 56,
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(28),
                   ),
                   child: TextButton(
                     onPressed: () => context.pop(),
-                    child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Back',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: GradientButton(
-                  text: _isLoading ? 'Saving...' : 'Next',
-                  onPressed: _isLoading ? null : _saveAndContinue,
+                  text: widget.isEditing ? 'Save Changes' : 'Continue',
+                  onPressed: _saveAndContinue,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 48),
         ],
       ),
     );
   }
 
-  Widget _buildDropdown(String label, String? value, List<String> options, Function(String?) onChanged, {bool isRequired = false}) {
+  Widget _buildDropdown({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+    bool isRequired = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
           text: TextSpan(
             text: label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-            children: isRequired ? [
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
-            ] : [],
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+            children: [
+              if (isRequired)
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -341,10 +384,16 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
-              hint: Text('Select $label', style: TextStyle(color: Colors.grey[400])),
+              hint: Text(
+                'Select $label',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
               isExpanded: true,
-              items: options.map((item) {
-                return DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontSize: 14)));
+              items: items.map((item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(item),
+                );
               }).toList(),
               onChanged: onChanged,
             ),
@@ -354,154 +403,94 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     );
   }
 
-  Widget _buildMultiSelect(String label, List<String> selected, List<String> options, Function(List<String>) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () async {
-            final result = await showDialog<List<String>>(
-              context: context,
-              builder: (context) => _MultiSelectDialog(
-                title: 'Select $label',
-                options: options,
-                selectedValues: selected,
-              ),
-            );
-            if (result != null) {
-              onChanged(result);
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    selected.isEmpty ? 'Select $label' : '${selected.length} selected',
-                    style: TextStyle(color: selected.isEmpty ? Colors.grey[400] : Colors.black87, fontSize: 14),
-                  ),
-                ),
-                const Icon(Icons.arrow_drop_down, color: Colors.grey),
-              ],
-            ),
-          ),
+  void _saveAndContinue() async {
+    // Validate required fields
+    if (_religionSect == null || _maritalStatus == null || _ethnicity.isEmpty || _nationality.isEmpty || _hasChildren == null) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          messageText: Text('Please fill all required fields', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
         ),
-      ],
-    );
-  }
+      );
+      return;
+    }
 
-  Widget _buildRadioGroup(String label, List<String> options, String selected, Function(String) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-        const SizedBox(height: 8),
-        Row(
-          children: options.map((option) {
-            final isSelected = selected == option;
-            return Expanded(
-              child: InkWell(
-                onTap: () => onChanged(option),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? Theme.of(context).primaryColor : const Color(0xFFE0E0E0),
-                    ),
-                  ),
-                  child: Text(
-                    option,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+    if (isSister) {
+      if (_dressStyle == null ||
+          _waliNameController.text.isEmpty ||
+          _waliRelationController.text.isEmpty ||
+          _waliNumberController.text.isEmpty) {
+        SnackBarHelper.showError(context, 'Please fill all required fields including Wali information');
+        return;
+      }
+    }
+
+    // If children selected, validate number
+    if (_hasChildren == 'Yes' && _numberOfChildren == null) {
+      SnackBarHelper.showError(context, 'Please specify the number of children');
+      return;
+    }
+
+    Map<String, dynamic> data = {
+      'sect': ChoiceMappings.displayToKey(_religionSect!, ChoiceMappings.sectDisplayToKey),
+      'marital_status': ChoiceMappings.displayToKey(_maritalStatus!, ChoiceMappings.maritalStatusDisplayToKey),
+      'ethnicity': ChoiceMappings.displaysToKeys(_ethnicity, ChoiceMappings.ethnicityDisplayToKey),
+      'nationality': ChoiceMappings.displaysToKeys(_nationality, ChoiceMappings.nationalityDisplayToKey),
+      'has_children': _hasChildren == 'Yes',
+      'children_count': _hasChildren == 'Yes' ? ChoiceMappings.displayToKey(_numberOfChildren!, ChoiceMappings.childrenCountDisplayToKey) : null,
+      'height': _height,
+      'weight': _weight,
+      'pray_5x': ChoiceMappings.displayToKey(_prayerFrequency!, ChoiceMappings.prayerDisplayToKey),
+      'open_to_relocate': ChoiceMappings.displayToKey(_openToRelocating!, ChoiceMappings.relocationDisplayToKey),
+    };
+
+    if (_education != null) data['education'] = ChoiceMappings.displayToKey(_education!, ChoiceMappings.educationDisplayToKey);
+    if (_employmentController.text.isNotEmpty) data['employment'] = _employmentController.text;
+    if (_income != null) data['income'] = ChoiceMappings.displayToKey(_income!, ChoiceMappings.incomeDisplayToKey);
+    if (_frame != null) data['frame'] = ChoiceMappings.displayToKey(_frame!, ChoiceMappings.frameDisplayToKey);
+    data['health_concerns'] = 'None';
+    if (_languagesSpoken.isNotEmpty) {
+      data['languages_spoken'] = ChoiceMappings.displaysToKeys(_languagesSpoken, ChoiceMappings.languageDisplayToKey);
+    }
+
+    if (isSister) {
+      data['dress'] = ChoiceMappings.displayToKey(_dressStyle!, ChoiceMappings.dressDisplayToKey);
+      data['wali_name'] = _waliNameController.text;
+      data['wali_relation'] = _waliRelationController.text;
+      data['wali_number'] = _waliNumberController.text;
+    }
+
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final success = await profileProvider.updateBasicInfo(data);
+    
+    if (success && mounted) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 3),
+          messageText: Text('Personal Details saved successfully', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
         ),
-      ],
-    );
-  }
-}
-
-// Multi-select dialog
-class _MultiSelectDialog extends StatefulWidget {
-  final String title;
-  final List<String> options;
-  final List<String> selectedValues;
-
-  const _MultiSelectDialog({
-    required this.title,
-    required this.options,
-    required this.selectedValues,
-  });
-
-  @override
-  State<_MultiSelectDialog> createState() => _MultiSelectDialogState();
-}
-
-class _MultiSelectDialogState extends State<_MultiSelectDialog> {
-  late List<String> _tempSelected;
-
-  @override
-  void initState() {
-    super.initState();
-    _tempSelected = List.from(widget.selectedValues);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: widget.options.length,
-          itemBuilder: (context, index) {
-            final option = widget.options[index];
-            final isSelected = _tempSelected.contains(option);
-            return CheckboxListTile(
-              title: Text(option),
-              value: isSelected,
-              onChanged: (checked) {
-                setState(() {
-                  if (checked == true) {
-                    _tempSelected.add(option);
-                  } else {
-                    _tempSelected.remove(option);
-                  }
-                });
-              },
-            );
-          },
+      );
+      if (widget.isEditing) {
+        context.pop();
+      } else {
+        context.push('/onboarding/preferences');
+      }
+    } else if (mounted) {
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(profileProvider.errorMessage ?? 'Failed to save Personal Details', style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _tempSelected),
-          child: const Text('Done'),
-        ),
-      ],
-    );
+      );
+    }
   }
 }

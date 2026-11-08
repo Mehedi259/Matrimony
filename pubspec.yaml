@@ -106,11 +106,9 @@ flutter:
     - assets/blurredProfile1.png
     - assets/blurredProfile2.png
     - assets/profileImage.png
-    - assets/profile image full.jpg
     - assets/waliProfile.png
     - assets/cupleIllustration.png
     - assets/handswithPhone.png
-    - assets/leaving picture.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

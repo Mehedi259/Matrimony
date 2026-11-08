@@ -14,7 +14,7 @@ import 'features/auth_onboarding/presentation/screens/verified_success_screen.da
 import 'features/auth_onboarding/presentation/screens/forgot_password_screen.dart';
 import 'features/auth_onboarding/presentation/screens/create_new_password_screen.dart';
 import 'features/auth_onboarding/presentation/screens/basic_information_screen.dart';
-import 'features/auth_onboarding/presentation/screens/personal_details_screen_new.dart';
+import 'features/auth_onboarding/presentation/screens/personal_details_screen.dart';
 import 'features/auth_onboarding/presentation/screens/about_expectations_screen.dart';
 import 'features/auth_onboarding/presentation/screens/upload_photos_screen.dart';
 import 'features/auth_onboarding/presentation/screens/your_preferences_screen.dart';
@@ -36,11 +36,7 @@ import 'features/main_navigation/presentation/screens/private_matchmaking_screen
 import 'features/main_navigation/presentation/screens/private_matches_screen.dart';
 import 'features/main_navigation/presentation/screens/saved_screen.dart';
 import 'features/main_navigation/presentation/screens/matched_profile_view_screen.dart';
-import 'features/main_navigation/presentation/screens/basic_information_form_screen.dart';
-import 'features/main_navigation/presentation/screens/personal_details_form_screen.dart';
-import 'features/main_navigation/presentation/screens/preferences_form_screen.dart';
 import 'features/main_navigation/presentation/screens/upload_photo_form_screen.dart';
-import 'features/main_navigation/presentation/screens/about_expectations_form_screen.dart';
 import 'features/main_navigation/presentation/screens/settings_screen.dart';
 import 'features/main_navigation/presentation/screens/edit_profile_screen.dart';
 import 'features/main_navigation/presentation/screens/subscription_screen.dart';
@@ -191,7 +187,7 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
               final profileType = state.uri.queryParameters['profileType'];
               final gender = state.uri.queryParameters['gender'];
               return _buildPageWithTransition(
-                PersonalDetailsScreenNew(
+                PersonalDetailsScreen(
                   userType: profileType,
                   gender: gender,
                 ),
@@ -294,7 +290,7 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
         builder: (context, state) => Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
-          body: const SafeArea(child: PersonalDetailsScreenNew(isEditing: true)),
+          body: const SafeArea(child: PersonalDetailsScreen(isEditing: true)),
         ),
       ),
       GoRoute(
@@ -376,8 +372,6 @@ class _MatrimonyAppState extends State<MatrimonyApp> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        final bool isAuthenticated = authProvider.authState == AuthState.authenticated;
-        
         // We do not recreate the router here. 
         // Recreating the router dynamically breaks the navigation stack (like context.push)
         // Navigation after login/logout is handled manually in the respective screens.

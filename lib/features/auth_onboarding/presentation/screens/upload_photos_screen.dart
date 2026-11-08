@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../widgets/common/gradient_button.dart';
-import '../widgets/onboarding/step_progress_indicator.dart';
 import '../../../../providers/profile_provider.dart';
 import 'package:get/get.dart';
 

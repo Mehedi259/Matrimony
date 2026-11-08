@@ -29,7 +29,6 @@ class _CustomRadioGroupState extends State<CustomRadioGroup> {
         const SizedBox(height: 8),
         Row(
           children: widget.options.map((option) {
-            bool isSelected = option == _currentSelected;
             return Padding(
               padding: const EdgeInsets.only(right: 24),
               child: Row(

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/models/user_model.dart';
-import '../data/models/auth/register_response.dart';
-import '../data/models/auth/login_response.dart';
-import '../data/models/auth/password_reset_response.dart';
 import '../core/services/storage_service.dart';
 
 enum AuthState {
@@ -96,7 +93,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final response = await _authRepository.registerInitiate(
+      await _authRepository.registerInitiate(
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -219,7 +216,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final response = await _authRepository.passwordResetInitiate(email: email);
+      await _authRepository.passwordResetInitiate(email: email);
       _resetEmail = email;
       _setLoading(false);
       return true;

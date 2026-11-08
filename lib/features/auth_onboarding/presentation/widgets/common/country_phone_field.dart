@@ -17,7 +17,6 @@ class CountryPhoneField extends StatefulWidget {
 
 class _CountryPhoneFieldState extends State<CountryPhoneField> {
   String _selectedFlag = '🇬🇧';
-  String _selectedCode = '+44';
 
   // Map of flag emoji to country code
   final Map<String, String> _flagToCode = {
@@ -110,7 +109,6 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
                       if (flag != null) {
                         setState(() {
                           _selectedFlag = flag;
-                          _selectedCode = _flagToCode[flag] ?? '+44';
                         });
                       }
                     },

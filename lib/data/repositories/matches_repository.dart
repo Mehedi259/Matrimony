@@ -1,7 +1,6 @@
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../models/matches/match_profile_model.dart';
-import '../models/profile/basic_info_model.dart';
 
 class MatchesRepository {
   final ApiClient _apiClient = ApiClient();
