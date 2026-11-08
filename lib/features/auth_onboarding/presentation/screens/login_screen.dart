@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
-  String? _selectedRole;
 
   @override
   void dispose() {
@@ -33,19 +32,11 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Show role selection dialog if not selected
-    if (_selectedRole == null) {
-      final role = await _showRoleSelectionDialog();
-      if (role == null) return;
-      _selectedRole = role;
-    }
-
     final authProvider = context.read<AuthProvider>();
 
     final success = await authProvider.login(
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      role: _selectedRole!,
     );
 
     if (!mounted) return;
@@ -56,36 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       _showError(authProvider.errorMessage ?? 'Login failed');
     }
-  }
-
-  Future<String?> _showRoleSelectionDialog() async {
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Your Profile Type'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Male'),
-              leading: const Icon(Icons.person, color: Color(0xFF7685C2)),
-              onTap: () => Navigator.pop(context, 'male'),
-            ),
-            ListTile(
-              title: const Text('Female'),
-              leading: const Icon(Icons.person_outline, color: Color(0xFFD48B91)),
-              onTap: () => Navigator.pop(context, 'female'),
-            ),
-            ListTile(
-              title: const Text('Wali (Guardian)'),
-              leading: const Icon(Icons.people_outline, color: Color(0xFFF2D76E)),
-              onTap: () => Navigator.pop(context, 'wali'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showError(String message) {

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/services/storage_service.dart';
@@ -104,30 +105,62 @@ class AuthRepository {
   Future<LoginResponse> login({
     required String email,
     required String password,
-    required String role, // 'male', 'female', 'wali'
+    String? role, // Optional: 'male', 'female', 'wali'
   }) async {
-    String endpoint;
-    switch (role.toLowerCase()) {
-      case 'male':
-        endpoint = ApiConstants.maleLogin;
-        break;
-      case 'female':
-        endpoint = ApiConstants.femaleLogin;
-        break;
-      case 'wali':
-        endpoint = ApiConstants.waliLogin;
-        break;
-      default:
-        throw Exception('Invalid role: $role');
-    }
+    Response response;
 
-    final response = await _apiClient.post(
-      endpoint,
-      data: {
-        'email': email,
-        'password': password,
-      },
-    );
+    if (role != null && role.isNotEmpty) {
+      String endpoint;
+      switch (role.toLowerCase()) {
+        case 'male':
+          endpoint = ApiConstants.maleLogin;
+          break;
+        case 'female':
+          endpoint = ApiConstants.femaleLogin;
+          break;
+        case 'wali':
+          endpoint = ApiConstants.waliLogin;
+          break;
+        default:
+          endpoint = ApiConstants.login;
+      }
+
+      response = await _apiClient.post(
+        endpoint,
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+    } else {
+      try {
+        response = await _apiClient.post(
+          ApiConstants.login,
+          data: {
+            'email': email,
+            'password': password,
+          },
+        );
+      } on ApiException catch (e) {
+        if (e.statusCode == 404) {
+          // Fallback to role-specific endpoints if unified endpoint is not deployed yet
+          Response? fallbackResp;
+          for (final ep in [ApiConstants.maleLogin, ApiConstants.femaleLogin, ApiConstants.waliLogin]) {
+            try {
+              fallbackResp = await _apiClient.post(ep, data: {'email': email, 'password': password});
+              break;
+            } catch (_) {}
+          }
+          if (fallbackResp != null) {
+            response = fallbackResp;
+          } else {
+            rethrow;
+          }
+        } else {
+          rethrow;
+        }
+      }
+    }
 
     final loginResponse = LoginResponse.fromJson(response.data);
 

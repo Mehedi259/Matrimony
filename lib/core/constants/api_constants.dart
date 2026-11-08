@@ -11,6 +11,7 @@ class ApiConstants {
   static const String waliRegisterInitiate = '$apiPrefix/user/wali/register/initiate/';
   static const String waliRegisterVerify = '$apiPrefix/user/wali/register/verify/';
   
+  static const String login = '$apiPrefix/user/login/';
   static const String maleLogin = '$apiPrefix/user/male/login/';
   static const String femaleLogin = '$apiPrefix/user/female/login/';
   static const String waliLogin = '$apiPrefix/user/wali/login/';
