@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as dart_ui;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:screen_protector/screen_protector.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
@@ -24,20 +25,76 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
   Timer? _timer;
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
+    _initializeScreenProtection();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<MatchesProvider>();
       if (provider.matches.isEmpty) {
         provider.loadMatches();
       }
     });
+  }
+
+  void _initializeScreenProtection() async {
+    try {
+      await ScreenProtector.preventScreenshotOn();
+      await ScreenProtector.protectDataLeakageWithColor(Colors.black);
+      ScreenProtector.addListener(() {
+        if (!mounted) return;
+        _timer?.cancel();
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        Get.showSnackbar(
+          const GetSnackBar(
+            snackPosition: SnackPosition.TOP,
+            margin: EdgeInsets.all(16),
+            borderRadius: 8,
+            duration: Duration(seconds: 4),
+            messageText: Text('Screenshots are disabled for privacy and protection.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }, (isCaptured) {
+        if (!mounted) return;
+        if (isCaptured) {
+          _timer?.cancel();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+          Get.showSnackbar(
+            const GetSnackBar(
+              snackPosition: SnackPosition.TOP,
+              margin: EdgeInsets.all(16),
+              borderRadius: 8,
+              duration: Duration(seconds: 4),
+              messageText: Text('Screen recording is not allowed during photo view.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      debugPrint('ScreenProtector error: $e');
+    }
+  }
+
+  void _disposeScreenProtection() async {
+    try {
+      ScreenProtector.removeListener();
+      await ScreenProtector.preventScreenshotOff();
+      await ScreenProtector.protectDataLeakageOff();
+    } catch (e) {
+      debugPrint('ScreenProtector dispose error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _disposeScreenProtection();
+    super.dispose();
   }
 
   @override
@@ -466,7 +523,27 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     );
   }
 
-  void _startPhotoTimer(List<dynamic> photos, String matchId) {
+  void _startPhotoTimer(List<dynamic> photos, String matchId) async {
+    try {
+      final isRecording = await ScreenProtector.isRecording();
+      if (isRecording) {
+        Get.showSnackbar(const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 4),
+          messageText: Text('Screen recording detected. Please stop recording to view photos.'),
+          backgroundColor: Colors.red,
+        ));
+        return;
+      }
+      await ScreenProtector.preventScreenshotOn();
+    } catch (e) {
+      debugPrint('ScreenProtector check error: $e');
+    }
+
+    if (!mounted) return;
+
     // Notify backend that photos are being viewed to start the lockdown
     context.read<MatchesProvider>().markPhotosViewed(matchId);
     

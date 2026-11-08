@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final url = primary.isNotEmpty ? primary.first.imageUrl : photos.first.imageUrl;
         return NetworkImage(url);
       }
-      if (user?.profilePicture != null && user.profilePicture!.isNotEmpty) {
+      if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
         return NetworkImage(user.profilePicture!);
       }
       return const AssetImage('assets/profileImage.png');

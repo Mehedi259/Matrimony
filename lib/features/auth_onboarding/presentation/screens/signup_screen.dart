@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../data/repositories/support_repository.dart';
 import '../widgets/common/custom_text_field.dart';
 import 'package:get/get.dart';
 
@@ -304,11 +306,14 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             TextSpan(
                               text: 'Terms and Conditions',
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => _showTermsDialog(context),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.secondary,
                                 fontSize: 12,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
                                 height: 1.50,
                               ),
                             ),
@@ -397,6 +402,130 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showTermsDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (sheetContext, scrollController) {
+            return FutureBuilder(
+              future: SupportRepository().getTerms(),
+              builder: (futureContext, snapshot) {
+                String content = '';
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  content = (snapshot.data as dynamic).content ?? '';
+                }
+
+                if (content.isEmpty) {
+                  content = 'Welcome to A Muslim Matchmaker.\n\n'
+                      '1. Acceptance of Terms: By creating an account or accessing our services, you agree to comply with and be bound by these terms.\n\n'
+                      '2. Modesty & Islamic Adab: All members must conduct themselves with Islamic decorum, honesty, and mutual respect.\n\n'
+                      '3. Accurate Profile Information: You agree to provide true, current, and complete information during registration and onboarding.\n\n'
+                      '4. Photo Privacy & Screenshots: Photos of sisters are private. Screenshots, screen recordings, copying, or distributing profile photos or sensitive personal data is strictly forbidden and constitutes a serious privacy violation.\n\n'
+                      '5. Wali Involvement: In accordance with Islamic principles, communications and steps may involve Wali supervision.\n\n'
+                      '6. Account Deletion: You may deactivate or request deletion of your account at any time via Settings.\n\n'
+                      'For questions or support, please contact us through the Help & Support section.';
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Terms and Conditions',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: Text(
+                              content,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.6,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _acceptTerms = true;
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'I Agree to Terms & Conditions',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

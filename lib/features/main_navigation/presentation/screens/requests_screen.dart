@@ -430,7 +430,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               lockMessage: '',
               isLocked: isActuallyLocked,
               isMatched: true,
-              isBlurred: isActuallyLocked,
+              isBlurred: !isFemaleOrWali,
               matchedButtonText: (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser) 
                   ? 'Review Photo Request' 
                   : (isActuallyLocked ? 'Request Photo' : 'View photos'),

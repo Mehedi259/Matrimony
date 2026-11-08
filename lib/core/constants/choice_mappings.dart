@@ -19,11 +19,16 @@ class ChoiceMappings {
   // ===== RELIGION / SECT =====
   static const Map<String, String> sectDisplayToKey = {
     'Sunni': 'sunni',
+    'Sunni/Salafi': 'salafi',
     'Salafi': 'salafi',
+    'Other Sect': 'other',
   };
 
-  static final Map<String, String> sectKeyToDisplay =
-      _reverseMap(sectDisplayToKey);
+  static const Map<String, String> sectKeyToDisplay = {
+    'sunni': 'Sunni',
+    'salafi': 'Sunni/Salafi',
+    'other': 'Other Sect',
+  };
 
   // ===== HOW FOUND =====
   static const Map<String, String> howFoundDisplayToKey = {
@@ -43,6 +48,7 @@ class ChoiceMappings {
 
   // ===== ETHNICITY =====
   static const Map<String, String> ethnicityDisplayToKey = {
+    'Open to other ethnicities': 'open_other',
     'Open to other Ethnicities': 'open_other',
     'Afghan': 'afghan',
     'African-American': 'african_american',
@@ -426,24 +432,36 @@ class ChoiceMappings {
 
   /// Convert a single display label to backend key
   static String displayToKey(String display, Map<String, String> mapping) {
-    return mapping[display] ?? display;
+    if (mapping.containsKey(display)) return mapping[display]!;
+    for (final entry in mapping.entries) {
+      if (entry.key.toLowerCase() == display.toLowerCase()) {
+        return entry.value;
+      }
+    }
+    return display;
   }
 
   /// Convert a single backend key to display label
   static String keyToDisplay(String key, Map<String, String> reverseMapping) {
-    return reverseMapping[key] ?? key;
+    if (reverseMapping.containsKey(key)) return reverseMapping[key]!;
+    for (final entry in reverseMapping.entries) {
+      if (entry.key.toLowerCase() == key.toLowerCase()) {
+        return entry.value;
+      }
+    }
+    return key;
   }
 
   /// Convert a list of display labels to backend keys
   static List<String> displaysToKeys(
       List<String> displays, Map<String, String> mapping) {
-    return displays.map((d) => mapping[d] ?? d).toList();
+    return displays.map((d) => displayToKey(d, mapping)).toList();
   }
 
   /// Convert a list of backend keys to display labels
   static List<String> keysToDisplays(
       List<String> keys, Map<String, String> reverseMapping) {
-    return keys.map((k) => reverseMapping[k] ?? k).toList();
+    return keys.map((k) => keyToDisplay(k, reverseMapping)).toList();
   }
 
   /// Create a reverse map (value → key)

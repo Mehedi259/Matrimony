@@ -148,18 +148,88 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    // Convert DOB to YYYY-MM-DD format
-    String? dobFormatted;
-    try {
-      final parts = _dobController.text.split('/');
-      if (parts.length == 3) {
-        dobFormatted = '${parts[2]}-${parts[1]}-${parts[0]}';
-      }
-    } catch (e) {
-      // Invalid date format
+    // Validate DOB format and calendar date
+    final dobText = _dobController.text.trim();
+    final parts = dobText.split('/');
+    if (parts.length != 3) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 4),
+          messageText: Text('Please enter Date of Birth in DD/MM/YYYY format'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    final day = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+
+    if (day == null || month == null || year == null ||
+        day < 1 || day > 31 ||
+        month < 1 || month > 12 ||
+        year < 1920 || year > DateTime.now().year) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 4),
+          messageText: Text('Date of Birth is invalid. Please check day, month, and year (DD/MM/YYYY)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate real calendar date (e.g. leap year, 30 vs 31 days)
+    DateTime? parsedDate;
+    try {
+      parsedDate = DateTime(year, month, day);
+      if (parsedDate.year != year || parsedDate.month != month || parsedDate.day != day) {
+        throw const FormatException('Invalid calendar date');
+      }
+    } catch (_) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 4),
+          messageText: Text('Date of Birth contains an invalid date for the month (DD/MM/YYYY)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Must be at least 18 years old
+    final now = DateTime.now();
+    int age = now.year - year;
+    if (now.month < month || (now.month == month && now.day < day)) {
+      age--;
+    }
+    if (age < 18) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 4),
+          messageText: Text('You must be at least 18 years old to register.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final dobFormatted = '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+
+    setState(() => _isLoading = true);
 
     final mappedHowFound = _howDidYouFindUs != null && ChoiceMappings.howFoundDisplayToKey.containsKey(_howDidYouFindUs)
         ? [ChoiceMappings.howFoundDisplayToKey[_howDidYouFindUs]]

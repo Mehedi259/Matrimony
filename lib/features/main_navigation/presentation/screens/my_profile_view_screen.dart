@@ -223,14 +223,14 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (basicInfo?.employment != null && basicInfo.employment.isNotEmpty)
-                        _InfoChip(icon: Icons.work_outline, label: _formatText(basicInfo.employment), color: Colors.blue),
-                      if (basicInfo?.height != null && basicInfo.height.isNotEmpty)
-                        _InfoChip(icon: Icons.height, label: basicInfo.height, color: Colors.orange),
-                      if (basicInfo?.maritalStatus != null && basicInfo.maritalStatus.isNotEmpty)
-                        _InfoChip(icon: Icons.star_outline, label: _formatText(basicInfo.maritalStatus), color: Colors.purple),
-                      if (basicInfo?.sect != null && basicInfo.sect.isNotEmpty)
-                        _InfoChip(icon: Icons.menu_book_outlined, label: _formatText(basicInfo.sect), color: Colors.teal),
+                      if (basicInfo?.employment != null && basicInfo!.employment!.isNotEmpty)
+                        _InfoChip(icon: Icons.work_outline, label: _formatText(basicInfo.employment!), color: Colors.blue),
+                      if (basicInfo?.height != null && basicInfo!.height!.isNotEmpty)
+                        _InfoChip(icon: Icons.height, label: basicInfo.height!, color: Colors.orange),
+                      if (basicInfo?.maritalStatus != null && basicInfo!.maritalStatus!.isNotEmpty)
+                        _InfoChip(icon: Icons.star_outline, label: _formatText(basicInfo.maritalStatus!), color: Colors.purple),
+                      if (basicInfo?.sect != null && basicInfo!.sect!.isNotEmpty)
+                        _InfoChip(icon: Icons.menu_book_outlined, label: _formatText(basicInfo.sect!), color: Colors.teal),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 20),

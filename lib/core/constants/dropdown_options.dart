@@ -16,7 +16,7 @@ class DropdownOptions {
   // Religion/Sect
   static const List<String> religionSect = [
     'Sunni',
-    'Salafi',
+    'Sunni/Salafi',
     'Other Sect',
   ];
 
@@ -132,12 +132,12 @@ class DropdownOptions {
 
   // Countries list for location
   static const List<String> countries = [
-    'No preference', 'Hijrah to a Muslim country',
+    'Australia', 'Canada', 'United Kingdom', 'United States',
     'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
-    'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas',
+    'Argentina', 'Armenia', 'Austria', 'Azerbaijan', 'Bahamas',
     'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin',
     'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei',
-    'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada',
+    'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon',
     'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia',
     'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
     'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador',
@@ -162,7 +162,7 @@ class DropdownOptions {
     'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania',
     'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey',
     'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates',
-    'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu',
+    'Uruguay', 'Uzbekistan', 'Vanuatu',
     'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe',
   ];
 

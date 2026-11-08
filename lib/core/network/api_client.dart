@@ -335,6 +335,31 @@ class ApiClient {
           }
           return data['errors'].toString();
         }
+
+        // Handle Django REST Framework top-level field validation errors:
+        // e.g. {"date_of_birth": ["Date has wrong format..."]} or {"non_field_errors": ["..."]}
+        if (data.isNotEmpty) {
+          final firstEntry = data.entries.first;
+          final key = firstEntry.key;
+          final value = firstEntry.value;
+          String fieldName = key.replaceAll('_', ' ');
+          if (fieldName.isNotEmpty) {
+            fieldName = fieldName[0].toUpperCase() + fieldName.substring(1);
+          }
+
+          if (value is List && value.isNotEmpty) {
+            final valStr = value.first.toString();
+            if (key == 'non_field_errors' || key == 'detail') {
+              return valStr;
+            }
+            return '$fieldName: $valStr';
+          } else if (value is String && value.isNotEmpty) {
+            if (key == 'non_field_errors' || key == 'detail') {
+              return value;
+            }
+            return '$fieldName: $value';
+          }
+        }
       }
 
       // Default error messages based on status code
