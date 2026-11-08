@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as dart_ui;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -8,6 +9,7 @@ import '../../../../data/models/matches/match_profile_model.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import 'package:screen_protector/screen_protector.dart';
+import '../../../../core/constants/choice_mappings.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
   final String userId;
@@ -101,6 +103,104 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  void _showCancelConnectionDialog(BuildContext context, String matchId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Color(0xFFE54B5E), size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Cancel Connection?',
+                  style: TextStyle(color: Color(0xFFE54B5E), fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to cancel this connection? You will no longer be matched with this profile.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.black87, fontSize: 14, height: 1.4),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.of(dialogContext).pop();
+                          final success = await context.read<MatchesProvider>().cancelMatch(matchId);
+                          if (!mounted) return;
+                          if (success) {
+                            Get.showSnackbar(const GetSnackBar(
+                              messageText: Text('Connection cancelled successfully'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ));
+                            setState(() {});
+                          } else {
+                            Get.showSnackbar(GetSnackBar(
+                              messageText: Text(context.read<MatchesProvider>().errorMessage ?? 'Failed to cancel connection'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDF8B8F),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Confirm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        child: const Text('Keep', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleCancelRequest(String requestId) async {
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.cancelRequest(requestId);
+    if (!mounted) return;
+    if (success) {
+      Get.showSnackbar(const GetSnackBar(
+        messageText: Text('Connection request cancelled'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+      ));
+      setState(() {});
+    } else {
+      Get.showSnackbar(GetSnackBar(
+        messageText: Text(matchesProvider.errorMessage ?? 'Failed to cancel request'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ));
     }
   }
 
@@ -275,9 +375,23 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              '${_profile!.age ?? 'N/A'} years • ${_profile!.city ?? 'Unknown'}, ${_profile!.country ?? ''}',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            Builder(
+                              builder: (context) {
+                                final ageText = _profile!.age != null ? '${_profile!.age} years' : '';
+                                final ethnicityText = (_profile!.ethnicity != null && _profile!.ethnicity!.isNotEmpty)
+                                    ? ChoiceMappings.keyToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay)
+                                    : '';
+                                final cityText = _profile!.city ?? '';
+                                final countryText = _profile!.country ?? '';
+                                final locationText = [cityText, countryText]
+                                    .where((s) => s.isNotEmpty && s.toLowerCase() != 'string')
+                                    .join(', ');
+                                final subtitle = [ageText, ethnicityText, locationText].where((s) => s.isNotEmpty).join(' • ');
+                                return Text(
+                                  subtitle,
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -349,7 +463,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   ).animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 20),
 
-                  // Send Interest Button
+                  // Action Buttons (Send Interest, Cancel Connection, Cancel Request)
                   Builder(
                     builder: (context) {
                       final matchesProvider = context.watch<MatchesProvider>();
@@ -358,19 +472,92 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                       final isMatch = matchesProvider.matches.any((m) => m.matchedUserId == _profile!.id);
                       final canSendRequest = context.watch<AuthProvider>().currentUser?.role == 'male';
 
+                      final matchingMatch = matchesProvider.matches.where((m) => m.matchedUserId == _profile!.id).firstOrNull;
+                      final matchingSent = matchesProvider.sentRequests.where((req) => req.receiverId == _profile!.id).firstOrNull;
+
+                      if (isMatch && matchingMatch != null) {
+                        return Column(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('You are connected', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showCancelConnectionDialog(context, matchingMatch.id),
+                                icon: const Icon(Icons.cancel_outlined, size: 18, color: Colors.white),
+                                label: const Text('Cancel Connection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE54B5E),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
+                      }
+
+                      if (hasSent && matchingSent != null) {
+                        return Column(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.access_time_rounded, color: Colors.orange, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Connection request pending', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 15)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _handleCancelRequest(matchingSent.id),
+                                icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white),
+                                label: const Text('Cancel Request', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE54B5E),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
+                      }
+
                       String buttonText = 'Send Interest';
                       IconData buttonIcon = Icons.favorite_rounded;
                       bool isEnabled = canSendRequest;
 
-                      if (isMatch) {
-                        buttonText = 'Connected';
-                        buttonIcon = Icons.handshake;
-                        isEnabled = false;
-                      } else if (hasSent) {
-                        buttonText = 'Connection is pending';
-                        buttonIcon = Icons.access_time;
-                        isEnabled = false;
-                      } else if (hasReceived) {
+                      if (hasReceived) {
                         buttonText = 'Accept Request';
                         buttonIcon = Icons.check_circle_outline;
                         isEnabled = true; 
@@ -477,9 +664,9 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
       ['Age', _profile!.age?.toString() ?? 'N/A'],
       ['City', _profile!.city ?? 'N/A'],
       ['Country', _profile!.country ?? 'N/A'],
-      ['Sect', _profile!.sect ?? 'N/A'],
-      ['Marital Status', _profile!.maritalStatus ?? 'N/A'],
-      ['Ethnicity', _profile!.ethnicity ?? 'N/A'],
+      ['Sect', _profile!.sect != null ? ChoiceMappings.keyToDisplay(_profile!.sect!, ChoiceMappings.sectKeyToDisplay) : 'N/A'],
+      ['Marital Status', _profile!.maritalStatus != null ? ChoiceMappings.keyToDisplay(_profile!.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : 'N/A'],
+      ['Ethnicity', _profile!.ethnicity != null ? ChoiceMappings.keyToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay) : 'N/A'],
       ['Height', _profile!.height ?? 'N/A'],
       ['Occupation', _profile!.occupation ?? 'N/A'],
       ['Education', _profile!.education ?? 'N/A'],
@@ -572,6 +759,16 @@ class _HeroImageSection extends StatelessWidget {
           image: imageProvider,
           fit: BoxFit.cover,
         ),
+        
+        if (photoBlurred)
+          ClipRect(
+            child: BackdropFilter(
+              filter: dart_ui.ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+              child: Container(
+                color: const Color(0xFFFBE8EA).withValues(alpha: 0.35),
+              ),
+            ),
+          ),
         
         // Gradient overlay
         Container(

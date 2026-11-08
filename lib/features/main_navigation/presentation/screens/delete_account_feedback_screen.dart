@@ -261,6 +261,19 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
                     : const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _isLoading ? null : () => context.pop(),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: Colors.grey[300]!),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text('Cancel', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 15)),
+              ),
+            ),
           ],
         ),
       ),

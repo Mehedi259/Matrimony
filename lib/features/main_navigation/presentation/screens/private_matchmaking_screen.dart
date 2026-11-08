@@ -125,7 +125,7 @@ class _PrivateMatchmakingScreenState extends State<PrivateMatchmakingScreen> {
         onPressed: _bookConsultation,
         icon: Icon(Icons.calendar_month, color: Colors.amber[700]),
         label: Text(
-          'Schedule with Admin',
+          'Book consultation',
           style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),

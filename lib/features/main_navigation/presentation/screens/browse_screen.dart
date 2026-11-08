@@ -6,6 +6,8 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
 import '../../../../core/utils/snackbar_helper.dart';
+import '../../../../core/constants/dropdown_options.dart';
+import '../../../../core/constants/choice_mappings.dart';
 import 'package:get/get.dart';
 
 class BrowseScreen extends StatefulWidget {
@@ -18,6 +20,10 @@ class BrowseScreen extends StatefulWidget {
 class _BrowseScreenState extends State<BrowseScreen> {
   String _selectedFilter = 'all';
   final TextEditingController _searchController = TextEditingController();
+  RangeValues _filterAgeRange = const RangeValues(18, 70);
+  String? _filterSect;
+  String? _filterMaritalStatus;
+  String? _filterCountry;
 
   @override
   void initState() {
@@ -79,6 +85,211 @@ class _BrowseScreenState extends State<BrowseScreen> {
         ),
       );
     }
+  }
+
+  void _showAdvancedFiltersBottomSheet() {
+    RangeValues tempAgeRange = _filterAgeRange;
+    String? tempSect = _filterSect;
+    String? tempMaritalStatus = _filterMaritalStatus;
+    String? tempCountry = _filterCountry;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + 24,
+                top: 20,
+                left: 24,
+                right: 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Advanced Filters',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setModalState(() {
+                              tempAgeRange = const RangeValues(18, 70);
+                              tempSect = null;
+                              tempMaritalStatus = null;
+                              tempCountry = null;
+                            });
+                          },
+                          child: const Text('Reset', style: TextStyle(color: Color(0xFFE54B5E), fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Age Range
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Age Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('${tempAgeRange.start.round()} - ${tempAgeRange.end.round()} yrs',
+                            style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE54B5E))),
+                      ],
+                    ),
+                    RangeSlider(
+                      values: tempAgeRange,
+                      min: 18,
+                      max: 75,
+                      divisions: 57,
+                      activeColor: const Color(0xFFE54B5E),
+                      inactiveColor: Colors.grey[200],
+                      onChanged: (values) {
+                        setModalState(() {
+                          tempAgeRange = values;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Religion / Sect Dropdown
+                    const Text('Religion / Sect', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: tempSect,
+                          isExpanded: true,
+                          hint: const Text('Any Sect'),
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('Any Sect')),
+                            ...DropdownOptions.religionSect.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+                          ],
+                          onChanged: (val) => setModalState(() => tempSect = val),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Marital Status Dropdown
+                    const Text('Marital Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: tempMaritalStatus,
+                          isExpanded: true,
+                          hint: const Text('Any Marital Status'),
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('Any Marital Status')),
+                            ...DropdownOptions.maritalStatus.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+                          ],
+                          onChanged: (val) => setModalState(() => tempMaritalStatus = val),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Country Dropdown
+                    const Text('Country', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: tempCountry,
+                          isExpanded: true,
+                          hint: const Text('Any Country'),
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('Any Country')),
+                            ...DropdownOptions.countries.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                          ],
+                          onChanged: (val) => setModalState(() => tempCountry = val),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Apply Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(bottomSheetContext).pop();
+                          setState(() {
+                            _filterAgeRange = tempAgeRange;
+                            _filterSect = tempSect;
+                            _filterMaritalStatus = tempMaritalStatus;
+                            _filterCountry = tempCountry;
+                          });
+
+                          final filters = <String, dynamic>{};
+                          filters['min_age'] = tempAgeRange.start.round().toString();
+                          filters['max_age'] = tempAgeRange.end.round().toString();
+                          if (tempSect != null) {
+                            filters['sect'] = ChoiceMappings.displayToKey(tempSect!, ChoiceMappings.sectDisplayToKey);
+                          }
+                          if (tempMaritalStatus != null) {
+                            filters['marital_status'] = ChoiceMappings.displayToKey(tempMaritalStatus!, ChoiceMappings.maritalStatusDisplayToKey);
+                          }
+                          if (tempCountry != null && tempCountry!.isNotEmpty) {
+                            filters['country'] = tempCountry;
+                          }
+                          _loadProfiles(filters: filters);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE54B5E),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: const Text('Apply Filters', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -143,16 +354,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   prefixIcon:
                       Icon(Icons.search_rounded, color: Colors.grey[400], size: 22),
                   suffixIcon: GestureDetector(
-                    onTap: () {
-                      // TODO: Open filter dialog
-                      Get.showSnackbar(
-                          const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Advanced filters coming soon')));
-                    },
+                    onTap: _showAdvancedFiltersBottomSheet,
                     child: Icon(Icons.tune_rounded, color: Colors.grey[400], size: 20),
                   ),
                   filled: true,

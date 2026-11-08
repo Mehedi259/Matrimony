@@ -75,9 +75,11 @@ class MatchCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
                 child: Container(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBE8EA).withValues(alpha: 0.35),
+                  ),
                 ),
               ),
             ),
@@ -206,16 +208,23 @@ class MatchCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text('• $age  • $ethnicity', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.location_on, color: Colors.white, size: 12),
-                                  const SizedBox(width: 4),
-                                  Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                                ],
-                              ),
+                              if ([age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  [age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').join(' • '),
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                              ],
+                              if (country.isNotEmpty && country != 'N/A') ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on, color: Colors.white, size: 12),
+                                    const SizedBox(width: 4),
+                                    Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -233,16 +242,23 @@ class MatchCard extends StatelessWidget {
                     )
                   else if (username.isNotEmpty) ...[
                     Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('• $age  • $ethnicity', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.white, size: 12),
-                        const SizedBox(width: 4),
-                        Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                      ],
-                    ),
+                    if ([age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        [age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').join(' • '),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                    if (country.isNotEmpty && country != 'N/A') ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, color: Colors.white, size: 12),
+                          const SizedBox(width: 4),
+                          Text(country, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 16),
                   ],
 

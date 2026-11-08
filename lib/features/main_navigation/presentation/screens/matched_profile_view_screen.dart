@@ -52,7 +52,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
             margin: EdgeInsets.all(16),
             borderRadius: 8,
             duration: Duration(seconds: 4),
-            messageText: Text('Screenshots are disabled for privacy and protection.'),
+            messageText: Text('Screenshots are blocked to preserve identity and privacy.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -226,9 +226,11 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                                 ),
                               ),
                               BackdropFilter(
-                                filter: dart_ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                                filter: dart_ui.ImageFilter.blur(sigmaX: 32, sigmaY: 32),
                                 child: Container(
-                                  color: Colors.transparent,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFBE8EA).withValues(alpha: 0.35),
+                                  ),
                                 ),
                               ),
                             ],

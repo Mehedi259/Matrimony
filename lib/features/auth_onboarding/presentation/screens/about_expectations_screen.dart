@@ -221,13 +221,6 @@ class _AboutExpectationsScreenState extends State<AboutExpectationsScreen> {
           const SizedBox(height: 24),
           
           _buildMultilineTextField(
-            label: 'Are you open to relocating?',
-            hint: 'Details about relocation preferences...',
-            controller: _openToRelocateDetailsController,
-          ),
-          const SizedBox(height: 24),
-          
-          _buildMultilineTextField(
             label: 'Any other preferences?',
             hint: 'Anything else you\'d like to mention...',
             controller: _otherPreferencesController,

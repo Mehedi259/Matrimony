@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/profile_provider.dart';
+import '../../../../core/constants/choice_mappings.dart';
 
 class MyProfileViewScreen extends StatefulWidget {
   const MyProfileViewScreen({super.key});
@@ -73,14 +74,19 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
       );
     }
 
-    final displayName = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+    final displayName = (user?.codename != null && user!.codename.isNotEmpty)
+        ? user.codename
+        : '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final ageText = basicInfo?.age != null ? '${basicInfo!.age} years' : '';
+    final ethnicityText = (basicInfo?.ethnicity != null && basicInfo!.ethnicity.isNotEmpty)
+        ? ChoiceMappings.keyToDisplay(basicInfo!.ethnicity.first, ChoiceMappings.ethnicityKeyToDisplay)
+        : '';
     final cityText = basicInfo?.city ?? '';
     final countryText = basicInfo?.country ?? '';
     final locationText = [cityText, countryText]
         .where((s) => s.isNotEmpty && s.toLowerCase() != 'string')
         .join(', ');
-    final subtitle = [ageText, locationText].where((s) => s.isNotEmpty).join(' • ');
+    final subtitle = [ageText, ethnicityText, locationText].where((s) => s.isNotEmpty).join(' • ');
 
     // Primary photo URL
     String? primaryPhotoUrl;
@@ -424,8 +430,12 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     }
 
     if (basicInfo?.prefMaritalStatus != null && basicInfo!.prefMaritalStatus.isNotEmpty) {
+      final formattedMarital = ChoiceMappings.keysToDisplays(
+        List<String>.from(basicInfo!.prefMaritalStatus),
+        ChoiceMappings.maritalStatusKeyToDisplay,
+      ).join(', ');
       children.add(
-        _InfoRow(label: 'Preferred Marital Status', value: basicInfo!.prefMaritalStatus.join(', '), primaryColor: primaryColor)
+        _InfoRow(label: 'Preferred Marital Status', value: formattedMarital, primaryColor: primaryColor)
             .animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
       );
     }
@@ -449,7 +459,8 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
           spacing: 8,
           runSpacing: 8,
           children: basicInfo!.prefEthnicity.asMap().entries.map<Widget>((e) {
-            return _PreferenceChip(label: e.value, primaryColor: primaryColor)
+            final displayLabel = ChoiceMappings.keyToDisplay(e.value, ChoiceMappings.ethnicityKeyToDisplay);
+            return _PreferenceChip(label: displayLabel, primaryColor: primaryColor)
                 .animate()
                 .fadeIn(duration: 400.ms, delay: Duration(milliseconds: (200 + e.key * 60).toInt()))
                 .scale(begin: const Offset(0.8, 0.8));
@@ -691,7 +702,7 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.primaryColor,
-    this.multiLine = false,
+    this.multiLine = true,
   });
 
   @override
@@ -708,7 +719,7 @@ class _InfoRow extends StatelessWidget {
           ],
         ),
         child: Row(
-          crossAxisAlignment: multiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               flex: 2,
@@ -719,7 +730,7 @@ class _InfoRow extends StatelessWidget {
               flex: 3,
               child: Text(
                 value,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), fontWeight: FontWeight.w600, height: 1.4),
                 maxLines: multiLine ? null : 1,
                 overflow: multiLine ? null : TextOverflow.ellipsis,
               ),
