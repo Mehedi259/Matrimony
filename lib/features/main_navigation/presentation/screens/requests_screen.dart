@@ -470,7 +470,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 lockMessage: '',
                 isLocked: false,
                 isMatched: true,
-                isBlurred: true,
+                isBlurred: !isFemaleOrWali,
                 matchedButtonText: 'Review Photo Request',
                 onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
               ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -490,8 +490,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
-                isLocked: true,
-                isBlurred: true,
+                isLocked: !isFemaleOrWali,
+                isBlurred: !isFemaleOrWali,
                 onDecline: () => _showDeclineDialog(context, request.id),
                 onAccept: () => _handleAcceptRequest(request.id),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -550,8 +550,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
-                isLocked: true,
-                isBlurred: true,
+                isLocked: !isFemaleOrWali,
+                isBlurred: !isFemaleOrWali,
                 onCancelRequest: () => _showCancelDialog(context, request.id),
                 onViewProfile: () => context.push('/matches/directory/${request.receiverId}'),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -595,7 +595,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         children: matchesProvider.matches.map((match) {
           final index = matchesProvider.matches.indexOf(match);
-          final isActuallyLocked = !match.photosCurrentlyVisible;
+          final isActuallyLocked = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
           
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
@@ -609,7 +609,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               lockMessage: '',
               isLocked: isActuallyLocked,
               isMatched: true,
-              isBlurred: true,
+              isBlurred: !isFemaleOrWali,
               matchedButtonText: (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser) 
                   ? 'Review Photo Request' 
                   : (isActuallyLocked ? 'Request Photo' : 'View photos'),

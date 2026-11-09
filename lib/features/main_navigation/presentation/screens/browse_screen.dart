@@ -455,7 +455,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       matchesProvider.directoryProfiles.indexOf(profile);
                   
                   final user = context.watch<AuthProvider>().currentUser;
-                  final isActuallyLocked = profile.photoBlurred;
+                  final isMale = profile.role == 'male';
+                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+                  final shouldOverrideLock = isMale && isFemaleOrWali;
+                  final isActuallyLocked = shouldOverrideLock ? false : profile.photoBlurred;
                   final canSendRequest = user?.role == 'male';
                   
                   return Padding(

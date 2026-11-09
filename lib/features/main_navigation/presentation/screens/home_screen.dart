@@ -306,7 +306,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   final isSaved = matchesProvider.wishlists.any((w) => (w['user_id'] ?? w['id']) == profile.id);
                   final isRequestSent = matchesProvider.sentRequests.any((req) => req.receiverId == profile.id);
                   
-                  final isActuallyLocked = profile.photoBlurred;
+                  final isMale = profile.role == 'male';
+                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
+                  final shouldOverrideLock = isMale && isFemaleOrWali;
+                  final isActuallyLocked = shouldOverrideLock ? false : profile.photoBlurred;
                   final canSendRequest = user?.role == 'male';
 
                   return Padding(
