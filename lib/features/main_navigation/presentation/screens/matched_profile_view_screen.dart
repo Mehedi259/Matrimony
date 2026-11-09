@@ -98,11 +98,8 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     final String? profession = otherUser['occupation'];
     final String? bio = otherUser['bio'];
     
-    final authUser = context.watch<AuthProvider>().currentUser;
-    final isFemaleOrWali = authUser?.role.toLowerCase() == 'female' || authUser?.role.toLowerCase() == 'wali' || authUser?.gender?.toLowerCase() == 'female';
-    
     if (_initialIsBlurred == null) {
-      _initialIsBlurred = isFemaleOrWali ? false : true;
+      _initialIsBlurred = true;
     }
     final bool isBlurred = _initialIsBlurred!;
 
@@ -252,7 +249,7 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
             const SizedBox(height: 16),
             
             // Info Banner
-            if (isBlurred && !isFemaleOrWali)
+            if (isBlurred)
               Container(
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.only(bottom: 16),
