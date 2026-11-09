@@ -8,7 +8,6 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
-import 'package:screen_protector/screen_protector.dart';
 import '../../../../core/constants/choice_mappings.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
@@ -46,16 +45,10 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfileData();
     });
-    _preventScreenshots();
-  }
-
-  Future<void> _preventScreenshots() async {
-    await ScreenProtector.preventScreenshotOn();
   }
 
   @override
   void dispose() {
-    ScreenProtector.preventScreenshotOff();
     _tabController.dispose();
     super.dispose();
   }

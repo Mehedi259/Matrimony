@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
 import 'core/services/storage_service.dart';
+import 'core/services/screen_protection_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/matches_provider.dart';
 import 'providers/profile_provider.dart';
@@ -13,6 +14,9 @@ void main() async {
   // Initialize storage service
   final storageService = StorageService();
   await storageService.init();
+
+  // Enable global screenshot and screen recording protection across the entire app
+  await ScreenProtectionService.init();
   
   // Initialize AuthProvider and check authentication state
   final authProvider = AuthProvider();

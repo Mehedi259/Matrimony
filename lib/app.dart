@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/screen_protection_service.dart';
 import 'providers/auth_provider.dart';
 import 'features/auth_onboarding/presentation/screens/welcome_screen.dart';
 import 'features/auth_onboarding/presentation/screens/login_screen.dart';
@@ -81,16 +82,31 @@ class MatrimonyApp extends StatefulWidget {
   State<MatrimonyApp> createState() => _MatrimonyAppState();
 }
 
-class _MatrimonyAppState extends State<MatrimonyApp> {
+class _MatrimonyAppState extends State<MatrimonyApp> with WidgetsBindingObserver {
   late GoRouter _router;
   late bool _wasAuthenticated;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    ScreenProtectionService.init();
     final authProvider = context.read<AuthProvider>();
     _wasAuthenticated = authProvider.authState == AuthState.authenticated;
     _router = _createRouter(_wasAuthenticated);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ScreenProtectionService.ensureProtection();
+    }
   }
 
   GoRouter _createRouter(bool isAuthenticated) {
