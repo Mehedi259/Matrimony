@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/utils/html_text_formatter.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../data/repositories/support_repository.dart';
 import '../widgets/common/custom_text_field.dart';
@@ -427,7 +428,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasData && snapshot.data != null) {
-                  content = (snapshot.data as dynamic).content ?? '';
+                  content = snapshot.data!.content;
                 }
 
                 if (content.isEmpty) {
@@ -480,12 +481,21 @@ class _SignupScreenState extends State<SignupScreen> {
                           controller: scrollController,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: Text(
-                              content,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1.6,
-                                color: Colors.black87,
+                            child: Text.rich(
+                              TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.6,
+                                  color: Colors.black87,
+                                ),
+                                children: HtmlTextFormatter.toSpans(
+                                  content,
+                                  baseStyle: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.6,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ),
                             ),
                           ),

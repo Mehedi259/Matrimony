@@ -195,7 +195,16 @@ class AuthRepository {
       data: {'email': email},
     );
 
-    return PasswordResetInitiateResponse.fromJson(response.data);
+    final data = response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : response.data is Map
+            ? Map<String, dynamic>.from(response.data as Map)
+            : <String, dynamic>{};
+
+    return PasswordResetInitiateResponse.fromJson(
+      data,
+      fallbackEmail: email,
+    );
   }
 
   /// Step 2: Verify OTP and get reset token
@@ -211,7 +220,13 @@ class AuthRepository {
       },
     );
 
-    return PasswordResetVerifyResponse.fromJson(response.data);
+    final data = response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : response.data is Map
+            ? Map<String, dynamic>.from(response.data as Map)
+            : <String, dynamic>{};
+
+    return PasswordResetVerifyResponse.fromJson(data);
   }
 
   /// Step 3: Set new password using reset token
@@ -225,11 +240,17 @@ class AuthRepository {
       data: {
         'reset_token': resetToken,
         'new_password': newPassword,
-        'confirm_password': confirmPassword,
+        'confirm_new_password': confirmPassword,
       },
     );
 
-    return PasswordResetConfirmResponse.fromJson(response.data);
+    final data = response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : response.data is Map
+            ? Map<String, dynamic>.from(response.data as Map)
+            : <String, dynamic>{};
+
+    return PasswordResetConfirmResponse.fromJson(data);
   }
 
   // ========== PASSWORD CHANGE ==========
@@ -244,7 +265,7 @@ class AuthRepository {
       data: {
         'old_password': oldPassword,
         'new_password': newPassword,
-        'confirm_password': confirmPassword,
+        'confirm_new_password': confirmPassword,
       },
     );
 

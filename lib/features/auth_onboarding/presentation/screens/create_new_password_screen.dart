@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -49,9 +50,14 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   }
 
   void _startTimer() {
+    _timer?.cancel();
     _canResend = false;
     _resendTimer = 600;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (_resendTimer > 0) {
         setState(() {
           _resendTimer--;
@@ -63,6 +69,33 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         timer.cancel();
       }
     });
+  }
+
+  void _handleOtpChanged(int index, String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 1) {
+      for (int i = 0; i < digits.length && (index + i) < _otpControllers.length; i++) {
+        _otpControllers[index + i].text = digits[i];
+      }
+      final nextIndex = index + digits.length;
+      if (nextIndex < _focusNodes.length) {
+        _focusNodes[nextIndex].requestFocus();
+      } else {
+        FocusScope.of(context).unfocus();
+      }
+      return;
+    }
+
+    if (digits != value) {
+      _otpControllers[index].text = digits;
+      _otpControllers[index].selection = TextSelection.collapsed(offset: digits.length);
+    }
+
+    if (digits.isNotEmpty && index < _focusNodes.length - 1) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (digits.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
   }
 
   String get _timerText {
@@ -169,13 +202,15 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   void _showError(String message) {
     Get.showSnackbar(
       GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(message),
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+        messageText: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.red,
-        
       ),
     );
   }
@@ -183,13 +218,15 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   void _showSuccess(String message) {
     Get.showSnackbar(
       GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(message),
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+        messageText: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.green,
-        
       ),
     );
   }
@@ -280,7 +317,9 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                           enabled: !isLoading,
                           textAlign: TextAlign.center,
                           keyboardType: TextInputType.number,
-                          maxLength: 1,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
@@ -302,13 +341,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                               ),
                             ),
                           ),
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 5) {
-                              _focusNodes[index + 1].requestFocus();
-                            } else if (value.isEmpty && index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                          },
+                          onChanged: (value) => _handleOtpChanged(index, value),
                         ),
                       );
                     })

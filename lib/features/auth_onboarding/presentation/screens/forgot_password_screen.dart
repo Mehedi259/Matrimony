@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -47,13 +48,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _showError(String message) {
     Get.showSnackbar(
       GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(message),
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+        messageText: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.red,
-        
       ),
     );
   }
@@ -137,11 +140,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _emailController,
                   enabled: !isLoading,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    final trimmed = value?.trim() ?? '';
+                    if (trimmed.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(value)) {
+                    if (!EmailValidator.validate(trimmed)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -200,7 +203,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 // Back to login
                 GestureDetector(
-                  onTap: isLoading ? null : () => context.push('/login'),
+                  onTap: isLoading
+                      ? null
+                      : () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/login');
+                          }
+                        },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

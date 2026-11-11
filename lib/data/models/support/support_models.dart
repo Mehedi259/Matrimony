@@ -35,8 +35,9 @@ class TermsModel {
 
   factory TermsModel.fromJson(Map<String, dynamic> json) {
     return TermsModel(
-      content: json['content'],
-      updatedAt: DateTime.parse(json['updated_at']),
+      content: json['content']?.toString() ?? '',
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }
@@ -52,8 +53,9 @@ class PrivacyModel {
 
   factory PrivacyModel.fromJson(Map<String, dynamic> json) {
     return PrivacyModel(
-      content: json['content'],
-      updatedAt: DateTime.parse(json['updated_at']),
+      content: json['content']?.toString() ?? '',
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

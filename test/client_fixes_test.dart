@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matrimony/core/constants/api_constants.dart';
 import 'package:matrimony/core/constants/choice_mappings.dart';
+import 'package:matrimony/core/utils/html_text_formatter.dart';
+import 'package:matrimony/data/models/auth/password_reset_response.dart';
 import 'package:matrimony/data/models/chat/chat_models.dart';
 import 'package:matrimony/data/models/matches/match_profile_model.dart';
 import 'package:matrimony/data/models/notification_model.dart';
@@ -520,6 +522,75 @@ void main() {
         expect(rawListFields.city, 'dhaka');
         expect(rawListFields.nationality, 'Afghan');
         expect(rawListFields.pray5x, 'true');
+      },
+    );
+
+    test(
+      'PasswordReset responses parse backend payloads without email field',
+      () {
+        final initiate = PasswordResetInitiateResponse.fromJson(
+          {
+            'message': 'If this email is registered, an OTP has been sent.',
+            'expires_in_seconds': 600,
+          },
+          fallbackEmail: 'noor@example.com',
+        );
+        expect(
+          initiate.message,
+          'If this email is registered, an OTP has been sent.',
+        );
+        expect(initiate.email, 'noor@example.com');
+        expect(initiate.expiresInSeconds, 600);
+
+        final initiateNoFallback = PasswordResetInitiateResponse.fromJson({
+          'message': 'Sent',
+          'expires_in_seconds': null,
+        });
+        expect(initiateNoFallback.email, '');
+        expect(initiateNoFallback.expiresInSeconds, 600);
+
+        final verify = PasswordResetVerifyResponse.fromJson({
+          'message': 'OTP verified.',
+          'reset_token': 'tok-123',
+        });
+        expect(verify.resetToken, 'tok-123');
+
+        final confirm = PasswordResetConfirmResponse.fromJson({
+          'message': 'Password reset successful.',
+        });
+        expect(confirm.message, 'Password reset successful.');
+      },
+    );
+
+    test(
+      'HtmlTextFormatter formats Terms HTML without showing raw tags or entities',
+      () {
+        const sampleHtml =
+            '<p><strong>A MUSLIM MATCHMAKER&nbsp;</strong></p>'
+            '<p><strong><br>Terms and Conditions</strong><br>'
+            'Effective date: 01 August 2026<br>Version: 3.0</p>'
+            '<p><br>1. About these Terms<br>1.1 Who we are<br>'
+            'These Terms apply to our Services &amp; Support.</p>';
+
+        final plain = HtmlTextFormatter.toPlainText(sampleHtml);
+        expect(plain, isNot(contains('<p>')));
+        expect(plain, isNot(contains('</p>')));
+        expect(plain, isNot(contains('<strong>')));
+        expect(plain, isNot(contains('<br>')));
+        expect(plain, isNot(contains('&nbsp;')));
+        expect(plain, contains('A MUSLIM MATCHMAKER'));
+        expect(plain, contains('Terms and Conditions'));
+        expect(plain, contains('Services & Support.'));
+
+        final spans = HtmlTextFormatter.toSpans(sampleHtml).whereType<TextSpan>();
+        expect(
+          spans.any(
+            (s) =>
+                (s.text ?? '').contains('Terms and Conditions') &&
+                s.style?.fontWeight == FontWeight.w700,
+          ),
+          isTrue,
+        );
       },
     );
   });

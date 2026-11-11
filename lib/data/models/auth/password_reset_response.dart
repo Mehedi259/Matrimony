@@ -9,11 +9,19 @@ class PasswordResetInitiateResponse {
     required this.expiresInSeconds,
   });
 
-  factory PasswordResetInitiateResponse.fromJson(Map<String, dynamic> json) {
+  factory PasswordResetInitiateResponse.fromJson(
+    Map<String, dynamic> json, {
+    String fallbackEmail = '',
+  }) {
+    final rawExpires = json['expires_in_seconds'];
+    final expires = rawExpires is num
+        ? rawExpires.toInt()
+        : int.tryParse(rawExpires?.toString() ?? '') ?? 600;
+    final parsedEmail = json['email']?.toString().trim() ?? '';
     return PasswordResetInitiateResponse(
-      message: json['message'],
-      email: json['email'],
-      expiresInSeconds: json['expires_in_seconds'],
+      message: json['message']?.toString() ?? '',
+      email: parsedEmail.isNotEmpty ? parsedEmail : fallbackEmail,
+      expiresInSeconds: expires,
     );
   }
 }
@@ -29,8 +37,8 @@ class PasswordResetVerifyResponse {
 
   factory PasswordResetVerifyResponse.fromJson(Map<String, dynamic> json) {
     return PasswordResetVerifyResponse(
-      message: json['message'],
-      resetToken: json['reset_token'],
+      message: json['message']?.toString() ?? '',
+      resetToken: json['reset_token']?.toString() ?? '',
     );
   }
 }
@@ -44,7 +52,7 @@ class PasswordResetConfirmResponse {
 
   factory PasswordResetConfirmResponse.fromJson(Map<String, dynamic> json) {
     return PasswordResetConfirmResponse(
-      message: json['message'],
+      message: json['message']?.toString() ?? '',
     );
   }
 }
