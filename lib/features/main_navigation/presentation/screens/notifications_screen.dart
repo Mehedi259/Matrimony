@@ -40,13 +40,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           Consumer<NotificationProvider>(
             builder: (context, provider, child) {
-              if (provider.notifications.isEmpty) return const SizedBox();
+              if (provider.notifications.isEmpty || provider.unreadCount == 0) {
+                return const SizedBox();
+              }
               return TextButton(
-                onPressed: () {
-                  // Mark all read could iterate, or we'd need a mark-all-read endpoint.
-                  // For now, doing it sequentially if needed, but omitted to prevent mass API calls
-                  // unless endpoint exists.
-                },
+                onPressed: () => provider.markAllAsRead(),
                 child: const Text('Mark all read'),
               );
             },
@@ -137,26 +135,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     
     switch (type.toLowerCase()) {
       case 'request':
+      case 'connection_request_received':
         icon = Icons.person_add;
         iconColor = Colors.blue;
         break;
       case 'match':
+      case 'match_created':
+      case 'connection_request_accepted':
         icon = Icons.favorite;
         iconColor = Colors.red;
         break;
+      case 'connection_request_declined':
+      case 'connection_request_cancelled':
+        icon = Icons.cancel_outlined;
+        iconColor = Colors.redAccent;
+        break;
       case 'message':
+      case 'new_message':
         icon = Icons.message;
         iconColor = Colors.green;
         break;
       case 'profile':
+      case 'profile_approved':
         icon = Icons.visibility;
         iconColor = Colors.orange;
         break;
       case 'photo_request_received':
       case 'photo_request_approved':
       case 'photo_request_declined':
+      case 'wali_request_received':
+      case 'wali_request_approved':
+      case 'wali_request_declined':
+      case 'unlock_request_received':
         icon = Icons.camera_alt_outlined;
         iconColor = Colors.purple;
+        break;
+      case 'private_matchmaking_requested':
+      case 'private_matchmaking_confirmed':
+      case 'pm_approved':
+      case 'pm_declined':
+      case 'pm_match_update':
+      case 'special_match_received':
+        icon = Icons.star_outline;
+        iconColor = Colors.amber.shade800;
+        break;
+      case 'account_suspended':
+      case 'account_blocked':
+        icon = Icons.warning_amber_rounded;
+        iconColor = Colors.red;
+        break;
+      case 'pass_changed':
+        icon = Icons.lock_outline;
+        iconColor = Colors.blueGrey;
+        break;
+      case 'welcome':
+        icon = Icons.celebration;
+        iconColor = Colors.teal;
         break;
       default:
         icon = Icons.notifications;
@@ -218,21 +252,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           // Navigate based on notification type
           switch (type.toLowerCase()) {
             case 'request':
-              context.push('/requests');
-              break;
+            case 'connection_request_received':
+            case 'connection_request_accepted':
+            case 'connection_request_declined':
+            case 'connection_request_cancelled':
             case 'match':
+            case 'match_created':
+            case 'photo_request_received':
+            case 'photo_request_approved':
+            case 'photo_request_declined':
+            case 'wali_request_received':
+            case 'wali_request_approved':
+            case 'wali_request_declined':
+            case 'unlock_request_received':
               context.push('/requests');
               break;
             case 'message':
-              context.push('/settings/chat-with-admin');
+            case 'new_message':
+              context.push('/settings/chat-with-admin').then((_) {
+                if (context.mounted) {
+                  context.read<NotificationProvider>().refreshUnreadAdminMessages();
+                }
+              });
               break;
             case 'profile':
               context.push('/profile-views');
               break;
-            case 'photo_request_received':
-            case 'photo_request_approved':
-            case 'photo_request_declined':
-              context.push('/requests');
+            case 'profile_approved':
+              context.push('/my-profile-view');
+              break;
+            case 'private_matchmaking_requested':
+            case 'private_matchmaking_confirmed':
+            case 'pm_approved':
+            case 'pm_declined':
+            case 'pm_match_update':
+            case 'special_match_received':
+              context.push('/private-matches');
               break;
           }
         },

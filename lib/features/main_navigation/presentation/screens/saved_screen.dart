@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/choice_mappings.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/match_card.dart';
+import '../widgets/upgrade_subscription_dialog.dart';
 import 'package:get/get.dart';
 
 class SavedScreen extends StatefulWidget {
@@ -20,7 +22,13 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   Future<void> _loadWishlists() async {
-    await context.read<MatchesProvider>().loadWishlists();
+    final provider = context.read<MatchesProvider>();
+    await Future.wait([
+      provider.loadWishlists(),
+      provider.loadSentRequests(),
+      provider.loadMatches(),
+      provider.fetchConnectionUsage(),
+    ]);
   }
 
   @override
@@ -82,6 +90,15 @@ class _SavedScreenState extends State<SavedScreen> {
                     itemBuilder: (context, index) {
                       final wishlist = matchesProvider.wishlists[index];
                       
+                      final profileId =
+                          (wishlist['user_id'] ?? wishlist['id'])?.toString() ??
+                              '';
+                      final isConnected = profileId.isNotEmpty &&
+                          matchesProvider.hasActiveConnectionWith(profileId);
+                      final isRequestSent = !isConnected &&
+                          profileId.isNotEmpty &&
+                          matchesProvider.hasPendingSentRequestTo(profileId);
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: MatchCard(
@@ -89,26 +106,55 @@ class _SavedScreenState extends State<SavedScreen> {
                           age: wishlist['age'] != null
                               ? '${wishlist['age']} Years old'
                               : 'N/A',
-                          ethnicity: wishlist['ethnicity'] ?? 'N/A',
+                          ethnicity: wishlist['ethnicity'] != null
+                              ? ChoiceMappings.keysStringToDisplay(
+                                  wishlist['ethnicity'].toString(),
+                                  ChoiceMappings.ethnicityKeyToDisplay,
+                                )
+                              : 'N/A',
                           country: wishlist['country'] ?? 'N/A',
-                          imageUrl: (wishlist['photos'] as List?)?.isNotEmpty == true ? wishlist['photos'].first['image'] : null,
+                          imageUrl: null,
                           photos: (wishlist['photos'] as List?) ?? [],
-                          lockMessage: wishlist['photo_blurred'] == true
-                              ? 'Photos will be revealed after mutual interest'
-                              : '',
-                          isLocked: wishlist['photo_blurred'] == true,
+                          lockMessage: isConnected
+                              ? 'Open profile to view photos safely'
+                              : 'Photos will be revealed after mutual interest',
+                          isLocked: true,
+                          isBlurred: true,
                           isWishlisted: true,
+                          isConnected: isConnected,
+                          isRequestSent: isRequestSent,
                           onWishlistToggle: () async {
                             await matchesProvider.removeFromWishlist(
                               wishlist['user_id'] ?? wishlist['id'],
                             );
                           },
                           onViewProfile: () {
-                            context.push(
-                              '/profile-view-details/${wishlist['user_id'] ?? wishlist['id']}',
-                            );
+                            context
+                                .push(
+                                  '/profile-view-details/${wishlist['user_id'] ?? wishlist['id']}',
+                                )
+                                .then((_) {
+                              if (mounted) _loadWishlists();
+                            });
                           },
                           onSendInterest: () async {
+                            if (matchesProvider.isCurrentUserProfileLocked) {
+                              Get.showSnackbar(
+                                const GetSnackBar(
+                                  snackPosition: SnackPosition.TOP,
+                                  margin: EdgeInsets.all(16),
+                                  borderRadius: 8,
+                                  duration: Duration(seconds: 3),
+                                  messageText: Text(
+                                    'Your profile is locked in an active Wali discussion.',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.deepPurple,
+                                ),
+                              );
+                              return;
+                            }
+
                             final success = await matchesProvider
                                 .sendConnectionRequest(
                               wishlist['user_id'] ?? wishlist['id'],
@@ -119,22 +165,30 @@ class _SavedScreenState extends State<SavedScreen> {
                             if (success) {
                               Get.showSnackbar(
                                 const GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('Interest sent!'),
+                                  snackPosition: SnackPosition.TOP,
+                                  margin: EdgeInsets.all(16),
+                                  borderRadius: 8,
+                                  duration: Duration(seconds: 3),
+                                  messageText: Text('Interest sent!'),
                                   backgroundColor: Colors.green,
                                 ),
+                              );
+                              if (matchesProvider.justExhaustedRequests) {
+                                showUpgradeSubscriptionDialog(context);
+                              }
+                            } else if (matchesProvider.lastSendFailedDueToLimit) {
+                              showUpgradeSubscriptionDialog(
+                                context,
+                                subtitle: matchesProvider.errorMessage,
                               );
                             } else {
                               Get.showSnackbar(
                                 GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text(
+                                  snackPosition: SnackPosition.TOP,
+                                  margin: const EdgeInsets.all(16),
+                                  borderRadius: 8,
+                                  duration: const Duration(seconds: 3),
+                                  messageText: Text(
                                     matchesProvider.errorMessage ??
                                         'Failed to send',
                                   ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../widgets/header_action_buttons.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 import 'package:get/get.dart';
@@ -41,9 +42,9 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
 
   Future<void> _loadData() async {
     final matchesProvider = context.read<MatchesProvider>();
+    final role = context.read<AuthProvider>().currentUser?.role;
     await Future.wait([
-      matchesProvider.loadReceivedRequests(),
-      matchesProvider.loadSentRequests(),
+      matchesProvider.loadConnectionRequestsForRole(role),
       matchesProvider.loadMatches(),
     ]);
   }
@@ -55,7 +56,23 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     if (!mounted) return;
     
     if (success) {
-      _showConnectionSuccessSubscriptionDialog(context);
+      setState(() {
+        _selectedIndex = 2;
+        _tabController.animateTo(2);
+      });
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 3),
+          messageText: Text(
+            'Connection accepted! You are now matched.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -68,192 +85,6 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
         ),
       );
     }
-  }
-
-  void _showConnectionSuccessSubscriptionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog.fullscreen(
-          backgroundColor: Colors.white,
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 28, color: Colors.grey),
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                        setState(() {
-                          _tabController.animateTo(2);
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).colorScheme.secondary,
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 40),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Connection Completed! 🎉',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'You and your match have connected successfully! Upgrade your account to enjoy the full experience.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  
-                  // Benefits container
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey[200]!),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Paid Plan Benefits',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSubscriptionBenefitRow(Icons.all_inclusive_rounded, 'Unlimited connection requests', 'Never miss a potential match with unlimited requests.'),
-                        const SizedBox(height: 14),
-                        _buildSubscriptionBenefitRow(Icons.chat_bubble_outline_rounded, 'Direct Chat & Messaging', 'Communicate directly with your approved connections.'),
-                        const SizedBox(height: 14),
-                        _buildSubscriptionBenefitRow(Icons.photo_library_outlined, 'Extended Photo Viewing', 'View approved match photos with full confidence.'),
-                        const SizedBox(height: 14),
-                        _buildSubscriptionBenefitRow(Icons.support_agent_rounded, 'Priority Support & Matchmaking', 'Get personalized assistance from our team.'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  
-                  // Prominent CTA Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                        context.push('/subscription-plans');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE54B5E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                      ),
-                      child: const Text(
-                        'Upgrade to Paid Plan',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                      setState(() {
-                        _tabController.animateTo(2);
-                      });
-                    },
-                    child: Text(
-                      'Maybe Later',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSubscriptionBenefitRow(IconData icon, String title, String subtitle) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE54B5E).withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: const Color(0xFFE54B5E), size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B)),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.3),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Future<void> _handleDeclineRequest(String requestId) async {
@@ -357,27 +188,18 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
           ],
         ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
         actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: primaryColor),
-            onPressed: () => context.push('/settings'),
-          ).animate().fadeIn(duration: 600.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8)),
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: secondaryColor, size: 26),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () => context.push('/notifications'),
-          ).animate().fadeIn(duration: 600.ms, delay: 200.ms).scale(begin: const Offset(0.8, 0.8)),
+          SettingsActionButton(iconColor: primaryColor)
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 100.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
+          NotificationBellButton(
+            iconColor: secondaryColor,
+            badgeColor: primaryColor,
+            iconSize: 26,
+          )
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(width: 8),
         ],
         bottom: PreferredSize(
@@ -465,14 +287,18 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
                 ethnicity: match.matchedUserEthnicity ?? 'N/A',
                 country: match.matchedUserCountry ?? 'N/A',
-                imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
+                imageUrl: null,
                 photos: match.matchedUserPhotos,
                 lockMessage: '',
                 isLocked: false,
                 isMatched: true,
-                isBlurred: !isFemaleOrWali,
+                isBlurred: true,
                 matchedButtonText: 'Review Photo Request',
-                onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
+                onMatchedButtonPressed: () {
+                  context.push('/matches/${match.matchedUserId}').then((_) {
+                    if (mounted) _loadData();
+                  });
+                },
               ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             );
           }).toList(),
@@ -487,11 +313,16 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 age: request.senderAge != null ? '${request.senderAge} Years old' : 'N/A',
                 ethnicity: request.senderEthnicity ?? 'N/A',
                 country: request.senderCountry ?? 'N/A',
-                imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
+                imageUrl: null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
-                isLocked: !isFemaleOrWali,
-                isBlurred: !isFemaleOrWali,
+                isLocked: true,
+                isBlurred: true,
+                onViewProfile: () {
+                  context.push('/matches/directory/${request.senderId}').then((_) {
+                    if (mounted) _loadData();
+                  });
+                },
                 onDecline: () => _showDeclineDialog(context, request.id),
                 onAccept: () => _handleAcceptRequest(request.id),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
@@ -547,13 +378,17 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                 age: request.receiverAge != null ? '${request.receiverAge} Years old' : 'N/A',
                 ethnicity: request.receiverEthnicity ?? 'N/A',
                 country: request.receiverCountry ?? 'N/A',
-                imageUrl: request.otherUserPhotos.isNotEmpty ? request.otherUserPhotos.first['image'] : null,
+                imageUrl: null,
                 photos: request.otherUserPhotos,
                 lockMessage: 'Photos will be revealed after mutual interest',
-                isLocked: !isFemaleOrWali,
-                isBlurred: !isFemaleOrWali,
+                isLocked: true,
+                isBlurred: true,
                 onCancelRequest: () => _showCancelDialog(context, request.id),
-                onViewProfile: () => context.push('/matches/directory/${request.receiverId}'),
+                onViewProfile: () {
+                  context.push('/matches/directory/${request.receiverId}').then((_) {
+                    if (mounted) _loadData();
+                  });
+                },
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             );
           }).toList(),
@@ -604,16 +439,25 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
               ethnicity: match.matchedUserEthnicity ?? 'N/A',
               country: match.matchedUserCountry ?? 'N/A',
-              imageUrl: match.matchedUserPhotos.isNotEmpty ? match.matchedUserPhotos.first['image'] : null,
+              imageUrl: null,
               photos: match.matchedUserPhotos,
               lockMessage: '',
               isLocked: isActuallyLocked,
               isMatched: true,
-              isBlurred: !isFemaleOrWali,
-              matchedButtonText: (match.photoRequestStatus == 'requested' && match.photoRequestedByOtherUser) 
-                  ? 'Review Photo Request' 
-                  : (isActuallyLocked ? 'Request Photo' : 'View photos'),
-              onMatchedButtonPressed: () => context.push('/matches/${match.matchedUserId}'),
+              isBlurred: true,
+              matchedButtonText: (match.photoRequestStatus == 'requested' &&
+                      match.photoRequestedByOtherUser)
+                  ? 'Review Photo Request'
+                  : (isFemaleOrWali && match.waliRequestStatus == 'requested')
+                      ? 'Review Wali Request'
+                      : match.isWaliApproved
+                          ? 'View Wali Details'
+                          : (isActuallyLocked ? 'Request Photo' : 'View photos'),
+              onMatchedButtonPressed: () {
+                context.push('/matches/${match.matchedUserId}').then((_) {
+                  if (mounted) _loadData();
+                });
+              },
             ).animate().fadeIn(duration: 700.ms, delay: (400 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           );
         }).toList(),

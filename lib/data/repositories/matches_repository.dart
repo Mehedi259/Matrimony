@@ -144,6 +144,38 @@ class MatchesRepository {
     return response.data;
   }
 
+  // ========== WALI & CONNECTION LIFECYCLE ==========
+
+  Future<Map<String, dynamic>> requestWaliDetails(String matchId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.requestWaliDetails}$matchId/wali/request/',
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> respondToWaliRequest({
+    required String matchId,
+    required String action, // 'accept' or 'decline'
+  }) async {
+    final response = await _apiClient.patch(
+      '${ApiConstants.respondWaliRequest}$matchId/wali/respond/',
+      queryParameters: {'action': action},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> unlockMatch(String matchId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.unlockMatch}$matchId/unlock/',
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getConnectionUsage() async {
+    final response = await _apiClient.get(ApiConstants.connectionUsage);
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   // ========== MATCHMAKING ==========
 
   Future<Map<String, dynamic>> createMatchmakingRequest() async {

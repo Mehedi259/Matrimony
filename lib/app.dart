@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/screen_protection_service.dart';
 import 'providers/auth_provider.dart';
+import 'providers/matches_provider.dart';
 import 'features/auth_onboarding/presentation/screens/welcome_screen.dart';
 import 'features/auth_onboarding/presentation/screens/login_screen.dart';
 import 'features/auth_onboarding/presentation/screens/profile_type_selection_screen.dart';
@@ -36,7 +37,6 @@ import 'features/main_navigation/presentation/screens/notifications_screen.dart'
 import 'features/main_navigation/presentation/screens/private_matchmaking_screen.dart';
 import 'features/main_navigation/presentation/screens/private_matches_screen.dart';
 import 'features/main_navigation/presentation/screens/saved_screen.dart';
-import 'features/main_navigation/presentation/screens/matched_profile_view_screen.dart';
 import 'features/main_navigation/presentation/screens/upload_photo_form_screen.dart';
 import 'features/main_navigation/presentation/screens/settings_screen.dart';
 import 'features/main_navigation/presentation/screens/edit_profile_screen.dart';
@@ -273,8 +273,20 @@ class _MatrimonyAppState extends State<MatrimonyApp> with WidgetsBindingObserver
       GoRoute(
         path: '/matches/:matchId',
         builder: (context, state) {
-          final matchId = state.pathParameters['matchId'] ?? '';
-          return MatchedProfileViewScreen(matchId: matchId);
+          final param = state.pathParameters['matchId'] ?? '';
+          final match = context
+              .read<MatchesProvider>()
+              .matches
+              .where(
+                (m) =>
+                    m.matchedUserId == param ||
+                    m.id == param ||
+                    m.matchId == param,
+              )
+              .firstOrNull;
+          return ProfileViewDetailsScreen(
+            userId: match?.matchedUserId ?? param,
+          );
         },
       ),
       GoRoute(

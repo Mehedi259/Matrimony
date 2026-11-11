@@ -1,3 +1,5 @@
+import '../../../core/constants/choice_mappings.dart';
+
 class MatchProfileModel {
   final String id;
   final String codename;
@@ -24,6 +26,26 @@ class MatchProfileModel {
   final String? bio;
   final String? languages;
   final List<dynamic> photos;
+  final String? about;
+  final String? aboutYourself;
+  final String? envisionMarriage;
+  final String? relationshipWithIslam;
+  final String? roleAsSpouse;
+  final String? envisionSpouse;
+  final String? spouseReligiousStatusPref;
+  final String? openToRelocateDetails;
+  final String? healthConcerns;
+  final String? otherPreferences;
+  final int? prefAgeMin;
+  final int? prefAgeMax;
+  final List<String> prefMaritalStatus;
+  final List<String> prefEthnicity;
+  final List<String> prefCountryOfResidence;
+  final List<String> preferredDress;
+  final List<String> dress;
+  final String? nationality;
+  final String? pray5x;
+  final String? openToRelocate;
 
   MatchProfileModel({
     required this.id,
@@ -51,35 +73,160 @@ class MatchProfileModel {
     this.bio,
     this.languages,
     this.photos = const [],
+    this.about,
+    this.aboutYourself,
+    this.envisionMarriage,
+    this.relationshipWithIslam,
+    this.roleAsSpouse,
+    this.envisionSpouse,
+    this.spouseReligiousStatusPref,
+    this.openToRelocateDetails,
+    this.healthConcerns,
+    this.otherPreferences,
+    this.prefAgeMin,
+    this.prefAgeMax,
+    this.prefMaritalStatus = const [],
+    this.prefEthnicity = const [],
+    this.prefCountryOfResidence = const [],
+    this.preferredDress = const [],
+    this.dress = const [],
+    this.nationality,
+    this.pray5x,
+    this.openToRelocate,
   });
 
+  static bool _computeIsOnline(
+    Map<String, dynamic> json,
+    DateTime? lastActive,
+    String? lastActiveDisplay,
+  ) {
+    if (json['is_online'] == true) return true;
+    final display = lastActiveDisplay?.toLowerCase().trim() ?? '';
+    if (display == 'active now' || display == 'online') return true;
+    if (lastActive != null) {
+      final diff = DateTime.now().toUtc().difference(lastActive.toUtc());
+      return diff.inSeconds < 300 && diff.inMinutes > -5;
+    }
+    return false;
+  }
+
+  static String? _asString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is List) {
+      final parts = value
+          .map((e) => e?.toString().trim() ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      return parts.isEmpty ? null : parts.join(', ');
+    }
+    return value.toString();
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString().trim());
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    if (value is String && value.trim().isNotEmpty) {
+      return value
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
+
+  static String? _formatMappedString(
+    dynamic value,
+    Map<String, String> mapping,
+  ) {
+    if (value == null) return null;
+    if (value is List) {
+      final list = value
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (list.isEmpty) return null;
+      return ChoiceMappings.keysToDisplays(list, mapping).join(', ');
+    }
+    final raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+    return ChoiceMappings.keysStringToDisplay(raw, mapping);
+  }
+
   factory MatchProfileModel.fromJson(Map<String, dynamic> json) {
+    final parsedLastActive = json['last_active'] != null
+        ? DateTime.tryParse(json['last_active'].toString())
+        : null;
+    final parsedLastActiveDisplay = _asString(json['last_active_display']);
+
     return MatchProfileModel(
-      id: json['id'] as String,
-      codename: json['codename'] as String,
-      firstName: json['first_name'] as String?,
-      lastName: json['last_name'] as String?,
-      role: json['role'] as String,
-      gender: json['gender'] as String?,
-      subscriptionPlan: json['subscription_plan'] as String,
-      lastActive: json['last_active'] != null ? DateTime.parse(json['last_active'] as String) : null,
-      lastActiveDisplay: json['last_active_display'] as String?,
-      completionPercentage: (json['completion_percentage'] as num?)?.toInt() ?? 0,
-      age: (json['age'] as num?)?.toInt(),
-      city: json['city'] as String?,
-      country: json['country'] as String?,
-      sect: json['sect'] as String?,
-      maritalStatus: json['marital_status'] as String?,
-      height: json['height'] as String?,
+      id: _asString(json['id']) ?? '',
+      codename: _asString(json['codename']) ?? '',
+      firstName: _asString(json['first_name']),
+      lastName: _asString(json['last_name']),
+      role: _asString(json['role']) ?? '',
+      gender: _asString(json['gender']),
+      subscriptionPlan: _asString(json['subscription_plan']) ?? '',
+      lastActive: parsedLastActive,
+      lastActiveDisplay: parsedLastActiveDisplay,
+      completionPercentage: _asInt(json['completion_percentage']) ?? 0,
+      age: _asInt(json['age']),
+      city: _asString(json['city']),
+      country: _asString(json['country']),
+      sect: _asString(json['sect']),
+      maritalStatus: _asString(json['marital_status']),
+      height: _asString(json['height']),
       hasBoostedProfile: json['has_boosted_profile'] as bool? ?? false,
       photoBlurred: json['photo_blurred'] as bool? ?? true,
-      isOnline: json['is_online'] as bool? ?? false,
-      occupation: json['occupation'] as String?,
-      ethnicity: json['ethnicity'] as String?,
-      education: json['education'] as String?,
-      bio: json['bio'] as String?,
-      languages: json['languages'] as String?,
-      photos: json['photos'] as List<dynamic>? ?? [],
+      isOnline: _computeIsOnline(json, parsedLastActive, parsedLastActiveDisplay),
+      occupation: _asString(json['occupation']),
+      ethnicity: _formatMappedString(
+        json['ethnicity'],
+        ChoiceMappings.ethnicityKeyToDisplay,
+      ),
+      education: _asString(json['education']),
+      bio: _asString(json['bio']),
+      languages: _formatMappedString(
+        json['languages'],
+        ChoiceMappings.languageKeyToDisplay,
+      ),
+      photos: json['photos'] is List ? json['photos'] as List<dynamic> : [],
+      about: _asString(json['about']),
+      aboutYourself: _asString(json['about_yourself']),
+      envisionMarriage: _asString(json['envision_marriage']),
+      relationshipWithIslam: _asString(json['relationship_with_islam']),
+      roleAsSpouse: _asString(json['role_as_spouse']),
+      envisionSpouse: _asString(json['envision_spouse']),
+      spouseReligiousStatusPref: _asString(json['spouse_religious_status_pref']),
+      openToRelocateDetails: _asString(json['open_to_relocate_details']),
+      healthConcerns: _asString(json['health_concerns']),
+      otherPreferences: _asString(json['other_preferences']),
+      prefAgeMin: _asInt(json['pref_age_min']),
+      prefAgeMax: _asInt(json['pref_age_max']),
+      prefMaritalStatus: _parseStringList(json['pref_marital_status']),
+      prefEthnicity: _parseStringList(json['pref_ethnicity']),
+      prefCountryOfResidence:
+          _parseStringList(json['pref_country_of_residence']),
+      preferredDress: _parseStringList(json['preferred_dress']),
+      dress: _parseStringList(json['dress']),
+      nationality: _formatMappedString(
+        json['nationality'],
+        ChoiceMappings.nationalityKeyToDisplay,
+      ),
+      pray5x: _asString(json['pray_5x']),
+      openToRelocate: _asString(json['open_to_relocate']),
     );
   }
 }
@@ -99,29 +246,41 @@ class ConnectionRequestModel {
     required this.requestedAt,
   });
 
-  String get senderCodename => otherUser['codename'] ?? '';
-  int? get senderAge => otherUser['age'];
-  String? get senderHeight => otherUser['height'];
-  String? get senderCity => otherUser['city'];
-  String? get senderEthnicity => otherUser['ethnicity'];
-  String? get senderCountry => otherUser['country'];
-  
-  String get receiverCodename => otherUser['codename'] ?? '';
-  int? get receiverAge => otherUser['age'];
-  String? get receiverHeight => otherUser['height'];
-  String? get receiverCity => otherUser['city'];
-  String? get receiverEthnicity => otherUser['ethnicity'];
-  String? get receiverCountry => otherUser['country'];
-  String get receiverId => otherUser['id'] ?? '';
-  List<dynamic> get otherUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
+  String get senderCodename => MatchProfileModel._asString(otherUser['codename']) ?? '';
+  int? get senderAge => MatchProfileModel._asInt(otherUser['age']);
+  String? get senderHeight => MatchProfileModel._asString(otherUser['height']);
+  String? get senderCity => MatchProfileModel._asString(otherUser['city']);
+  String? get senderEthnicity => MatchProfileModel._formatMappedString(
+        otherUser['ethnicity'],
+        ChoiceMappings.ethnicityKeyToDisplay,
+      );
+  String? get senderCountry => MatchProfileModel._asString(otherUser['country']);
+
+  String get receiverCodename => MatchProfileModel._asString(otherUser['codename']) ?? '';
+  int? get receiverAge => MatchProfileModel._asInt(otherUser['age']);
+  String? get receiverHeight => MatchProfileModel._asString(otherUser['height']);
+  String? get receiverCity => MatchProfileModel._asString(otherUser['city']);
+  String? get receiverEthnicity => MatchProfileModel._formatMappedString(
+        otherUser['ethnicity'],
+        ChoiceMappings.ethnicityKeyToDisplay,
+      );
+  String? get receiverCountry => MatchProfileModel._asString(otherUser['country']);
+  String get senderId => MatchProfileModel._asString(otherUser['id']) ?? '';
+  String get receiverId => MatchProfileModel._asString(otherUser['id']) ?? '';
+  List<dynamic> get otherUserPhotos =>
+      otherUser['photos'] is List ? otherUser['photos'] as List<dynamic> : [];
 
   factory ConnectionRequestModel.fromJson(Map<String, dynamic> json) {
+    final other = json['other_user'];
     return ConnectionRequestModel(
-      id: json['id'] as String,
-      matchId: json['match_id'] as String?, // ✅ Now handles null
-      status: json['status'] as String,
-      otherUser: json['other_user'] as Map<String, dynamic>,
-      requestedAt: DateTime.parse(json['requested_at'] as String),
+      id: MatchProfileModel._asString(json['id']) ?? '',
+      matchId: MatchProfileModel._asString(json['match_id']),
+      status: MatchProfileModel._asString(json['status']) ?? '',
+      otherUser: other is Map
+          ? Map<String, dynamic>.from(other)
+          : <String, dynamic>{},
+      requestedAt: DateTime.tryParse(json['requested_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }
@@ -185,29 +344,82 @@ class MatchModel {
     );
   }
 
-  String get matchedUserCodename => otherUser['codename'] ?? '';
-  int? get matchedUserAge => otherUser['age'];
-  String? get matchedUserHeight => otherUser['height'];
-  String? get matchedUserCity => otherUser['city'];
-  String? get matchedUserEthnicity => otherUser['ethnicity'];
-  String? get matchedUserCountry => otherUser['country'];
-  String get matchedUserId => otherUser['id'] ?? '';
-  List<dynamic> get matchedUserPhotos => otherUser['photos'] as List<dynamic>? ?? [];
+  String get matchedUserCodename =>
+      MatchProfileModel._asString(otherUser['codename']) ?? '';
+  int? get matchedUserAge => MatchProfileModel._asInt(otherUser['age']);
+  String? get matchedUserHeight =>
+      MatchProfileModel._asString(otherUser['height']);
+  String? get matchedUserCity => MatchProfileModel._asString(otherUser['city']);
+  String? get matchedUserEthnicity => MatchProfileModel._formatMappedString(
+        otherUser['ethnicity'],
+        ChoiceMappings.ethnicityKeyToDisplay,
+      );
+  String? get matchedUserCountry =>
+      MatchProfileModel._asString(otherUser['country']);
+  String get matchedUserId =>
+      MatchProfileModel._asString(otherUser['id']) ?? '';
+  List<dynamic> get matchedUserPhotos =>
+      otherUser['photos'] is List ? otherUser['photos'] as List<dynamic> : [];
+  Map<String, dynamic>? get waliDetails => otherUser['wali_details'] is Map
+      ? Map<String, dynamic>.from(otherUser['wali_details'] as Map)
+      : null;
+  String? get waliName =>
+      waliDetails?['wali_name']?.toString() ??
+      otherUser['wali_name']?.toString();
+  String? get waliRelation =>
+      waliDetails?['wali_relation']?.toString() ??
+      otherUser['wali_relation']?.toString();
+  String? get waliNumber =>
+      waliDetails?['wali_number']?.toString() ??
+      otherUser['wali_phone']?.toString();
+  bool get isWaliApproved {
+    final waliStatus = waliRequestStatus.toLowerCase();
+    final matchStatus = status.toLowerCase();
+    return waliStatus == 'accepted' ||
+        waliStatus == 'approved' ||
+        matchStatus == 'wali_accepted' ||
+        matchStatus == 'in_discussion';
+  }
+
+  bool get isDiscussionLocked {
+    final matchStatus = status.toLowerCase();
+    return isWaliApproved ||
+        matchStatus == 'wali_accepted' ||
+        matchStatus == 'in_discussion';
+  }
+
+  bool get isActiveConnection => !const {
+        'pending',
+        'declined',
+        'cancelled',
+        'dropped',
+      }.contains(status.toLowerCase());
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
+    final other = json['other_user'];
     return MatchModel(
-      id: json['id'] as String,
-      matchId: json['match_id'] as String,
-      status: json['status'] as String,
-      otherUser: json['other_user'] as Map<String, dynamic>,
+      id: MatchProfileModel._asString(json['id']) ?? '',
+      matchId: MatchProfileModel._asString(json['match_id']) ?? '',
+      status: MatchProfileModel._asString(json['status']) ?? '',
+      otherUser: other is Map
+          ? Map<String, dynamic>.from(other)
+          : <String, dynamic>{},
       photosCurrentlyVisible: json['photos_currently_visible'] as bool? ?? false,
-      photoRequestStatus: json['photo_request_status'] as String? ?? 'none',
-      photoRequestedByOtherUser: json['photo_requested_by_other_user'] as bool? ?? false,
-      waliRequestStatus: json['wali_request_status'] as String? ?? 'none',
-      secondPhotoRequestStatus: json['second_photo_request_status'] as String? ?? 'none',
-      photoViewCount: (json['photo_view_count'] as num?)?.toInt() ?? 0,
-      acceptedAt: json['accepted_at'] != null ? DateTime.parse(json['accepted_at'] as String) : null,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      photoRequestStatus:
+          MatchProfileModel._asString(json['photo_request_status']) ?? 'none',
+      photoRequestedByOtherUser:
+          json['photo_requested_by_other_user'] as bool? ?? false,
+      waliRequestStatus:
+          MatchProfileModel._asString(json['wali_request_status']) ?? 'none',
+      secondPhotoRequestStatus:
+          MatchProfileModel._asString(json['second_photo_request_status']) ??
+              'none',
+      photoViewCount: MatchProfileModel._asInt(json['photo_view_count']) ?? 0,
+      acceptedAt: json['accepted_at'] != null
+          ? DateTime.tryParse(json['accepted_at'].toString())
+          : null,
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

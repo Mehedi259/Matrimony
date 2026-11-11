@@ -5,8 +5,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../providers/profile_provider.dart';
+import '../widgets/header_action_buttons.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
+import '../widgets/upgrade_subscription_dialog.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 
@@ -31,33 +33,55 @@ class _HomeScreenState extends State<HomeScreen> {
     final matchesProvider = context.read<MatchesProvider>();
     final authProvider = context.read<AuthProvider>();
     final profileProvider = context.read<ProfileProvider>();
-    
-    // Refresh user profile and photos for the avatar
-    await authProvider.refreshProfile();
-    await profileProvider.loadPhotos();
-    
-    // Load matches for home screen (suggested profiles)
-    await matchesProvider.loadDirectory(page: 1);
-    
-    // Load wishlists for saved count
-    await matchesProvider.loadWishlists();
-    
-    // Load sent requests for pending count
-    await matchesProvider.loadSentRequests();
 
-    // Load profile viewers for view count
-    await matchesProvider.loadProfileViewers();
+    await Future.wait([
+      authProvider.refreshProfile(),
+      profileProvider.loadPhotos(),
+      matchesProvider.loadWishlists(),
+      matchesProvider.loadConnectionRequestsForRole(authProvider.currentUser?.role),
+      matchesProvider.loadMatches(),
+      matchesProvider.loadProfileViewers(),
+      matchesProvider.fetchConnectionUsage(),
+    ]);
+
+    if (!mounted) return;
+    await matchesProvider.loadDirectory(page: 1);
   }
 
   Future<void> _handleSendInterest(String userId) async {
     final matchesProvider = context.read<MatchesProvider>();
-    
+
+    if (matchesProvider.isCurrentUserProfileLocked) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 3),
+          messageText: Text(
+            'Your profile is locked in an active Wali discussion.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+
     final success = await matchesProvider.sendConnectionRequest(userId);
-    
+
     if (!mounted) return;
-    
+
     if (success) {
       SnackBarHelper.showRequestSent(context);
+      if (matchesProvider.justExhaustedRequests) {
+        showUpgradeSubscriptionDialog(context);
+      }
+    } else if (matchesProvider.lastSendFailedDueToLimit) {
+      showUpgradeSubscriptionDialog(
+        context,
+        subtitle: matchesProvider.errorMessage,
+      );
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -65,7 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
           margin: const EdgeInsets.all(16),
           borderRadius: 8,
           duration: const Duration(seconds: 3),
-          messageText: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+          messageText:
+              Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
           backgroundColor: Colors.red,
         ),
       );
@@ -118,34 +143,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
         actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined,
-                color: Theme.of(context).primaryColor),
-            onPressed: () => context.push('/settings'),
-          ).animate().fadeIn(duration: 600.ms, delay: 100.ms).scale(
-              begin: const Offset(0.8, 0.8)),
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none,
-                    color: Theme.of(context).colorScheme.secondary, size: 28),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        shape: BoxShape.circle),
-                    constraints:
-                        const BoxConstraints(minWidth: 12, minHeight: 12),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () => context.push('/notifications'),
-          ).animate().fadeIn(duration: 600.ms, delay: 200.ms).scale(
-              begin: const Offset(0.8, 0.8)),
+          const SettingsActionButton()
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 100.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
+          const NotificationBellButton()
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(width: 8),
         ],
       ),
@@ -304,12 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ...matchesProvider.directoryProfiles.take(5).map((profile) {
                   final index = matchesProvider.directoryProfiles.indexOf(profile);
                   final isSaved = matchesProvider.wishlists.any((w) => (w['user_id'] ?? w['id']) == profile.id);
-                  final isRequestSent = matchesProvider.sentRequests.any((req) => req.receiverId == profile.id);
-                  
-                  final isMale = profile.role == 'male';
-                  final isFemaleOrWali = user?.role == 'female' || user?.role == 'wali';
-                  final shouldOverrideLock = isMale && isFemaleOrWali;
-                  final isActuallyLocked = shouldOverrideLock ? false : profile.photoBlurred;
+                  final isConnected = matchesProvider.hasActiveConnectionWith(profile.id);
+                  final isRequestSent = !isConnected &&
+                      matchesProvider.hasPendingSentRequestTo(profile.id);
                   final canSendRequest = user?.role == 'male';
 
                   return Padding(
@@ -319,15 +321,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       age: profile.age != null ? '${profile.age} Years old' : 'N/A',
                       ethnicity: profile.ethnicity ?? 'N/A',
                       country: profile.country ?? 'N/A',
-                      imageUrl: profile.photos.isNotEmpty ? profile.photos.first['image'] : null,
+                      imageUrl: null,
                       photos: profile.photos,
-                      lockMessage: isActuallyLocked
-                          ? 'Photos will be revealed after mutual interest'
-                          : '',
-                      isLocked: isActuallyLocked,
-                      isBlurred: isActuallyLocked,
+                      lockMessage: isConnected
+                          ? 'Open profile to view photos safely'
+                          : 'Photos will be revealed after mutual interest',
+                      isLocked: true,
+                      isBlurred: true,
                       isWishlisted: isSaved,
                       isRequestSent: isRequestSent,
+                      isConnected: isConnected,
                       onWishlistToggle: () async {
                         if (isSaved) {
                           await matchesProvider.removeFromWishlist(profile.id);
@@ -336,8 +339,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                       },
                       onViewProfile: () {
-                        // Navigate to profile details with userId
-                        context.push('/matches/directory/${profile.id}');
+                        context.push('/matches/directory/${profile.id}').then((_) {
+                          if (mounted) _loadData();
+                        });
                       },
                       onSendInterest: canSendRequest ? () => _handleSendInterest(profile.id) : null,
                     )

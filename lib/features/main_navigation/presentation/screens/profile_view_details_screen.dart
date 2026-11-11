@@ -9,6 +9,8 @@ import '../../../../data/models/matches/match_profile_model.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/choice_mappings.dart';
+import '../widgets/photo_viewer_dialog.dart';
+import '../widgets/upgrade_subscription_dialog.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
   final String userId;
@@ -60,8 +62,16 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     });
 
     final matchesProvider = context.read<MatchesProvider>();
-    final success = await matchesProvider.getProfileDetails(widget.userId);
+    final role = context.read<AuthProvider>().currentUser?.role;
+    final profileFuture = matchesProvider.getProfileDetails(widget.userId);
+    await Future.wait<void>([
+      profileFuture,
+      matchesProvider.loadMatches(),
+      matchesProvider.loadConnectionRequestsForRole(role),
+    ]);
 
+    if (!mounted) return;
+    final success = await profileFuture;
     if (success && matchesProvider.selectedProfile != null) {
       setState(() {
         _profile = matchesProvider.selectedProfile;
@@ -69,7 +79,9 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
       });
     } else {
       setState(() {
-        _errorMessage = matchesProvider.errorMessage ?? 'Failed to load profile';
+        _errorMessage = matchesProvider.selectedProfileError ??
+            matchesProvider.errorMessage ??
+            'Failed to load profile';
         _isLoading = false;
       });
     }
@@ -79,12 +91,37 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     if (_profile == null) return;
 
     final matchesProvider = context.read<MatchesProvider>();
+    if (matchesProvider.isCurrentUserProfileLocked) {
+      Get.showSnackbar(
+        const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: Duration(seconds: 3),
+          messageText: Text(
+            'Your profile is locked in an active Wali discussion.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+
     final success = await matchesProvider.sendConnectionRequest(_profile!.id);
 
     if (!mounted) return;
 
     if (success) {
       SnackBarHelper.showRequestSent(context);
+      if (matchesProvider.justExhaustedRequests) {
+        showUpgradeSubscriptionDialog(context);
+      }
+    } else if (matchesProvider.lastSendFailedDueToLimit) {
+      showUpgradeSubscriptionDialog(
+        context,
+        subtitle: matchesProvider.errorMessage,
+      );
     } else {
       Get.showSnackbar(
         GetSnackBar(
@@ -93,6 +130,55 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
           borderRadius: 8,
           duration: const Duration(seconds: 3),
           messageText: Text(matchesProvider.errorMessage ?? 'Failed to send interest'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleRespondToReceivedRequest(
+    String requestId, {
+    required bool accept,
+  }) async {
+    final matchesProvider = context.read<MatchesProvider>();
+    final success = await matchesProvider.respondToRequest(
+      requestId: requestId,
+      accept: accept,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(
+            accept
+                ? 'Connection accepted! You are now matched.'
+                : 'Request declined.',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: accept ? Colors.green : Colors.orange,
+        ),
+      );
+      if (!accept) {
+        context.pop();
+      } else {
+        setState(() {});
+      }
+    } else {
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(
+            matchesProvider.errorMessage ?? 'Failed to respond to request',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -332,14 +418,48 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
             flexibleSpace: FlexibleSpaceBar(
               background: Builder(
                 builder: (context) {
-                  final isMatch = context.watch<MatchesProvider>().matches.any((m) => m.matchedUserId == _profile!.id);
-                  final isActuallyLocked = !isMatch && _profile!.photoBlurred;
+                  final matchesProvider = context.watch<MatchesProvider>();
+                  final matchingMatch =
+                      matchesProvider.activeMatchForUser(_profile!.id);
+                  final isMatch = matchingMatch != null;
+                  final authUser = context.watch<AuthProvider>().currentUser;
+                  final isFemaleOrWali =
+                      authUser?.role.toLowerCase() == 'female' ||
+                          authUser?.role.toLowerCase() == 'wali' ||
+                          authUser?.gender?.toLowerCase() == 'female';
+                  final availablePhotos = isMatch &&
+                          matchingMatch.matchedUserPhotos.isNotEmpty
+                      ? matchingMatch.matchedUserPhotos
+                      : _profile!.photos;
 
-                  return _HeroImageSection(
-                    primaryColor: primaryColor,
-                    photoBlurred: isActuallyLocked,
-                    codename: _profile!.codename,
-                    photos: _profile!.photos,
+                  return GestureDetector(
+                    onTap: () {
+                      if (!isMatch || availablePhotos.isEmpty) return;
+                      if (!isFemaleOrWali &&
+                          !matchingMatch.photosCurrentlyVisible) {
+                        return;
+                      }
+                      showProtectedPhotoViewerDialog(
+                        context,
+                        photos: availablePhotos,
+                        durationSeconds: isFemaleOrWali ? null : 60,
+                        onViewerOpened: isFemaleOrWali
+                            ? null
+                            : () {
+                                matchesProvider
+                                    .markPhotosViewed(matchingMatch.id);
+                              },
+                      );
+                    },
+                    child: _HeroImageSection(
+                      primaryColor: primaryColor,
+                      photoBlurred: true,
+                      lockMessage: isMatch
+                          ? 'Photos remain hidden for privacy. Use View Photos below.'
+                          : 'Photos revealed after mutual interest',
+                      codename: _profile!.codename,
+                      photos: _profile!.photos,
+                    ),
                   );
                 },
               ),
@@ -372,7 +492,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                               builder: (context) {
                                 final ageText = _profile!.age != null ? '${_profile!.age} years' : '';
                                 final ethnicityText = (_profile!.ethnicity != null && _profile!.ethnicity!.isNotEmpty)
-                                    ? ChoiceMappings.keyToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay)
+                                    ? ChoiceMappings.keysStringToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay)
                                     : '';
                                 final cityText = _profile!.city ?? '';
                                 final countryText = _profile!.country ?? '';
@@ -428,10 +548,10 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      if (_profile!.occupation != null)
+                      if (_profile!.occupation != null && _profile!.occupation!.isNotEmpty)
                         _InfoChip(
                           icon: Icons.work_outline,
-                          label: _profile!.occupation!,
+                          label: _formatOccupation(_profile!.occupation!),
                           color: Colors.blue,
                         ),
                       if (_profile!.height != null)
@@ -440,16 +560,22 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                           label: _profile!.height!,
                           color: Colors.orange,
                         ),
-                      if (_profile!.maritalStatus != null)
+                      if (_profile!.maritalStatus != null && _profile!.maritalStatus!.isNotEmpty)
                         _InfoChip(
                           icon: Icons.star_outline,
-                          label: _profile!.maritalStatus!,
+                          label: ChoiceMappings.keyToDisplay(
+                            _profile!.maritalStatus!,
+                            ChoiceMappings.maritalStatusKeyToDisplay,
+                          ),
                           color: Colors.purple,
                         ),
-                      if (_profile!.sect != null)
+                      if (_profile!.sect != null && _profile!.sect!.isNotEmpty)
                         _InfoChip(
                           icon: Icons.menu_book_outlined,
-                          label: _profile!.sect!,
+                          label: ChoiceMappings.keyToDisplay(
+                            _profile!.sect!,
+                            ChoiceMappings.sectKeyToDisplay,
+                          ),
                           color: Colors.teal,
                         ),
                     ],
@@ -460,15 +586,24 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   Builder(
                     builder: (context) {
                       final matchesProvider = context.watch<MatchesProvider>();
-                      final hasSent = matchesProvider.sentRequests.any((req) => req.receiverId == _profile!.id);
-                      final hasReceived = matchesProvider.receivedRequests.any((req) => req.otherUser['id'] == _profile!.id);
-                      final isMatch = matchesProvider.matches.any((m) => m.matchedUserId == _profile!.id);
-                      final canSendRequest = context.watch<AuthProvider>().currentUser?.role == 'male';
+                      final authUser = context.watch<AuthProvider>().currentUser;
+                      final hasSent = matchesProvider.hasPendingSentRequestTo(_profile!.id);
+                      final hasReceived = matchesProvider.hasPendingReceivedRequestFrom(_profile!.id);
+                      final matchingMatch = matchesProvider.activeMatchForUser(_profile!.id);
+                      final isMatch = matchingMatch != null;
+                      final canSendRequest = authUser?.role == 'male';
+                      final isFemaleOrWali =
+                          authUser?.role.toLowerCase() == 'female' ||
+                              authUser?.role.toLowerCase() == 'wali' ||
+                              authUser?.gender?.toLowerCase() == 'female';
 
-                      final matchingMatch = matchesProvider.matches.where((m) => m.matchedUserId == _profile!.id).firstOrNull;
                       final matchingSent = matchesProvider.sentRequests.where((req) => req.receiverId == _profile!.id).firstOrNull;
 
-                      if (isMatch && matchingMatch != null) {
+                      if (isMatch) {
+                        final availablePhotos = matchingMatch.matchedUserPhotos.isNotEmpty
+                            ? matchingMatch.matchedUserPhotos
+                            : _profile!.photos;
+
                         return Column(
                           children: [
                             Container(
@@ -487,6 +622,19 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                                   Text('You are connected', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15)),
                                 ],
                               ),
+                            ),
+                            const SizedBox(height: 12),
+                            MatchedPhotoActionSection(
+                              match: matchingMatch,
+                              photos: availablePhotos,
+                              otherCodename: _profile!.codename,
+                              isFemaleOrWali: isFemaleOrWali,
+                              accentColor: secondaryColor,
+                              onViewerClosed: () {
+                                if (mounted) {
+                                  context.read<MatchesProvider>().loadMatches();
+                                }
+                              },
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
@@ -546,22 +694,103 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                         ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
                       }
 
-                      String buttonText = 'Send Interest';
-                      IconData buttonIcon = Icons.favorite_rounded;
-                      bool isEnabled = canSendRequest;
+                      final matchingReceived = matchesProvider.receivedRequests
+                          .where((req) => req.otherUser['id'] == _profile!.id)
+                          .firstOrNull;
 
-                      if (hasReceived) {
-                        buttonText = 'Accept Request';
-                        buttonIcon = Icons.check_circle_outline;
-                        isEnabled = true; 
+                      if (hasReceived && matchingReceived != null) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 52,
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _handleRespondToReceivedRequest(
+                                    matchingReceived.id,
+                                    accept: false,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: Color(0xFFE54B5E),
+                                  ),
+                                  label: const Text(
+                                    'Decline',
+                                    style: TextStyle(
+                                      color: Color(0xFFE54B5E),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: Color(0xFFE54B5E),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: SizedBox(
+                                height: 52,
+                                child: ElevatedButton.icon(
+                                  onPressed: () =>
+                                      _handleRespondToReceivedRequest(
+                                    matchingReceived.id,
+                                    accept: true,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.check_circle_outline,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'Accept Request',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
                       }
-                      
+
+                      final bool isLockedOut =
+                          matchesProvider.isCurrentUserProfileLocked;
+                      final String buttonText = isLockedOut
+                          ? 'Profile Locked (In Discussion)'
+                          : 'Send Interest';
+                      final bool isEnabled = canSendRequest && !isLockedOut;
+
                       return SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton.icon(
-                          onPressed: isEnabled ? (hasReceived ? () => context.push('/requests') : _handleSendInterest) : null,
-                          icon: Icon(buttonIcon, size: 18, color: Colors.white),
+                          onPressed: isEnabled ? _handleSendInterest : null,
+                          icon: Icon(
+                            isLockedOut
+                                ? Icons.lock_outline_rounded
+                                : Icons.favorite_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                           label: Text(
                             buttonText,
                             style: const TextStyle(
@@ -651,6 +880,20 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
   }
 
   // ── Basic Info ────────────────────────────────────────────────────────
+  String _formatOccupation(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return 'N/A';
+    if (!trimmed.contains('_') && trimmed != trimmed.toLowerCase()) {
+      return trimmed;
+    }
+    return trimmed
+        .replaceAll('_', ' ')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0].toUpperCase() + w.substring(1))
+        .join(' ');
+  }
+
   Widget _buildBasicInfoTab(Color primaryColor) {
     final fields = [
       ['Codename', _profile!.codename],
@@ -659,10 +902,18 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
       ['Country', _profile!.country ?? 'N/A'],
       ['Sect', _profile!.sect != null ? ChoiceMappings.keyToDisplay(_profile!.sect!, ChoiceMappings.sectKeyToDisplay) : 'N/A'],
       ['Marital Status', _profile!.maritalStatus != null ? ChoiceMappings.keyToDisplay(_profile!.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : 'N/A'],
-      ['Ethnicity', _profile!.ethnicity != null ? ChoiceMappings.keyToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay) : 'N/A'],
+      ['Ethnicity', _profile!.ethnicity != null ? ChoiceMappings.keysStringToDisplay(_profile!.ethnicity!, ChoiceMappings.ethnicityKeyToDisplay) : 'N/A'],
       ['Height', _profile!.height ?? 'N/A'],
-      ['Occupation', _profile!.occupation ?? 'N/A'],
-      ['Education', _profile!.education ?? 'N/A'],
+      ['Occupation', _profile!.occupation != null ? _formatOccupation(_profile!.occupation!) : 'N/A'],
+      ['Education', _profile!.education != null ? ChoiceMappings.keyToDisplay(_profile!.education!, ChoiceMappings.educationKeyToDisplay) : 'N/A'],
+      if (_profile!.nationality != null && _profile!.nationality!.isNotEmpty)
+        ['Nationality', ChoiceMappings.keysStringToDisplay(_profile!.nationality!, ChoiceMappings.nationalityKeyToDisplay)],
+      if (_profile!.pray5x != null && _profile!.pray5x!.isNotEmpty)
+        ['Prayer 5x a day?', ChoiceMappings.keyToDisplay(_profile!.pray5x!, ChoiceMappings.prayerKeyToDisplay)],
+      if (_profile!.openToRelocate != null && _profile!.openToRelocate!.isNotEmpty)
+        ['Open to relocating?', ChoiceMappings.keyToDisplay(_profile!.openToRelocate!, ChoiceMappings.relocationKeyToDisplay)],
+      if (_profile!.dress.isNotEmpty)
+        ['Dress', ChoiceMappings.keysToDisplays(_profile!.dress, ChoiceMappings.dressKeyToDisplay).join(', ')],
     ];
 
     return Column(
@@ -681,39 +932,156 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
 
   // ── About Me ──────────────────────────────────────────────────────────
   Widget _buildAboutMeTab(Color primaryColor) {
+    final fields = <MapEntry<String, String>>[];
+
+    void addField(String label, String? value) {
+      if (value != null && value.trim().isNotEmpty) {
+        fields.add(MapEntry(label, value.trim()));
+      }
+    }
+
+    final aboutYourself = _profile!.aboutYourself?.trim().isNotEmpty == true
+        ? _profile!.aboutYourself
+        : _profile!.bio;
+    if (_profile!.about != null &&
+        _profile!.about!.trim().isNotEmpty &&
+        _profile!.about!.trim() != aboutYourself?.trim()) {
+      addField('About', _profile!.about);
+    }
+    addField('About Yourself', aboutYourself);
+    addField('Idea of Marriage', _profile!.envisionMarriage);
+    addField('Relationship with Islam', _profile!.relationshipWithIslam);
+    addField('Role as a Spouse', _profile!.roleAsSpouse);
+    addField('Envision Your Spouse', _profile!.envisionSpouse);
+    addField(
+      "Spouse's Religious Status Preference",
+      _profile!.spouseReligiousStatusPref,
+    );
+    addField('Relocation Details', _profile!.openToRelocateDetails);
+    addField('Health Concerns', _profile!.healthConcerns);
+    addField('Other Preferences', _profile!.otherPreferences);
+    addField(
+      'Languages',
+      (_profile!.languages != null && _profile!.languages!.trim().isNotEmpty)
+          ? ChoiceMappings.keysStringToDisplay(
+              _profile!.languages!,
+              ChoiceMappings.languageKeyToDisplay,
+            )
+          : null,
+    );
+
+    if (fields.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _InfoRow(
+            label: 'About',
+            value: 'No information provided',
+            primaryColor: primaryColor,
+            multiLine: true,
+          ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _InfoRow(
-          label: 'About',
-          value: _profile!.bio ?? 'No information provided',
-          primaryColor: primaryColor,
-          multiLine: true,
-        ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0),
-        
-        if (_profile!.languages != null && _profile!.languages!.isNotEmpty)
+        for (int i = 0; i < fields.length; i++)
           _InfoRow(
-            label: 'Languages',
-            value: _profile!.languages!,
+            label: fields[i].key,
+            value: fields[i].value,
             primaryColor: primaryColor,
-          ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
+            multiLine: fields[i].key != 'Languages',
+          )
+              .animate()
+              .fadeIn(duration: 400.ms, delay: (50 * i).ms)
+              .slideX(begin: 0.1, end: 0),
       ],
     );
   }
 
   // ── Preferences ───────────────────────────────────────────────────────
   Widget _buildPreferencesTab(Color primaryColor) {
+    final fields = <MapEntry<String, String>>[];
+
+    if (_profile!.prefAgeMin != null && _profile!.prefAgeMax != null) {
+      fields.add(MapEntry(
+        'Preferred Age Range',
+        '${_profile!.prefAgeMin} - ${_profile!.prefAgeMax} years',
+      ));
+    } else if (_profile!.prefAgeMin != null) {
+      fields.add(MapEntry('Minimum Age', '${_profile!.prefAgeMin} years'));
+    } else if (_profile!.prefAgeMax != null) {
+      fields.add(MapEntry('Maximum Age', '${_profile!.prefAgeMax} years'));
+    }
+
+    if (_profile!.prefMaritalStatus.isNotEmpty) {
+      fields.add(MapEntry(
+        'Preferred Marital Status',
+        ChoiceMappings.keysToDisplays(
+          _profile!.prefMaritalStatus,
+          ChoiceMappings.maritalStatusKeyToDisplay,
+        ).join(', '),
+      ));
+    }
+
+    if (_profile!.prefEthnicity.isNotEmpty) {
+      fields.add(MapEntry(
+        'Preferred Ethnicity',
+        ChoiceMappings.keysToDisplays(
+          _profile!.prefEthnicity,
+          ChoiceMappings.ethnicityKeyToDisplay,
+        ).join(', '),
+      ));
+    }
+
+    if (_profile!.prefCountryOfResidence.isNotEmpty) {
+      fields.add(MapEntry(
+        'Preferred Country of Residence',
+        _profile!.prefCountryOfResidence.join(', '),
+      ));
+    }
+
+    if (_profile!.preferredDress.isNotEmpty) {
+      fields.add(MapEntry(
+        'Preferred Dress',
+        ChoiceMappings.keysToDisplays(
+          _profile!.preferredDress,
+          ChoiceMappings.dressKeyToDisplay,
+        ).join(', '),
+      ));
+    }
+
+    if (fields.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'No preferences specified',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
+          ).animate().fadeIn(duration: 400.ms),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Profile preferences will be visible after mutual match',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-            fontStyle: FontStyle.italic,
-          ),
-        ).animate().fadeIn(duration: 400.ms),
+        for (int i = 0; i < fields.length; i++)
+          _InfoRow(
+            label: fields[i].key,
+            value: fields[i].value,
+            primaryColor: primaryColor,
+            multiLine: true,
+          )
+              .animate()
+              .fadeIn(duration: 400.ms, delay: (50 * i).ms)
+              .slideX(begin: 0.1, end: 0),
       ],
     );
   }
@@ -723,26 +1091,23 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
 class _HeroImageSection extends StatelessWidget {
   final Color primaryColor;
   final bool photoBlurred;
+  final String lockMessage;
   final String codename;
   final List<dynamic> photos;
 
   const _HeroImageSection({
     required this.primaryColor,
     required this.photoBlurred,
+    this.lockMessage = 'Photos revealed after mutual interest',
     required this.codename,
     required this.photos,
   });
 
   @override
   Widget build(BuildContext context) {
-    ImageProvider imageProvider;
-    if (photos.isNotEmpty && !photoBlurred) {
-      imageProvider = NetworkImage(photos.first['image']);
-    } else {
-      imageProvider = AssetImage(
-        photoBlurred ? 'assets/blurredProfile1.png' : 'assets/profileImage.png',
-      );
-    }
+    final ImageProvider imageProvider = (!photoBlurred && photos.isNotEmpty)
+        ? NetworkImage(photos.first['image'])
+        : const AssetImage('assets/blurredProfile1.png');
 
     return Stack(
       fit: StackFit.expand,
@@ -794,13 +1159,15 @@ class _HeroImageSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.lock_outline_rounded, color: Colors.white, size: 16),
-                  SizedBox(width: 8),
+                children: [
+                  const Icon(Icons.lock_outline_rounded, color: Colors.white, size: 16),
+                  const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'Photos revealed after mutual interest',
-                      style: TextStyle(
+                      photos.isNotEmpty
+                          ? '${photos.length} photo${photos.length == 1 ? '' : 's'} • $lockMessage'
+                          : lockMessage,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,

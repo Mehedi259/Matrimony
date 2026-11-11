@@ -465,6 +465,22 @@ class ChoiceMappings {
   }
 
   /// Create a reverse map (value → key)
+  /// Converts a comma-separated string of backend keys into formatted display labels.
+  static String keysStringToDisplay(
+    String raw,
+    Map<String, String> reverseMapping,
+  ) {
+    if (raw.isEmpty) return raw;
+    if (reverseMapping.containsKey(raw)) return reverseMapping[raw]!;
+    return raw
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .map((part) => keyToDisplay(part, reverseMapping))
+        .join(', ');
+  }
+
+  /// Helper to reverse a mapping dictionary.
   static Map<String, String> _reverseMap(Map<String, String> map) {
     return map.map((key, value) => MapEntry(value, key));
   }

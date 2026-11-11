@@ -12,6 +12,7 @@ class UserModel {
   final DateTime? subscriptionEnd;
   final String provider;
   final bool isActive;
+  final bool isVerified;
   final bool isPrivateMatchmakingClient;
   final DateTime? lastActive;
   final String? lastActiveDisplay;
@@ -33,6 +34,7 @@ class UserModel {
     this.subscriptionEnd,
     required this.provider,
     required this.isActive,
+    this.isVerified = false,
     required this.isPrivateMatchmakingClient,
     this.lastActive,
     this.lastActiveDisplay,
@@ -60,6 +62,7 @@ class UserModel {
           : null,
       provider: json['provider'],
       isActive: json['is_active'],
+      isVerified: json['is_verified'] as bool? ?? false,
       isPrivateMatchmakingClient: json['is_private_matchmaking_client'],
       lastActive: json['last_active'] != null
           ? DateTime.parse(json['last_active'])
@@ -86,6 +89,7 @@ class UserModel {
       'subscription_end': subscriptionEnd?.toIso8601String(),
       'provider': provider,
       'is_active': isActive,
+      'is_verified': isVerified,
       'is_private_matchmaking_client': isPrivateMatchmakingClient,
       'last_active': lastActive?.toIso8601String(),
       'last_active_display': lastActiveDisplay,
@@ -109,6 +113,7 @@ class UserModel {
     DateTime? subscriptionEnd,
     String? provider,
     bool? isActive,
+    bool? isVerified,
     bool? isPrivateMatchmakingClient,
     DateTime? lastActive,
     String? lastActiveDisplay,
@@ -130,6 +135,7 @@ class UserModel {
       subscriptionEnd: subscriptionEnd ?? this.subscriptionEnd,
       provider: provider ?? this.provider,
       isActive: isActive ?? this.isActive,
+      isVerified: isVerified ?? this.isVerified,
       isPrivateMatchmakingClient: isPrivateMatchmakingClient ?? this.isPrivateMatchmakingClient,
       lastActive: lastActive ?? this.lastActive,
       lastActiveDisplay: lastActiveDisplay ?? this.lastActiveDisplay,

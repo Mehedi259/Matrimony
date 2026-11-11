@@ -14,7 +14,13 @@ class MatchesProvider extends ChangeNotifier {
   List<dynamic> _profileViewers = [];
 
   bool _isLoading = false;
+  bool _isLoadingProfileViewers = false;
   String? _errorMessage;
+  String? _selectedProfileError;
+  String? _profileViewersError;
+  Map<String, dynamic>? _connectionUsage;
+  bool _justExhaustedRequests = false;
+  bool _lastSendFailedDueToLimit = false;
 
   // Getters
   List<MatchProfileModel> get directoryProfiles => _directoryProfiles;
@@ -24,7 +30,34 @@ class MatchesProvider extends ChangeNotifier {
   List<dynamic> get wishlists => _wishlists;
   List<dynamic> get profileViewers => _profileViewers;
   bool get isLoading => _isLoading;
+  bool get isLoadingProfileViewers => _isLoadingProfileViewers;
   String? get errorMessage => _errorMessage;
+  String? get selectedProfileError => _selectedProfileError;
+  String? get profileViewersError => _profileViewersError;
+  Map<String, dynamic>? get connectionUsage => _connectionUsage;
+  bool get justExhaustedRequests => _justExhaustedRequests;
+  bool get lastSendFailedDueToLimit => _lastSendFailedDueToLimit;
+
+  int? get requestsRemaining =>
+      (_connectionUsage?['requests_remaining'] as num?)?.toInt();
+
+  String? get usageSubscriptionPlan =>
+      _connectionUsage?['subscription_plan']?.toString();
+
+  bool get hasExhaustedRequests {
+    final plan = usageSubscriptionPlan;
+    final remaining = requestsRemaining;
+    return remaining != null &&
+        remaining <= 0 &&
+        (plan == 'free' || plan == 'monthly');
+  }
+
+  /// Whether either user is currently locked into an approved Wali discussion.
+  bool get isCurrentUserProfileLocked =>
+      _matches.any((m) => m.isDiscussionLocked);
+
+  MatchModel? get lockedDiscussionMatch =>
+      _matches.where((m) => m.isDiscussionLocked).firstOrNull;
 
   // Selected profile for viewing details
   MatchProfileModel? _selectedProfile;
@@ -40,8 +73,14 @@ class MatchesProvider extends ChangeNotifier {
     _wishlists = [];
     _profileViewers = [];
     _selectedProfile = null;
+    _connectionUsage = null;
+    _justExhaustedRequests = false;
+    _lastSendFailedDueToLimit = false;
     _errorMessage = null;
+    _selectedProfileError = null;
+    _profileViewersError = null;
     _isLoading = false;
+    _isLoadingProfileViewers = false;
     notifyListeners();
   }
 
@@ -50,15 +89,24 @@ class MatchesProvider extends ChangeNotifier {
   Future<bool> loadDirectory({
     Map<String, dynamic>? filters,
     int page = 1,
+    Duration? maxLastActiveAge,
   }) async {
     _setLoading(true);
     _clearError();
 
     try {
-      _directoryProfiles = await _matchesRepository.getDirectory(
+      var profiles = await _matchesRepository.getDirectory(
         filters: filters,
         page: page,
       );
+      if (maxLastActiveAge != null) {
+        final cutoff = DateTime.now().toUtc().subtract(maxLastActiveAge);
+        profiles = profiles.where((profile) {
+          final lastActive = profile.lastActive?.toUtc();
+          return lastActive != null && !lastActive.isBefore(cutoff);
+        }).toList();
+      }
+      _directoryProfiles = profiles;
       _setLoading(false);
       notifyListeners();
       return true;
@@ -68,36 +116,107 @@ class MatchesProvider extends ChangeNotifier {
     }
   }
 
+  /// Returns the active match for [userId], if one exists.
+  MatchModel? activeMatchForUser(String userId) {
+    return _matches
+        .where((m) => m.matchedUserId == userId && m.isActiveConnection)
+        .firstOrNull;
+  }
+
+  /// Whether there is an active/approved match with [userId].
+  bool hasActiveConnectionWith(String userId) {
+    return activeMatchForUser(userId) != null;
+  }
+
+  /// Whether a pending connection request has already been sent to [userId].
+  bool hasPendingSentRequestTo(String userId) {
+    return _sentRequests.any((req) => req.receiverId == userId);
+  }
+
+  /// Whether a pending connection request was received from [userId].
+  bool hasPendingReceivedRequestFrom(String userId) {
+    return _receivedRequests.any((req) => req.otherUser['id'] == userId);
+  }
+
+  static String? _joinListField(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      final parts = value
+          .map((e) => e?.toString().trim() ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      return parts.isEmpty ? null : parts.join(', ');
+    }
+    return value.toString();
+  }
+
+  /// Merges the nested `{"profile": ..., "basic_info": ...}` API payload into
+  /// a [MatchProfileModel] without relying on raw string casts.
+  static MatchProfileModel parseDirectoryProfileDetail(
+    Map<String, dynamic> profileData,
+  ) {
+    final profileSection = profileData['profile'];
+    final profileJson = Map<String, dynamic>.from(
+      profileSection is Map ? profileSection : profileData,
+    );
+
+    final basicInfoRaw = profileData['basic_info'];
+    if (basicInfoRaw is Map) {
+      final basicInfo = Map<String, dynamic>.from(basicInfoRaw);
+      profileJson['photos'] = basicInfo['photos'];
+      profileJson['ethnicity'] = _joinListField(basicInfo['ethnicity']);
+      profileJson['ethnicity_list'] = basicInfo['ethnicity'];
+      profileJson['education'] = basicInfo['education'];
+      profileJson['occupation'] = basicInfo['employment'];
+      profileJson['bio'] = basicInfo['about_yourself'] ?? basicInfo['about'];
+      profileJson['languages'] = _joinListField(basicInfo['languages_spoken']);
+      profileJson['languages_list'] = basicInfo['languages_spoken'];
+      profileJson['about'] = basicInfo['about'];
+      profileJson['about_yourself'] = basicInfo['about_yourself'];
+      profileJson['envision_marriage'] = basicInfo['envision_marriage'];
+      profileJson['relationship_with_islam'] =
+          basicInfo['relationship_with_islam'];
+      profileJson['role_as_spouse'] = basicInfo['role_as_spouse'];
+      profileJson['envision_spouse'] = basicInfo['envision_spouse'];
+      profileJson['spouse_religious_status_pref'] =
+          basicInfo['spouse_religious_status_pref'];
+      profileJson['open_to_relocate_details'] =
+          basicInfo['open_to_relocate_details'];
+      profileJson['health_concerns'] = basicInfo['health_concerns'];
+      profileJson['other_preferences'] = basicInfo['other_preferences'];
+      profileJson['pref_age_min'] = basicInfo['pref_age_min'];
+      profileJson['pref_age_max'] = basicInfo['pref_age_max'];
+      profileJson['pref_marital_status'] = basicInfo['pref_marital_status'];
+      profileJson['pref_ethnicity'] = basicInfo['pref_ethnicity'];
+      profileJson['pref_country_of_residence'] =
+          basicInfo['pref_country_of_residence'];
+      profileJson['preferred_dress'] = basicInfo['preferred_dress'];
+      profileJson['dress'] = basicInfo['dress'];
+      profileJson['nationality'] = _joinListField(basicInfo['nationality']);
+      profileJson['pray_5x'] = basicInfo['pray_5x'];
+      profileJson['open_to_relocate'] = basicInfo['open_to_relocate'];
+
+      profileJson['height'] ??= basicInfo['height'];
+    }
+
+    return MatchProfileModel.fromJson(profileJson);
+  }
+
   Future<bool> getProfileDetails(String userId) async {
     _setLoading(true);
     _clearError();
+    _selectedProfileError = null;
 
     try {
       final profileData = await _matchesRepository.getDirectoryProfile(userId);
-      
-      // API returns {"profile": {...}, "basic_info": {...}}
-      // Extract the profile section and merge with basic_info
-      final profileJson = Map<String, dynamic>.from(profileData['profile'] as Map<String, dynamic>? ?? profileData);
-      
-      if (profileData.containsKey('basic_info') && profileData['basic_info'] != null) {
-        final basicInfo = profileData['basic_info'] as Map<String, dynamic>;
-        profileJson['photos'] = basicInfo['photos'];
-        profileJson['ethnicity'] = (basicInfo['ethnicity'] as List?)?.join(', ');
-        profileJson['education'] = basicInfo['education'];
-        profileJson['occupation'] = basicInfo['employment'];
-        profileJson['bio'] = basicInfo['about_yourself'];
-        profileJson['languages'] = (basicInfo['languages_spoken'] as List?)?.join(', ');
-        
-        if (profileJson['height'] == null) profileJson['height'] = basicInfo['height'];
-      }
-      
-      _selectedProfile = MatchProfileModel.fromJson(profileJson);
-      
+      _selectedProfile = parseDirectoryProfileDetail(profileData);
+
       _setLoading(false);
       notifyListeners();
       return true;
     } catch (e) {
       _handleError(e);
+      _selectedProfileError = _errorMessage;
       _selectedProfile = null;
       notifyListeners();
       return false;
@@ -106,17 +225,44 @@ class MatchesProvider extends ChangeNotifier {
 
   // ========== CONNECTION REQUESTS ==========
 
+  Future<Map<String, dynamic>?> fetchConnectionUsage() async {
+    try {
+      _connectionUsage = await _matchesRepository.getConnectionUsage();
+      notifyListeners();
+      return _connectionUsage;
+    } catch (_) {
+      return _connectionUsage;
+    }
+  }
+
   Future<bool> sendConnectionRequest(String targetUserId) async {
+    _justExhaustedRequests = false;
+    _lastSendFailedDueToLimit = false;
     _setLoading(true);
     _clearError();
 
     try {
       await _matchesRepository.sendConnectionRequest(targetUserId);
-      await loadSentRequests(); // Refresh sent requests
+      await Future.wait([
+        loadSentRequests(),
+        fetchConnectionUsage(),
+      ]);
+      if (hasExhaustedRequests) {
+        _justExhaustedRequests = true;
+      }
       _setLoading(false);
+      notifyListeners();
       return true;
     } catch (e) {
       _handleError(e);
+      final msg = (_errorMessage ?? '').toLowerCase();
+      if (msg.contains('limit') ||
+          msg.contains('free users can send') ||
+          msg.contains('monthly')) {
+        _lastSendFailedDueToLimit = true;
+        await fetchConnectionUsage();
+        notifyListeners();
+      }
       return false;
     }
   }
@@ -153,8 +299,33 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 403) {
+        // Access restricted for male users, handle gracefully
+        _receivedRequests = [];
+        _setLoading(false);
+        notifyListeners();
+        return true;
+      }
       _handleError(e);
       return false;
+    }
+  }
+
+  /// Loads only the connection request list applicable to [role] to avoid
+  /// role-restricted 403 responses from the backend.
+  Future<void> loadConnectionRequestsForRole(String? role) async {
+    final normalized = role?.toLowerCase().trim();
+    if (normalized == 'male') {
+      _receivedRequests = [];
+      await loadSentRequests();
+    } else if (normalized == 'female' || normalized == 'wali') {
+      _sentRequests = [];
+      await loadReceivedRequests();
+    } else {
+      await Future.wait([
+        loadSentRequests(),
+        loadReceivedRequests(),
+      ]);
     }
   }
 
@@ -221,6 +392,59 @@ class MatchesProvider extends ChangeNotifier {
     try {
       await _matchesRepository.cancelMatch(matchId);
       await loadMatches(); // Refresh matches to get updated status
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _handleError(e);
+      return false;
+    }
+  }
+
+  // ========== WALI & LOCK LIFECYCLE ==========
+
+  Future<bool> requestWaliDetails(String matchId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.requestWaliDetails(matchId);
+      await loadMatches();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _handleError(e);
+      return false;
+    }
+  }
+
+  Future<bool> respondToWaliRequest({
+    required String matchId,
+    required bool accept,
+  }) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.respondToWaliRequest(
+        matchId: matchId,
+        action: accept ? 'accept' : 'decline',
+      );
+      await loadMatches();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _handleError(e);
+      return false;
+    }
+  }
+
+  Future<bool> unlockMatch(String matchId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      await _matchesRepository.unlockMatch(matchId);
+      await loadMatches();
       _setLoading(false);
       return true;
     } catch (e) {
@@ -302,11 +526,29 @@ class MatchesProvider extends ChangeNotifier {
   }
 
   Future<bool> loadProfileViewers() async {
+    _isLoadingProfileViewers = true;
+    _profileViewersError = null;
+    notifyListeners();
+
     try {
       _profileViewers = await _matchesRepository.getProfileViewers();
+      _isLoadingProfileViewers = false;
       notifyListeners();
       return true;
     } catch (e) {
+      _profileViewers = [];
+      _isLoadingProfileViewers = false;
+      if (e is DioException && e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        _profileViewersError = (data['error'] ??
+                data['detail'] ??
+                data['message'] ??
+                'Failed to load profile views')
+            .toString();
+      } else {
+        _profileViewersError = 'Failed to load profile views';
+      }
+      notifyListeners();
       return false;
     }
   }
@@ -388,7 +630,9 @@ class MatchesProvider extends ChangeNotifier {
     if (e is DioException && e.response?.data != null) {
       final data = e.response!.data;
       if (data is Map) {
-        if (data.containsKey('detail')) {
+        if (data.containsKey('error')) {
+          _errorMessage = data['error'].toString();
+        } else if (data.containsKey('detail')) {
           _errorMessage = data['detail'].toString();
         } else if (data.containsKey('message')) {
           _errorMessage = data['message'].toString();

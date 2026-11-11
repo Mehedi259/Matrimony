@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../../data/models/chat/chat_models.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../providers/notification_provider.dart';
 import 'package:get/get.dart';
 
 class ChatWithAdminScreen extends StatefulWidget {
@@ -59,8 +60,10 @@ class _ChatWithAdminScreenState extends State<ChatWithAdminScreen> {
 
     try {
       final messages = await _chatRepository.getMessages();
-      
+      await _chatRepository.markMessagesAsRead();
+
       if (mounted) {
+        context.read<NotificationProvider>().clearUnreadAdminMessages();
         setState(() {
           _messages = messages.reversed.toList(); // Reverse to show newest at bottom with reverse: true
           _isLoading = false;

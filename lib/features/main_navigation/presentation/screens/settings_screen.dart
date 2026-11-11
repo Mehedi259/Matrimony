@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/notification_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -46,10 +47,25 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => context.push('/settings/support'),
           ),
           const SizedBox(height: 16),
-          _buildSettingsItem(
-            icon: Icons.chat_bubble_outline,
-            title: 'Chat with Admin',
-            onTap: () => context.push('/settings/chat-with-admin'),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final unreadCount = notificationProvider.unreadAdminMessagesCount;
+              return _buildSettingsItem(
+                icon: Icons.chat_bubble_outline,
+                title: 'Chat with Admin',
+                showBadge: unreadCount > 0,
+                badgeCount: unreadCount,
+                onTap: () {
+                  context.push('/settings/chat-with-admin').then((_) {
+                    if (context.mounted) {
+                      context
+                          .read<NotificationProvider>()
+                          .refreshUnreadAdminMessages();
+                    }
+                  });
+                },
+              );
+            },
           ),
           const SizedBox(height: 16),
           _buildSettingsItem(
@@ -108,8 +124,11 @@ class SettingsScreen extends StatelessWidget {
                     profileProvider.clearData();
                     matchesProvider.clearData();
 
-                    // Call logout from auth provider
+                    // Clear user providers on logout
                     await authProvider.logout();
+                    if (context.mounted) {
+                      context.read<NotificationProvider>().clearData();
+                    }
                     
                     // Navigate to login screen using the captured router
                     router.go('/login');
@@ -142,7 +161,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsItem({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool showBadge = false,
+    int badgeCount = 0,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -166,6 +191,34 @@ class SettingsScreen extends StatelessWidget {
             Expanded(
               child: Text(title, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
             ),
+            if (showBadge) ...[
+              Container(
+                padding: badgeCount > 0
+                    ? const EdgeInsets.symmetric(horizontal: 7, vertical: 3)
+                    : EdgeInsets.zero,
+                width: badgeCount > 0 ? null : 10,
+                height: badgeCount > 0 ? null : 10,
+                constraints: badgeCount > 0
+                    ? const BoxConstraints(minWidth: 20, minHeight: 20)
+                    : null,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: badgeCount > 0
+                    ? Text(
+                        badgeCount > 99 ? '99+' : badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 8),
+            ],
             const Icon(Icons.chevron_right, color: Colors.black87),
           ],
         ),

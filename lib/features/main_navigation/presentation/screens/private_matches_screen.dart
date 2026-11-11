@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/header_action_buttons.dart';
 import '../widgets/match_card.dart';
 import '../widgets/privacy_banner.dart';
 
@@ -15,29 +16,10 @@ class PrivateMatchesScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text('My Private Matches', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20)),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: Theme.of(context).colorScheme.secondary, size: 28),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: Theme.of(context).primaryColor, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
+        actions: const [
+          SettingsActionButton(),
+          NotificationBellButton(),
+          SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(

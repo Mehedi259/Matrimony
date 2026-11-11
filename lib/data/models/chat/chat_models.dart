@@ -14,14 +14,19 @@ class ChatRoomModel {
   });
 
   factory ChatRoomModel.fromJson(Map<String, dynamic> json) {
+    final dynamic lastMsg = json['last_message'];
+    final dynamic rawLastMessageAt = json['last_message_at'] ??
+        (lastMsg is Map ? lastMsg['created_at'] : null) ??
+        json['updated_at'];
+
     return ChatRoomModel(
-      id: json['id'],
-      roomId: json['room_id'],
-      unreadCount: json['unread_count'] ?? 0,
-      lastMessageAt: json['last_message_at'] != null
-          ? DateTime.parse(json['last_message_at'])
+      id: json['id'].toString(),
+      roomId: (json['room_id'] ?? json['id']).toString(),
+      unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      lastMessageAt: rawLastMessageAt != null
+          ? DateTime.tryParse(rawLastMessageAt.toString())
           : null,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at'].toString()),
     );
   }
 }

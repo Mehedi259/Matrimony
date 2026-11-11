@@ -24,6 +24,7 @@ class MatchCard extends StatelessWidget {
   final bool isWishlisted;
   final VoidCallback? onWishlistToggle;
   final bool isRequestSent;
+  final bool isConnected;
 
   const MatchCard({
     super.key,
@@ -49,6 +50,7 @@ class MatchCard extends StatelessWidget {
     this.isWishlisted = false,
     this.onWishlistToggle,
     this.isRequestSent = false,
+    this.isConnected = false,
   });
 
   @override
@@ -60,12 +62,9 @@ class MatchCard extends StatelessWidget {
         color: Colors.grey[300], // Placeholder for image
         borderRadius: BorderRadius.circular(24),
         image: DecorationImage(
-          image: imageUrl != null
+          image: (!isBlurred && imageUrl != null)
               ? NetworkImage(imageUrl!) as ImageProvider
-              : AssetImage(
-                  isBlurred
-                      ? 'assets/blurredProfile1.png'
-                      : 'assets/blurredProfile1.png'), // Use blurredProfile2 for matched profiles
+              : const AssetImage('assets/blurredProfile1.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -265,30 +264,63 @@ class MatchCard extends StatelessWidget {
                   // Buttons
                   if (!isMatched)
                     if (onAccept != null && onDecline != null)
-                      Row(
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: onDecline,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF15A68), // Reddish pink
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                          if (onViewProfile != null) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: onViewProfile,
+                                icon: const Icon(Icons.fit_screen, size: 16, color: Colors.white),
+                                label: const Text(
+                                  'View Profile',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .secondary
+                                      .withValues(alpha: 0.85),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                ),
                               ),
-                              child: const Text('Decline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: onAccept,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF5A75F1), // Blue
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                            const SizedBox(height: 8),
+                          ],
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: onDecline,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF15A68), // Reddish pink
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  child: const Text('Decline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
                               ),
-                              child: const Text('Accept', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: onAccept,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF5A75F1), // Blue
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  child: const Text('Accept', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       )
@@ -338,24 +370,49 @@ class MatchCard extends StatelessWidget {
                           const SizedBox(width: 16),
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: isRequestSent ? null : onSendInterest,
+                              onPressed: (isConnected || isRequestSent)
+                                  ? null
+                                  : onSendInterest,
                               icon: Icon(
-                                isRequestSent ? Icons.check : Icons.favorite, 
-                                size: 16, 
-                                color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor
+                                isConnected
+                                    ? Icons.check_circle
+                                    : (isRequestSent
+                                        ? Icons.check
+                                        : Icons.favorite),
+                                size: 16,
+                                color: isConnected
+                                    ? Colors.green[700]
+                                    : (isRequestSent
+                                        ? Colors.grey
+                                        : Theme.of(context).primaryColor),
                               ),
                               label: Text(
-                                isRequestSent ? 'Connection is pending' : 'Send Interest', 
+                                isConnected
+                                    ? 'Connected'
+                                    : (isRequestSent
+                                        ? 'Connection is pending'
+                                        : 'Send Interest'),
                                 style: TextStyle(
-                                  color: isRequestSent ? Colors.grey : Theme.of(context).primaryColor, 
-                                  fontSize: 12, 
-                                  fontWeight: FontWeight.bold
-                                )
+                                  color: isConnected
+                                      ? Colors.green[700]
+                                      : (isRequestSent
+                                          ? Colors.grey
+                                          : Theme.of(context).primaryColor),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isRequestSent ? Colors.grey[200] : Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                backgroundColor: (isConnected || isRequestSent)
+                                    ? Colors.grey[200]
+                                    : Colors.white,
+                                disabledBackgroundColor: isConnected
+                                    ? Colors.green[50]
+                                    : Colors.grey[200],
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                               ),
                             ),
                           ),

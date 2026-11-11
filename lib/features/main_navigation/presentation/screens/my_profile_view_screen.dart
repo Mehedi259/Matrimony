@@ -234,9 +234,23 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                       if (basicInfo?.height != null && basicInfo!.height!.isNotEmpty)
                         _InfoChip(icon: Icons.height, label: basicInfo.height!, color: Colors.orange),
                       if (basicInfo?.maritalStatus != null && basicInfo!.maritalStatus!.isNotEmpty)
-                        _InfoChip(icon: Icons.star_outline, label: _formatText(basicInfo.maritalStatus!), color: Colors.purple),
+                        _InfoChip(
+                          icon: Icons.star_outline,
+                          label: ChoiceMappings.keyToDisplay(
+                            basicInfo.maritalStatus!,
+                            ChoiceMappings.maritalStatusKeyToDisplay,
+                          ),
+                          color: Colors.purple,
+                        ),
                       if (basicInfo?.sect != null && basicInfo!.sect!.isNotEmpty)
-                        _InfoChip(icon: Icons.menu_book_outlined, label: _formatText(basicInfo.sect!), color: Colors.teal),
+                        _InfoChip(
+                          icon: Icons.menu_book_outlined,
+                          label: ChoiceMappings.keyToDisplay(
+                            basicInfo.sect!,
+                            ChoiceMappings.sectKeyToDisplay,
+                          ),
+                          color: Colors.teal,
+                        ),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 20),
@@ -350,21 +364,101 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     if (basicInfo?.dateOfBirth != null) fields.add(['Date of Birth', basicInfo!.dateOfBirth!]);
     if (basicInfo?.city != null) fields.add(['City', basicInfo!.city!]);
     if (basicInfo?.country != null) fields.add(['Country', basicInfo!.country!]);
-    if (basicInfo?.sect != null) fields.add(['Sect', _formatText(basicInfo!.sect!)]);
-    if (basicInfo?.maritalStatus != null) fields.add(['Marital Status', _formatText(basicInfo!.maritalStatus!)]);
-    if (basicInfo?.ethnicity != null && basicInfo!.ethnicity.isNotEmpty) fields.add(['Ethnicity', basicInfo!.ethnicity.map((e) => _formatText(e)).join(', ')]);
+    if (basicInfo?.sect != null) {
+      fields.add([
+        'Sect',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.sect!,
+          ChoiceMappings.sectKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.maritalStatus != null) {
+      fields.add([
+        'Marital Status',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.maritalStatus!,
+          ChoiceMappings.maritalStatusKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.ethnicity != null && basicInfo!.ethnicity.isNotEmpty) {
+      fields.add([
+        'Ethnicity',
+        ChoiceMappings.keysToDisplays(
+          basicInfo!.ethnicity,
+          ChoiceMappings.ethnicityKeyToDisplay,
+        ).join(', '),
+      ]);
+    }
     if (basicInfo?.nationality != null && basicInfo!.nationality.isNotEmpty) fields.add(['Nationality / Citizenship', basicInfo!.nationality.map((e) => _formatText(e)).join(', ')]);
     if (basicInfo?.hasChildren != null) fields.add(['Do you have children?', basicInfo!.hasChildren! ? 'Yes' : 'No']);
     if (basicInfo?.height != null) fields.add(['Height', basicInfo!.height!]);
     if (basicInfo?.weight != null) fields.add(['Weight', basicInfo!.weight!]);
-    if (basicInfo?.pray5x != null) fields.add(['Prayer 5x a day?', _formatText(basicInfo!.pray5x!)]);
-    if (basicInfo?.openToRelocate != null) fields.add(['Open to relocating?', _formatText(basicInfo!.openToRelocate!)]);
-    if (basicInfo?.dress != null) fields.add(['How do you dress?', _formatText(basicInfo!.dress!)]);
+    if (basicInfo?.pray5x != null) {
+      fields.add([
+        'Prayer 5x a day?',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.pray5x!,
+          ChoiceMappings.prayerKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.openToRelocate != null) {
+      fields.add([
+        'Open to relocating?',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.openToRelocate!,
+          ChoiceMappings.relocationKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.dress != null) {
+      fields.add([
+        'How do you dress?',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.dress!,
+          ChoiceMappings.dressKeyToDisplay,
+        ),
+      ]);
+    }
     if (basicInfo?.employment != null) fields.add(['Employment', _formatText(basicInfo!.employment!)]);
-    if (basicInfo?.education != null) fields.add(['Education', _formatText(basicInfo!.education!)]);
-    if (basicInfo?.income != null) fields.add(['Income', basicInfo!.income!]);
-    if (basicInfo?.frame != null) fields.add(['Frame', _formatText(basicInfo!.frame!)]);
-    if (basicInfo?.languagesSpoken != null && basicInfo!.languagesSpoken.isNotEmpty) fields.add(['Languages Spoken', basicInfo!.languagesSpoken.join(', ')]);
+    if (basicInfo?.education != null) {
+      fields.add([
+        'Education',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.education!,
+          ChoiceMappings.educationKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.income != null) {
+      fields.add([
+        'Income',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.income!,
+          ChoiceMappings.incomeKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.frame != null) {
+      fields.add([
+        'Frame',
+        ChoiceMappings.keyToDisplay(
+          basicInfo!.frame!,
+          ChoiceMappings.frameKeyToDisplay,
+        ),
+      ]);
+    }
+    if (basicInfo?.languagesSpoken != null && basicInfo!.languagesSpoken.isNotEmpty) {
+      fields.add([
+        'Languages Spoken',
+        ChoiceMappings.keysToDisplays(
+          basicInfo!.languagesSpoken,
+          ChoiceMappings.languageKeyToDisplay,
+        ).join(', '),
+      ]);
+    }
 
     if (fields.isEmpty) {
       return Center(
@@ -396,6 +490,14 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     if (basicInfo?.aboutYourself != null && basicInfo!.aboutYourself!.isNotEmpty) fields.add(['About yourself', basicInfo!.aboutYourself!]);
     if (basicInfo?.envisionSpouse != null && basicInfo!.envisionSpouse!.isNotEmpty) fields.add(['Envision your spouse', basicInfo!.envisionSpouse!]);
     if (basicInfo?.spouseReligiousStatusPref != null && basicInfo!.spouseReligiousStatusPref!.isNotEmpty) fields.add(['Religious preference', basicInfo!.spouseReligiousStatusPref!]);
+    if (basicInfo?.openToRelocateDetails != null &&
+        basicInfo!.openToRelocateDetails!.isNotEmpty) {
+      fields.add(['Relocation Details', basicInfo!.openToRelocateDetails!]);
+    }
+    if (basicInfo?.healthConcerns != null &&
+        basicInfo!.healthConcerns!.isNotEmpty) {
+      fields.add(['Health Concerns', basicInfo!.healthConcerns!]);
+    }
     if (basicInfo?.otherPreferences != null && basicInfo!.otherPreferences!.isNotEmpty) fields.add(['Other preferences', basicInfo!.otherPreferences!]);
 
     if (fields.isEmpty) {

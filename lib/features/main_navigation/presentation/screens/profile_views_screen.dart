@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../widgets/header_action_buttons.dart';
 
 class ProfileViewsScreen extends StatefulWidget {
   const ProfileViewsScreen({super.key});
@@ -29,43 +30,77 @@ class _ProfileViewsScreenState extends State<ProfileViewsScreen> {
         elevation: 0,
         title: const Text('Profile Views', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
-            onPressed: () => context.push('/settings'),
-          ),
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: Theme.of(context).colorScheme.secondary, size: 28),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: Theme.of(context).primaryColor, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () => context.push('/notifications'),
-          ),
-          const SizedBox(width: 8),
+        actions: const [
+          SettingsActionButton(),
+          NotificationBellButton(),
+          SizedBox(width: 8),
         ],
       ),
       body: Consumer<MatchesProvider>(
         builder: (context, matchesProvider, _) {
-          if (matchesProvider.isLoading) {
+          if (matchesProvider.isLoadingProfileViewers &&
+              matchesProvider.profileViewers.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (matchesProvider.errorMessage != null && matchesProvider.errorMessage!.isNotEmpty) {
+          if (matchesProvider.profileViewersError != null &&
+              matchesProvider.profileViewersError!.isNotEmpty) {
+            final errText = matchesProvider.profileViewersError!;
+            final requiresUpgrade = errText.toLowerCase().contains('upgrade') ||
+                errText.toLowerCase().contains('monthly') ||
+                errText.toLowerCase().contains('annual');
+
             return Center(
-              child: Text(
-                matchesProvider.errorMessage!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      requiresUpgrade
+                          ? Icons.workspace_premium_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 56,
+                      color: requiresUpgrade
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      errText,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF334155),
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (requiresUpgrade) {
+                          context.push('/subscription-plans');
+                        } else {
+                          matchesProvider.loadProfileViewers();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        requiresUpgrade ? 'Upgrade Plan' : 'Retry',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -73,40 +108,63 @@ class _ProfileViewsScreenState extends State<ProfileViewsScreen> {
           final viewers = matchesProvider.profileViewers;
 
           if (viewers.isEmpty) {
-            return const Center(
-              child: Text(
-                'No one has viewed your profile yet.',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+            return RefreshIndicator(
+              onRefresh: () => matchesProvider.loadProfileViewers(),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: const [
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        'No one has viewed your profile yet.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(24),
-            itemCount: viewers.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final viewer = viewers[index];
-              final profile = viewer['profile'] ?? {};
-              
-              final userId = profile['user_id'] ?? profile['id']?.toString() ?? profile['username'] ?? '';
-              final username = profile['username'] ?? 'Unknown User';
-              final firstName = profile['first_name'] ?? '';
-              final lastName = profile['last_name'] ?? '';
-              final fullName = firstName.isNotEmpty || lastName.isNotEmpty 
-                  ? '$firstName $lastName'.trim() 
-                  : username;
+          return RefreshIndicator(
+            onRefresh: () => matchesProvider.loadProfileViewers(),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(24),
+              itemCount: viewers.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final viewer = viewers[index];
+                final profile = (viewer is Map && viewer['profile'] is Map)
+                    ? Map<String, dynamic>.from(viewer['profile'] as Map)
+                    : <String, dynamic>{};
 
-              return _ProfileViewCard(
-                username: username,
-                subtitle: '$fullName has shown interest in your profile.',
-                onViewProfile: () {
-                  if (userId.isNotEmpty) {
-                    context.push('/profile-view-details/$userId');
-                  }
-                },
-              );
-            },
+                final userId =
+                    (profile['id'] ?? profile['user_id'] ?? '').toString();
+                final codename = (profile['codename'] ??
+                        profile['username'] ??
+                        'Member')
+                    .toString();
+                final age = profile['age'];
+                final country = profile['country']?.toString();
+                final subtitleParts = <String>[
+                  if (age != null) '$age yrs',
+                  if (country != null && country.isNotEmpty) country,
+                ];
+                final subtitle = subtitleParts.isNotEmpty
+                    ? '${subtitleParts.join(' • ')} viewed your profile.'
+                    : '$codename viewed your profile.';
+
+                return _ProfileViewCard(
+                  username: codename,
+                  subtitle: subtitle,
+                  onViewProfile: () {
+                    if (userId.isNotEmpty) {
+                      context.push('/profile-view-details/$userId');
+                    }
+                  },
+                );
+              },
+            ),
           );
         },
       ),

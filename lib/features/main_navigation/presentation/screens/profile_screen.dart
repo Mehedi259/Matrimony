@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../providers/profile_provider.dart';
+import '../../../../providers/notification_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -206,13 +207,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         basicInfo.openToRelocateDetails != null && basicInfo.openToRelocateDetails!.isNotEmpty &&
         basicInfo.otherPreferences != null && basicInfo.otherPreferences!.isNotEmpty;
 
+    final bool isVerified = currentUser?.isVerified ?? false;
     final items = [
       _ItemData(
-        icon: Icons.verified_outlined, 
-        iconColor: Colors.green, 
-        title: 'Verify Profile', 
-        subtitle: 'Identity verified', 
-        isCompleted: false, // Set to false if not verified
+        icon: isVerified ? Icons.verified_outlined : Icons.verified_user_outlined,
+        iconColor: isVerified ? Colors.green : Colors.orange,
+        title: 'Verify Profile',
+        subtitle: isVerified
+            ? 'Identity verified'
+            : 'Pending admin verification',
+        isCompleted: isVerified,
+        statusText: isVerified ? 'Done' : 'Pending',
         onTap: () => context.push('/settings/chat-with-admin'),
       ),
       _ItemData(icon: Icons.person_outline, iconColor: Colors.blue, title: 'Basic Information', subtitle: 'Name, age, height, location, education', isCompleted: isBasicInfoComplete, onTap: () => context.push('/basic-information-form')),
@@ -220,7 +225,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _ItemData(icon: Icons.favorite_border, iconColor: Colors.pink, title: 'Preferences', subtitle: 'Partner preferences and expectations', isCompleted: isPreferencesComplete, onTap: () => context.push('/preferences-form')),
       _ItemData(icon: Icons.camera_alt_outlined, iconColor: primaryColor, title: 'Photos', subtitle: '${profileProvider.photos.length} of 6 photos added', isCompleted: profileProvider.photos.length >= 6, statusText: '${profileProvider.photos.length}/6', onTap: () => context.push('/upload-photo-form')),
       _ItemData(icon: Icons.people_outline, iconColor: Colors.purple, title: 'About You & Expectations', subtitle: 'What you are looking for', isCompleted: isAboutExpectationsComplete, onTap: () => context.push('/about-expectations-form')),
-      _ItemData(icon: Icons.settings_outlined, iconColor: Colors.grey, title: 'Settings', subtitle: 'Privacy, notifications, security', isCompleted: null, onTap: () => context.push('/settings')),
+      _ItemData(
+        icon: Icons.settings_outlined,
+        iconColor: Colors.grey,
+        title: 'Settings',
+        subtitle: 'Privacy, notifications, security',
+        isCompleted: null,
+        badgeCount:
+            context.watch<NotificationProvider>().unreadAdminMessagesCount,
+        onTap: () {
+          final notificationProvider = context.read<NotificationProvider>();
+          notificationProvider.refreshUnreadAdminMessages();
+          context.push('/settings').then((_) {
+            notificationProvider.refreshUnreadAdminMessages();
+          });
+        },
+      ),
     ];
 
     return Container(
@@ -521,6 +541,7 @@ class _ItemData {
   final String subtitle;
   final bool? isCompleted; // null = arrow only
   final String? statusText;
+  final int badgeCount;
   final VoidCallback? onTap;
 
   _ItemData({
@@ -530,6 +551,7 @@ class _ItemData {
     required this.subtitle,
     required this.isCompleted,
     this.statusText,
+    this.badgeCount = 0,
     this.onTap,
   });
 }
@@ -577,7 +599,40 @@ class _ProfileListTile extends StatelessWidget {
 
             // Trailing
             if (data.isCompleted == null)
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (data.badgeCount > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        data.badgeCount > 99
+                            ? '99+'
+                            : data.badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+                ],
+              )
             else if (data.isCompleted == true)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

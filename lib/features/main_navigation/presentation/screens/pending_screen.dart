@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/header_action_buttons.dart';
 
 class PendingScreen extends StatelessWidget {
   const PendingScreen({super.key});
@@ -14,33 +15,14 @@ class PendingScreen extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: const Text('Pending', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFFCD868A)),
-            onPressed: () => context.push('/settings'),
+        actions: const [
+          SettingsActionButton(iconColor: Color(0xFFCD868A)),
+          NotificationBellButton(
+            iconColor: Color(0xFF7A86C1),
+            badgeColor: Color(0xFF7A86C1),
+            iconSize: 24,
           ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none, color: Color(0xFF7A86C1)),
-                onPressed: () => context.push('/notifications'),
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF7A86C1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
       ),
       body: ListView(

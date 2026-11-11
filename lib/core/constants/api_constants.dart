@@ -58,6 +58,12 @@ class ApiConstants {
   static const String respondPhotoRequest = '$apiPrefix/matches/'; // + id + /photos/respond/
   static const String markPhotosViewed = '$apiPrefix/matches/'; // + id + /photos/mark-viewed/
 
+  // Match Wali & Discussion Lifecycle
+  static const String requestWaliDetails = '$apiPrefix/matches/'; // + id + /wali/request/
+  static const String respondWaliRequest = '$apiPrefix/matches/'; // + id + /wali/respond/
+  static const String unlockMatch = '$apiPrefix/matches/'; // + id + /unlock/
+  static const String connectionUsage = '$apiPrefix/matches/usage/';
+
   // Matchmaking
   static const String myMatchmakingRequest = '$apiPrefix/matchmaking/my-request/';
 
@@ -76,7 +82,9 @@ class ApiConstants {
   static const String myFeedbacks = '$apiPrefix/supports/feedback/my-feedbacks/';
 
   // Notifications
-  static const String notifications = '$apiPrefix/notification/';
+  static const String notifications = '$apiPrefix/notification/shared/';
+  static const String notificationsMarkAllRead = '$apiPrefix/notification/shared/mark-all-read/';
+  static const String notificationsUnreadCount = '$apiPrefix/notification/shared/unread-count/';
 
   // Wishlists
   static const String wishlists = '$apiPrefix/wishlists/saved/';

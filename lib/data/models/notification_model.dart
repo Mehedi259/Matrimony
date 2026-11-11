@@ -1,9 +1,11 @@
 class NotificationModel {
-  final int id;
+  final String id;
   final String title;
   final String body;
   final bool isRead;
   final String? type;
+  final String? priority;
+  final Map<String, dynamic>? data;
   final String createdAt;
 
   NotificationModel({
@@ -12,16 +14,22 @@ class NotificationModel {
     required this.body,
     required this.isRead,
     this.type,
+    this.priority,
+    this.data,
     required this.createdAt,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id'] ?? 0,
+      id: json['id']?.toString() ?? '',
       title: json['title'] ?? json['message'] ?? 'Notification',
       body: json['body'] ?? json['description'] ?? '',
       isRead: json['is_read'] ?? json['read'] ?? false,
-      type: json['type'],
+      type: json['notification_type'] ?? json['type'],
+      priority: json['priority']?.toString(),
+      data: json['data'] is Map
+          ? Map<String, dynamic>.from(json['data'] as Map)
+          : null,
       createdAt: json['created_at'] ?? DateTime.now().toIso8601String(),
     );
   }

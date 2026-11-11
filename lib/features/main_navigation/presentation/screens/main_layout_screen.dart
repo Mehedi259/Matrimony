@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/notification_provider.dart';
 
-class MainLayoutScreen extends StatelessWidget {
+class MainLayoutScreen extends StatefulWidget {
   final Widget child;
 
   const MainLayoutScreen({super.key, required this.child});
 
   @override
+  State<MainLayoutScreen> createState() => _MainLayoutScreenState();
+}
+
+class _MainLayoutScreenState extends State<MainLayoutScreen>
+    with WidgetsBindingObserver {
+  NotificationProvider? _notificationProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _notificationProvider = context.read<NotificationProvider>();
+      _notificationProvider!.startPolling();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _notificationProvider?.refreshAll();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationProvider?.stopPolling();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final child = widget.child;
     // Determine the current index based on the route
     final String location = GoRouterState.of(context).uri.path;
     int currentIndex = 0;
