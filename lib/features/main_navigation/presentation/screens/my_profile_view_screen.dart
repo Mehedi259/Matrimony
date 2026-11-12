@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../core/constants/choice_mappings.dart';
+import '../widgets/profile_badges.dart';
 
 class MyProfileViewScreen extends StatefulWidget {
   const MyProfileViewScreen({super.key});
@@ -78,8 +79,8 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
         ? user.codename
         : '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final ageText = basicInfo?.age != null ? '${basicInfo!.age} years' : '';
-    final ethnicityText = (basicInfo?.ethnicity != null && basicInfo!.ethnicity.isNotEmpty)
-        ? ChoiceMappings.keyToDisplay(basicInfo!.ethnicity.first, ChoiceMappings.ethnicityKeyToDisplay)
+    final ethnicityText = (basicInfo != null && basicInfo.ethnicity.isNotEmpty)
+        ? ChoiceMappings.keyToDisplay(basicInfo.ethnicity.first, ChoiceMappings.ethnicityKeyToDisplay)
         : '';
     final cityText = basicInfo?.city ?? '';
     final countryText = basicInfo?.country ?? '';
@@ -192,9 +193,11 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              displayName.isNotEmpty ? displayName : 'No Name',
+                            VerifiedCodename(
+                              codename: displayName.isNotEmpty ? displayName : 'No Name',
+                              isVerified: user?.isVerified ?? false,
                               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                              iconSize: 22,
                             ),
                             const SizedBox(height: 4),
                             if (subtitle.isNotEmpty)
@@ -202,24 +205,7 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8, height: 8,
-                              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text('Online', style: TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
+                      const OnlineStatusBadge(isOnline: true),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideX(begin: -0.2, end: 0),
                   const SizedBox(height: 16),
@@ -493,10 +479,6 @@ class _MyProfileViewScreenState extends State<MyProfileViewScreen>
     if (basicInfo?.openToRelocateDetails != null &&
         basicInfo!.openToRelocateDetails!.isNotEmpty) {
       fields.add(['Relocation Details', basicInfo!.openToRelocateDetails!]);
-    }
-    if (basicInfo?.healthConcerns != null &&
-        basicInfo!.healthConcerns!.isNotEmpty) {
-      fields.add(['Health Concerns', basicInfo!.healthConcerns!]);
     }
     if (basicInfo?.otherPreferences != null && basicInfo!.otherPreferences!.isNotEmpty) fields.add(['Other preferences', basicInfo!.otherPreferences!]);
 

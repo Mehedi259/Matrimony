@@ -6,6 +6,7 @@ class MultiSelectField extends StatefulWidget {
   final List<String> selectedValues;
   final Function(List<String>) onChanged;
   final String searchHint;
+  final bool isRequired;
 
   const MultiSelectField({
     super.key,
@@ -14,6 +15,7 @@ class MultiSelectField extends StatefulWidget {
     required this.selectedValues,
     required this.onChanged,
     this.searchHint = 'Search...',
+    this.isRequired = false,
   });
 
   @override
@@ -78,9 +80,19 @@ class _MultiSelectFieldState extends State<MultiSelectField> {
         // Label
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            widget.label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          child: Text.rich(
+            TextSpan(
+              text: widget.label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              children: widget.isRequired
+                  ? const [
+                      TextSpan(
+                        text: ' *',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ]
+                  : const [],
+            ),
           ),
         ),
         const Divider(),

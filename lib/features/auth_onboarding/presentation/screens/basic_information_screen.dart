@@ -60,6 +60,8 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
 
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.currentUser;
+    final isWali = (widget.profileType?.toLowerCase() == 'wali') ||
+        (user?.role.toLowerCase() == 'wali');
 
     if (user != null) {
       _firstNameController.text = user.firstName;
@@ -70,26 +72,58 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
     // Try to load profile data
     final profileProvider = context.read<ProfileProvider>();
     await profileProvider.loadBasicInfo();
-    
-    if (profileProvider.basicInfo != null) {
-      final basicInfo = profileProvider.basicInfo!;
-      _phoneController.text = basicInfo.phone ?? _phoneController.text;
-      
-      if (basicInfo.dateOfBirth != null) {
-        final dob = DateTime.parse(basicInfo.dateOfBirth!);
-        _dobController.text = '${dob.day.toString().padLeft(2, '0')}/${dob.month.toString().padLeft(2, '0')}/${dob.year}';
-      }
-      
-      _cityController.text = basicInfo.city ?? _cityController.text;
-      _selectedCountry = basicInfo.country ?? _selectedCountry;
-      
-      if (basicInfo.howFound.isNotEmpty) {
-        final key = basicInfo.howFound.first;
-        if (ChoiceMappings.howFoundKeyToDisplay.containsKey(key)) {
-          _howDidYouFindUs = ChoiceMappings.howFoundKeyToDisplay[key];
+    if (isWali) {
+      await profileProvider.loadWaliProfile();
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      if (profileProvider.basicInfo != null) {
+        final basicInfo = profileProvider.basicInfo!;
+        if (!isWali) {
+          _phoneController.text = basicInfo.phone ?? _phoneController.text;
+        }
+
+        if (basicInfo.dateOfBirth != null) {
+          final dob = DateTime.tryParse(basicInfo.dateOfBirth!);
+          if (dob != null) {
+            _dobController.text =
+                '${dob.day.toString().padLeft(2, '0')}/${dob.month.toString().padLeft(2, '0')}/${dob.year}';
+          }
+        }
+
+        _cityController.text = basicInfo.city ?? _cityController.text;
+        _selectedCountry = basicInfo.country ?? _selectedCountry;
+
+        if (!isWali && basicInfo.howFound.isNotEmpty) {
+          final key = basicInfo.howFound.first;
+          if (ChoiceMappings.howFoundKeyToDisplay.containsKey(key)) {
+            _howDidYouFindUs = ChoiceMappings.howFoundKeyToDisplay[key];
+          }
         }
       }
-    }
+
+      if (isWali && profileProvider.waliProfile != null) {
+        final wp = profileProvider.waliProfile!;
+        if (wp.firstName != null && wp.firstName!.isNotEmpty) {
+          _firstNameController.text = wp.firstName!;
+        }
+        if (wp.lastName != null && wp.lastName!.isNotEmpty) {
+          _lastNameController.text = wp.lastName!;
+        }
+        if (wp.phone != null && wp.phone!.isNotEmpty) {
+          _phoneController.text = wp.phone!;
+        }
+        final howFound = wp.howFound;
+        if (howFound != null && howFound.isNotEmpty) {
+          final key = howFound.first;
+          if (ChoiceMappings.howFoundKeyToDisplay.containsKey(key)) {
+            _howDidYouFindUs = ChoiceMappings.howFoundKeyToDisplay[key];
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -235,16 +269,48 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
         ? [ChoiceMappings.howFoundDisplayToKey[_howDidYouFindUs]]
         : [];
 
-    final data = {
-      'how_found': mappedHowFound,
-      'phone': _phoneController.text,
-      'date_of_birth': dobFormatted,
-      'city': _cityController.text,
-      'country': _selectedCountry,
-    };
-
+    final authProvider = context.read<AuthProvider>();
     final profileProvider = context.read<ProfileProvider>();
-    final success = await profileProvider.updateBasicInfo(data);
+    final currentUser = authProvider.currentUser;
+    final isWali = (widget.profileType?.toLowerCase() == 'wali') ||
+        (currentUser?.role.toLowerCase() == 'wali');
+
+    final trimmedFirst = _firstNameController.text.trim();
+    final trimmedLast = _lastNameController.text.trim();
+    if (currentUser != null &&
+        (trimmedFirst != currentUser.firstName ||
+            trimmedLast != currentUser.lastName)) {
+      await authProvider.updateProfile(
+        firstName: trimmedFirst,
+        lastName: trimmedLast,
+      );
+    }
+
+    bool success;
+    if (isWali) {
+      success = await profileProvider.updateBasicInfo({
+        'date_of_birth': dobFormatted,
+        'city': _cityController.text.trim(),
+        'country': _selectedCountry,
+      });
+      if (success) {
+        await profileProvider.updateWaliProfile({
+          'first_name': trimmedFirst,
+          'last_name': trimmedLast,
+          'how_found': mappedHowFound,
+          'phone': _phoneController.text.trim(),
+        });
+      }
+    } else {
+      final data = {
+        'how_found': mappedHowFound,
+        'phone': _phoneController.text.trim(),
+        'date_of_birth': dobFormatted,
+        'city': _cityController.text.trim(),
+        'country': _selectedCountry,
+      };
+      success = await profileProvider.updateBasicInfo(data);
+    }
 
     setState(() => _isLoading = false);
 

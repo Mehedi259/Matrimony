@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import '../core/network/api_client.dart';
 import '../data/repositories/matches_repository.dart';
 import '../data/models/matches/match_profile_model.dart';
 
@@ -182,7 +183,6 @@ class MatchesProvider extends ChangeNotifier {
           basicInfo['spouse_religious_status_pref'];
       profileJson['open_to_relocate_details'] =
           basicInfo['open_to_relocate_details'];
-      profileJson['health_concerns'] = basicInfo['health_concerns'];
       profileJson['other_preferences'] = basicInfo['other_preferences'];
       profileJson['pref_age_min'] = basicInfo['pref_age_min'];
       profileJson['pref_age_max'] = basicInfo['pref_age_max'];
@@ -277,7 +277,8 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      if (e is DioException && e.response?.statusCode == 403) {
+      if ((e is ApiException && e.statusCode == 403) ||
+          (e is DioException && e.response?.statusCode == 403)) {
         // Access restricted for non-male users, handle gracefully
         _sentRequests = [];
         _setLoading(false);
@@ -299,7 +300,8 @@ class MatchesProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      if (e is DioException && e.response?.statusCode == 403) {
+      if ((e is ApiException && e.statusCode == 403) ||
+          (e is DioException && e.response?.statusCode == 403)) {
         // Access restricted for male users, handle gracefully
         _receivedRequests = [];
         _setLoading(false);
@@ -538,7 +540,11 @@ class MatchesProvider extends ChangeNotifier {
     } catch (e) {
       _profileViewers = [];
       _isLoadingProfileViewers = false;
-      if (e is DioException && e.response?.data is Map) {
+      if (e is ApiException) {
+        _profileViewersError = e.message.trim().isNotEmpty
+            ? e.message
+            : 'Failed to load profile views';
+      } else if (e is DioException && e.response?.data is Map) {
         final data = e.response!.data as Map;
         _profileViewersError = (data['error'] ??
                 data['detail'] ??
@@ -627,7 +633,9 @@ class MatchesProvider extends ChangeNotifier {
   }
 
   void _handleError(dynamic e) {
-    if (e is DioException && e.response?.data != null) {
+    if (e is ApiException) {
+      _errorMessage = e.message;
+    } else if (e is DioException && e.response?.data != null) {
       final data = e.response!.data;
       if (data is Map) {
         if (data.containsKey('error')) {

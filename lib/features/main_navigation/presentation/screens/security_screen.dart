@@ -30,7 +30,7 @@ class SecurityScreen extends StatelessWidget {
           _buildActionItem(
             title: 'Change Email',
             icon: Icons.chevron_right,
-            onTap: () => context.push('/chat-with-admin'),
+            onTap: () => context.push('/settings/chat-with-admin'),
           ),
           const SizedBox(height: 16),
           _buildActionItem(

@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/screen_protection_service.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/profile_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import '../widgets/header_action_buttons.dart';
 import '../widgets/photo_viewer_dialog.dart';
+import '../widgets/profile_badges.dart';
 import 'package:get/get.dart';
 
 class MatchedProfileViewScreen extends StatefulWidget {
@@ -26,7 +28,20 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
     super.initState();
     _initializeScreenProtection();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<MatchesProvider>().loadMatches();
+      final user = context.read<AuthProvider>().currentUser;
+      final role = user?.role.toLowerCase();
+      final isFemaleOrWali = role == 'female' ||
+          role == 'wali' ||
+          user?.gender?.toLowerCase() == 'female';
+      if (isFemaleOrWali) {
+        final profileProvider = context.read<ProfileProvider>();
+        profileProvider.loadBasicInfo();
+        if (role == 'wali') {
+          profileProvider.loadWaliProfile();
+        }
+      }
     });
   }
 
@@ -291,6 +306,26 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: VerifiedCodename(
+                          codename: match.matchedUserCodename.isNotEmpty
+                              ? match.matchedUserCodename
+                              : name,
+                          isVerified: match.isOtherUserVerified,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+                          iconSize: 18,
+                        ),
+                      ),
+                      OnlineStatusBadge(
+                        isOnline: match.isOtherUserOnline,
+                        offlineLabel: match.otherUserOfflineLastActiveLabel,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     children: const [
                       Icon(Icons.info_outline, size: 18),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/matches_provider.dart';
 import '../widgets/header_action_buttons.dart';
+import '../widgets/profile_badges.dart';
 
 class ProfileViewsScreen extends StatefulWidget {
   const ProfileViewsScreen({super.key});
@@ -156,6 +157,7 @@ class _ProfileViewsScreenState extends State<ProfileViewsScreen> {
 
                 return _ProfileViewCard(
                   username: codename,
+                  isVerified: profile['is_verified'] == true,
                   subtitle: subtitle,
                   onViewProfile: () {
                     if (userId.isNotEmpty) {
@@ -174,10 +176,16 @@ class _ProfileViewsScreenState extends State<ProfileViewsScreen> {
 
 class _ProfileViewCard extends StatelessWidget {
   final String username;
+  final bool isVerified;
   final String subtitle;
   final VoidCallback onViewProfile;
 
-  const _ProfileViewCard({required this.username, required this.subtitle, required this.onViewProfile});
+  const _ProfileViewCard({
+    required this.username,
+    this.isVerified = false,
+    required this.subtitle,
+    required this.onViewProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +215,12 @@ class _ProfileViewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(username, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    VerifiedCodename(
+                      codename: username,
+                      isVerified: isVerified,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      iconSize: 16,
+                    ),
                     const SizedBox(height: 4),
                     Text(subtitle, style: const TextStyle(color: Colors.black54, fontSize: 14)),
                   ],

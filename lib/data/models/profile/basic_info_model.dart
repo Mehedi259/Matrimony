@@ -36,7 +36,6 @@ class BasicInfoModel {
   final String? envisionMarriage;
   final String? spouseReligiousStatusPref;
   final String? openToRelocateDetails;
-  final String? healthConcerns;
   final String? otherPreferences;
   final int completionPercentage;
   final int? age;
@@ -82,7 +81,6 @@ class BasicInfoModel {
     this.envisionMarriage,
     this.spouseReligiousStatusPref,
     this.openToRelocateDetails,
-    this.healthConcerns,
     this.otherPreferences,
     required this.completionPercentage,
     this.age,
@@ -130,7 +128,6 @@ class BasicInfoModel {
       envisionMarriage: json['envision_marriage'],
       spouseReligiousStatusPref: json['spouse_religious_status_pref'],
       openToRelocateDetails: json['open_to_relocate_details'],
-      healthConcerns: json['health_concerns'],
       otherPreferences: json['other_preferences'],
       completionPercentage: json['completion_percentage'] ?? 0,
       age: json['age'],
@@ -179,7 +176,6 @@ class BasicInfoModel {
       'envision_marriage': envisionMarriage,
       'spouse_religious_status_pref': spouseReligiousStatusPref,
       'open_to_relocate_details': openToRelocateDetails,
-      'health_concerns': healthConcerns,
       'other_preferences': otherPreferences,
       'completion_percentage': completionPercentage,
       'age': age,

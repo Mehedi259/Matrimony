@@ -318,6 +318,29 @@ class _SignupScreenState extends State<SignupScreen> {
                                 height: 1.50,
                               ),
                             ),
+                            const TextSpan(
+                              text: ' and ',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                height: 1.50,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => _showPrivacyDialog(context),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.secondary,
+                                fontSize: 12,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                height: 1.50,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -407,6 +430,52 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _showTermsDialog(BuildContext context) {
+    _showLegalSheet(
+      context: context,
+      title: 'Terms and Conditions',
+      loader: () async {
+        final terms = await SupportRepository().getTerms();
+        return terms.content;
+      },
+      fallbackContent: 'Welcome to A Muslim Matchmaker.\n\n'
+          '1. Acceptance of Terms: By creating an account or accessing our services, you agree to comply with and be bound by these terms.\n\n'
+          '2. Modesty & Islamic Adab: All members must conduct themselves with Islamic decorum, honesty, and mutual respect.\n\n'
+          '3. Accurate Profile Information: You agree to provide true, current, and complete information during registration and onboarding.\n\n'
+          '4. Photo Privacy & Screenshots: Photos of sisters are private. Screenshots, screen recordings, copying, or distributing profile photos or sensitive personal data is strictly forbidden and constitutes a serious privacy violation.\n\n'
+          '5. Wali Involvement: In accordance with Islamic principles, communications and steps may involve Wali supervision.\n\n'
+          '6. Account Deletion: You may deactivate or request deletion of your account at any time via Settings.\n\n'
+          'For questions or support, please contact us through the Help & Support section.',
+      agreeLabel: 'I Agree to Terms & Conditions',
+      onAgree: () => setState(() => _acceptTerms = true),
+    );
+  }
+
+  void _showPrivacyDialog(BuildContext context) {
+    _showLegalSheet(
+      context: context,
+      title: 'Privacy Policy',
+      loader: () async {
+        final privacy = await SupportRepository().getPrivacy();
+        return privacy.content;
+      },
+      fallbackContent: 'Your privacy and modesty are central to A Muslim Matchmaker.\n\n'
+          '1. Data Protection: Personal details, emails, phone numbers, and photos are kept confidential and are only shared with your explicit consent.\n\n'
+          '2. Profile Discretion: Your full name, photos, and Wali contact information remain hidden until mutually approved.\n\n'
+          '3. Screenshot Prevention: Capturing or distributing photos or private profile details is strictly prohibited.\n\n'
+          '4. Your Rights: You may edit, deactivate, or permanently delete your account at any time from Settings.',
+      agreeLabel: 'I Agree & Accept',
+      onAgree: () => setState(() => _acceptTerms = true),
+    );
+  }
+
+  void _showLegalSheet({
+    required BuildContext context,
+    required String title,
+    required Future<String> Function() loader,
+    required String fallbackContent,
+    required String agreeLabel,
+    required VoidCallback onAgree,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -421,26 +490,14 @@ class _SignupScreenState extends State<SignupScreen> {
           maxChildSize: 0.95,
           expand: false,
           builder: (sheetContext, scrollController) {
-            return FutureBuilder(
-              future: SupportRepository().getTerms(),
+            return FutureBuilder<String>(
+              future: loader(),
               builder: (futureContext, snapshot) {
-                String content = '';
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasData && snapshot.data != null) {
-                  content = snapshot.data!.content;
                 }
-
-                if (content.isEmpty) {
-                  content = 'Welcome to A Muslim Matchmaker.\n\n'
-                      '1. Acceptance of Terms: By creating an account or accessing our services, you agree to comply with and be bound by these terms.\n\n'
-                      '2. Modesty & Islamic Adab: All members must conduct themselves with Islamic decorum, honesty, and mutual respect.\n\n'
-                      '3. Accurate Profile Information: You agree to provide true, current, and complete information during registration and onboarding.\n\n'
-                      '4. Photo Privacy & Screenshots: Photos of sisters are private. Screenshots, screen recordings, copying, or distributing profile photos or sensitive personal data is strictly forbidden and constitutes a serious privacy violation.\n\n'
-                      '5. Wali Involvement: In accordance with Islamic principles, communications and steps may involve Wali supervision.\n\n'
-                      '6. Account Deletion: You may deactivate or request deletion of your account at any time via Settings.\n\n'
-                      'For questions or support, please contact us through the Help & Support section.';
-                }
+                final loaded = snapshot.data?.trim() ?? '';
+                final content = loaded.isNotEmpty ? loaded : fallbackContent;
 
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -461,9 +518,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Terms and Conditions',
-                            style: TextStyle(
+                          Text(
+                            title,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
@@ -506,9 +563,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            setState(() {
-                              _acceptTerms = true;
-                            });
+                            onAgree();
                             Navigator.pop(ctx);
                           },
                           style: ElevatedButton.styleFrom(
@@ -518,9 +573,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'I Agree to Terms & Conditions',
-                            style: TextStyle(
+                          child: Text(
+                            agreeLabel,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,

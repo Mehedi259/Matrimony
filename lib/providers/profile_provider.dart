@@ -1,16 +1,19 @@
 import 'package:flutter/foundation.dart';
 import '../data/models/profile/basic_info_model.dart';
+import '../data/models/profile/wali_profile_model.dart';
 import '../data/repositories/profile_repository.dart';
 
 class ProfileProvider with ChangeNotifier {
   final ProfileRepository _profileRepository = ProfileRepository();
 
   BasicInfoModel? _basicInfo;
+  WaliProfileModel? _waliProfile;
   List<PhotoModel> _photos = [];
   bool _isLoading = false;
   String? _errorMessage;
 
   BasicInfoModel? get basicInfo => _basicInfo;
+  WaliProfileModel? get waliProfile => _waliProfile;
   List<PhotoModel> get photos => _photos;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -27,6 +30,7 @@ class ProfileProvider with ChangeNotifier {
 
   void clearData() {
     _basicInfo = null;
+    _waliProfile = null;
     _photos = [];
     _isLoading = false;
     _errorMessage = null;
@@ -160,6 +164,31 @@ class ProfileProvider with ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> loadWaliProfile() async {
+    try {
+      _waliProfile = await _profileRepository.getWaliProfile();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateWaliProfile(Map<String, dynamic> data) async {
+    _errorMessage = null;
+    try {
+      _waliProfile = await _profileRepository.updateWaliProfile(data);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
       notifyListeners();
       return false;
     }

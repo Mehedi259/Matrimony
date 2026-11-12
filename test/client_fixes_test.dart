@@ -7,9 +7,17 @@ import 'package:matrimony/data/models/auth/password_reset_response.dart';
 import 'package:matrimony/data/models/chat/chat_models.dart';
 import 'package:matrimony/data/models/matches/match_profile_model.dart';
 import 'package:matrimony/data/models/notification_model.dart';
+import 'package:matrimony/data/models/profile/basic_info_model.dart';
+import 'package:matrimony/data/models/profile/wali_profile_model.dart';
+import 'package:matrimony/data/models/support/support_models.dart';
 import 'package:matrimony/data/models/user_model.dart';
+import 'package:matrimony/data/repositories/support_repository.dart';
+import 'package:matrimony/features/auth_onboarding/presentation/widgets/common/country_phone_field.dart';
+import 'package:matrimony/features/auth_onboarding/presentation/widgets/common/custom_text_field.dart';
+import 'package:matrimony/features/auth_onboarding/presentation/widgets/common/multi_select_field.dart';
 import 'package:matrimony/features/main_navigation/presentation/widgets/match_card.dart';
 import 'package:matrimony/features/main_navigation/presentation/widgets/photo_viewer_dialog.dart';
+import 'package:matrimony/features/main_navigation/presentation/widgets/profile_badges.dart';
 import 'package:matrimony/features/main_navigation/presentation/widgets/upgrade_subscription_dialog.dart';
 import 'package:matrimony/providers/matches_provider.dart';
 
@@ -105,7 +113,6 @@ void main() {
         'envision_spouse': 'Kind and pious',
         'spouse_religious_status_pref': 'Prays 5x',
         'open_to_relocate_details': 'Open within UK',
-        'health_concerns': 'None',
         'other_preferences': 'Respects family',
         'pref_age_min': 24,
         'pref_age_max': 30,
@@ -125,7 +132,6 @@ void main() {
       expect(model.envisionSpouse, 'Kind and pious');
       expect(model.spouseReligiousStatusPref, 'Prays 5x');
       expect(model.openToRelocateDetails, 'Open within UK');
-      expect(model.healthConcerns, 'None');
       expect(model.otherPreferences, 'Respects family');
       expect(model.prefAgeMin, 24);
       expect(model.prefAgeMax, 30);
@@ -593,6 +599,282 @@ void main() {
         );
       },
     );
+  });
+
+  group('PDF revision client fixes verification', () {
+    test('BasicInfoModel omits removed health_concerns field in JSON serialization', () {
+      final info = BasicInfoModel.fromJson({
+        'id': 'bi-1',
+        'how_found': ['instagram'],
+        'ethnicity': ['afghan'],
+        'nationality': ['british'],
+        'languages_spoken': ['english'],
+        'dress': 'hijab_abaya',
+        'pref_marital_status': ['never_married'],
+        'pref_ethnicity': ['afghan'],
+        'pref_country_of_residence': ['United Kingdom'],
+        'completion_percentage': 85,
+        'photos': const [],
+        'created_at': '2026-11-10T10:00:00Z',
+        'updated_at': '2026-11-10T10:00:00Z',
+      });
+
+      expect(info.dress, 'hijab_abaya');
+      expect(info.toJson().containsKey('health_concerns'), isFalse);
+    });
+
+    test('WaliProfileModel parses dedicated wali profile fields', () {
+      final wali = WaliProfileModel.fromJson({
+        'id': 'wp-1',
+        'first_name': 'Omar',
+        'last_name': 'Khan',
+        'wali_name': 'Omar Khan',
+        'how_found': ['friend', 'masjid'],
+        'gender': 'male',
+        'relation_to_sister': 'brother',
+        'phone': '+447700900123',
+        'completion_percentage': 75,
+      });
+
+      expect(wali.firstName, 'Omar');
+      expect(wali.lastName, 'Khan');
+      expect(wali.waliName, 'Omar Khan');
+      expect(wali.howFound, ['friend', 'masjid']);
+      expect(wali.gender, 'male');
+      expect(wali.relationToSister, 'brother');
+      expect(wali.phone, '+447700900123');
+      expect(wali.completionPercentage, 75);
+    });
+
+    test('UserModel, MatchProfileModel, and MatchModel parse verification and lock status', () {
+      final user = UserModel.fromJson({
+        'id': 'u-lock',
+        'codename': 'B-1',
+        'first_name': 'Ali',
+        'last_name': 'H',
+        'email': 'ali@example.com',
+        'role': 'male',
+        'gender': 'male',
+        'subscription_plan': 'free',
+        'provider': 'email',
+        'is_active': true,
+        'is_verified': true,
+        'is_profile_locked': true,
+        'is_private_matchmaking_client': false,
+        'created_at': '2026-11-01T00:00:00Z',
+        'updated_at': '2026-11-10T00:00:00Z',
+      });
+      expect(user.isVerified, isTrue);
+      expect(user.isProfileLocked, isTrue);
+
+      final profile = MatchProfileModel.fromJson({
+        'id': 'u-2',
+        'codename': 'S-5',
+        'role': 'female',
+        'subscription_plan': 'free',
+        'completion_percentage': 90,
+        'is_verified': true,
+        'is_profile_locked': true,
+      });
+      expect(profile.isVerified, isTrue);
+      expect(profile.isProfileLocked, isTrue);
+
+      final match = MatchModel.fromJson({
+        'id': 'm-lock',
+        'match_id': 'MT-99',
+        'status': 'accepted',
+        'other_user': {
+          'id': 'u-2',
+          'codename': 'S-5',
+          'is_verified': true,
+          'last_active_display': 'Active 2 hr(s) ago',
+        },
+        'photos_currently_visible': false,
+        'photo_request_status': 'none',
+        'photo_requested_by_other_user': false,
+        'wali_request_status': 'none',
+        'second_photo_request_status': 'none',
+        'photo_view_count': 0,
+        'updated_at': '2026-11-10T12:00:00Z',
+      });
+      expect(match.isOtherUserVerified, isTrue);
+      expect(match.isOtherUserOnline, isFalse);
+      expect(match.otherUserOfflineLastActiveLabel, 'Active 2 hr(s) ago');
+    });
+
+    test('formatOfflineLastActive formats offline durations in hours or days only', () {
+      final now = DateTime.now().toUtc();
+      expect(
+        MatchProfileModel.formatOfflineLastActive(now, 'Active now', isOnline: true),
+        isNull,
+      );
+      expect(
+        MatchProfileModel.formatOfflineLastActive(
+          now.subtract(const Duration(hours: 5)),
+          null,
+          isOnline: false,
+        ),
+        'Active 5 hrs ago',
+      );
+      expect(
+        MatchProfileModel.formatOfflineLastActive(
+          now.subtract(const Duration(days: 3)),
+          null,
+          isOnline: false,
+        ),
+        'Active 3 days ago',
+      );
+      expect(
+        MatchProfileModel.formatOfflineLastActive(
+          now.subtract(const Duration(minutes: 20)),
+          null,
+          isOnline: false,
+        ),
+        'Active 1 hr ago',
+      );
+    });
+
+    testWidgets('VerifiedCodename and OnlineStatusBadge render verification and activity states', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                VerifiedCodename(codename: 'B-7', isVerified: true),
+                VerifiedCodename(codename: 'S-8', isVerified: false),
+                OnlineStatusBadge(isOnline: true),
+                OnlineStatusBadge(isOnline: false, offlineLabel: 'Active 3 hr(s) ago'),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      expect(find.text('B-7'), findsOneWidget);
+      expect(find.text('S-8'), findsOneWidget);
+      expect(find.text('Online'), findsOneWidget);
+      expect(find.text('Active 3 hr(s) ago'), findsOneWidget);
+    });
+
+    testWidgets('MatchCard displays verified icon and single-line Connection is pending button', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MatchCard(
+              username: 'S-22',
+              age: '28 Years old',
+              ethnicity: 'Arab',
+              country: 'United Kingdom',
+              lockMessage: 'Locked',
+              isLocked: true,
+              isBlurred: true,
+              isRequestSent: true,
+              isVerified: true,
+              onViewProfile: () {},
+              onSendInterest: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      final pendingText = tester.widget<Text>(find.text('Connection is pending'));
+      expect(pendingText.maxLines, 1);
+    });
+
+    testWidgets('Required indicator * renders on CustomTextField and MultiSelectField', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                const CustomTextField(label: 'City', isRequired: true),
+                const CustomTextField(label: 'Optional Note', isRequired: false),
+                MultiSelectField(
+                  label: 'Ethnicity',
+                  options: const ['Afghan', 'Arab'],
+                  selectedValues: const [],
+                  onChanged: (_) {},
+                  isRequired: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('City *', findRichText: true), findsOneWidget);
+      expect(find.text('Optional Note *', findRichText: true), findsNothing);
+      expect(find.text('Ethnicity *', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('CountryPhoneField parses dial codes and syncs formatted E.164 phone numbers', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: '+447700900123');
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CountryPhoneField(
+              controller: controller,
+              label: 'Wali Contact Number',
+              isRequired: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Wali Contact Number *', findRichText: true), findsOneWidget);
+      expect(find.text('+44'), findsOneWidget);
+      expect(find.text('7700900123'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextFormField), '7911123456');
+      await tester.pump();
+      expect(controller.text, '+447911123456');
+
+      await tester.enterText(find.byType(TextFormField), '');
+      await tester.pump();
+      expect(controller.text, '');
+    });
+
+    test('Support models and payload extractor handle paginated results and subject field', () {
+      final rawList = SupportRepository.extractListPayload({
+        'count': 1,
+        'results': [
+          {
+            'id': 12,
+            'subject': 'App Bug',
+            'email': 'u@example.com',
+            'message': 'Something broke',
+            'created_at': '2026-11-11T10:00:00Z',
+          },
+        ],
+      });
+      expect(rawList, hasLength(1));
+
+      final feedback = FeedbackModel.fromJson(
+        rawList.first as Map<String, dynamic>,
+      );
+      expect(feedback.id, '12');
+      expect(feedback.feedbackType, 'App Bug');
+      expect(feedback.status, 'submitted');
+
+      final faq = FaqModel.fromJson({
+        'id': 3,
+        'question': 'How do connections work?',
+        'answer': 'Send an interest to begin.',
+        'created_at': '2026-11-11T10:00:00Z',
+      });
+      expect(faq.id, '3');
+      expect(faq.order, 0);
+    });
   });
 }
 

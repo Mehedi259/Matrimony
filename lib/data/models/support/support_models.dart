@@ -15,11 +15,13 @@ class FaqModel {
 
   factory FaqModel.fromJson(Map<String, dynamic> json) {
     return FaqModel(
-      id: json['id'],
-      question: json['question'],
-      answer: json['answer'],
-      order: json['order'] ?? 0,
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id']?.toString() ?? '',
+      question: json['question']?.toString() ?? '',
+      answer: json['answer']?.toString() ?? '',
+      order: (json['order'] as num?)?.toInt() ?? 0,
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }
@@ -79,12 +81,15 @@ class FeedbackModel {
 
   factory FeedbackModel.fromJson(Map<String, dynamic> json) {
     return FeedbackModel(
-      id: json['id'],
-      feedbackType: json['feedback_type'],
-      message: json['message'],
-      response: json['response'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id']?.toString() ?? '',
+      feedbackType:
+          (json['feedback_type'] ?? json['subject'])?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
+      response: json['response']?.toString(),
+      status: json['status']?.toString() ?? 'submitted',
+      createdAt:
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

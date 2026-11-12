@@ -2,6 +2,7 @@ import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/services/storage_service.dart';
 import '../models/profile/basic_info_model.dart';
+import '../models/profile/wali_profile_model.dart';
 
 class ProfileRepository {
   final ApiClient _apiClient = ApiClient();
@@ -203,5 +204,26 @@ class ProfileRepository {
     } catch (e) {
       return 0;
     }
+  }
+
+  // ========== WALI PROFILE (Wali Role Step 1 / Own Info) ==========
+
+  Future<WaliProfileModel> getWaliProfile() async {
+    final response = await _apiClient.get(ApiConstants.waliProfile);
+    final raw = response.data is Map
+        ? Map<String, dynamic>.from(response.data as Map)
+        : <String, dynamic>{};
+    return WaliProfileModel.fromJson(raw);
+  }
+
+  Future<WaliProfileModel> updateWaliProfile(Map<String, dynamic> data) async {
+    final response = await _apiClient.patch(
+      ApiConstants.waliProfile,
+      data: data,
+    );
+    final raw = response.data is Map
+        ? Map<String, dynamic>.from(response.data as Map)
+        : <String, dynamic>{};
+    return WaliProfileModel.fromJson(raw);
   }
 }

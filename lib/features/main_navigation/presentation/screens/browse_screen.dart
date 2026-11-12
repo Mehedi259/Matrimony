@@ -863,6 +863,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: MatchCard(
                       username: profile.codename,
+                      isVerified: profile.isVerified,
                       age: profile.age != null
                           ? '${profile.age} Years old'
                           : 'N/A',
@@ -870,9 +871,11 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       country: profile.country ?? 'N/A',
                       imageUrl: null,
                       photos: profile.photos,
-                      lockMessage: isConnected
-                          ? 'Open profile to view photos safely'
-                          : 'Photos will be revealed after mutual interest',
+                      lockMessage: profile.isProfileLocked && !isConnected
+                          ? 'Currently locked in an active Wali discussion'
+                          : isConnected
+                              ? 'Open profile to view photos safely'
+                              : 'Photos will be revealed after mutual interest',
                       isLocked: true,
                       isBlurred: true,
                       isWishlisted: isSaved,
@@ -893,7 +896,25 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         );
                       },
                       onSendInterest: canSendRequest
-                          ? () => _handleSendInterest(profile.id)
+                          ? () {
+                              if (profile.isProfileLocked) {
+                                Get.showSnackbar(
+                                  const GetSnackBar(
+                                    snackPosition: SnackPosition.TOP,
+                                    margin: EdgeInsets.all(16),
+                                    borderRadius: 8,
+                                    duration: Duration(seconds: 3),
+                                    messageText: Text(
+                                      'This profile is currently locked in an active Wali discussion.',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.deepPurple,
+                                  ),
+                                );
+                                return;
+                              }
+                              _handleSendInterest(profile.id);
+                            }
                           : null,
                     )
                         .animate()

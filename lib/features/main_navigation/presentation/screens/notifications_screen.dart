@@ -248,7 +248,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (!isRead) {
             provider.markAsRead(notification.id);
           }
-          
+
+          final targetUserId = _extractTargetUserId(notification.data);
+
           // Navigate based on notification type
           switch (type.toLowerCase()) {
             case 'request':
@@ -265,7 +267,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             case 'wali_request_approved':
             case 'wali_request_declined':
             case 'unlock_request_received':
-              context.push('/requests');
+              if (targetUserId != null) {
+                context.push('/profile-view-details/$targetUserId');
+              } else {
+                context.go('/requests');
+              }
               break;
             case 'message':
             case 'new_message':
@@ -276,7 +282,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               });
               break;
             case 'profile':
-              context.push('/profile-views');
+            case 'profile_view':
+            case 'profile_viewed':
+            case 'new_profile_view':
+              if (targetUserId != null) {
+                context.push('/profile-view-details/$targetUserId');
+              } else {
+                context.push('/profile-views');
+              }
               break;
             case 'profile_approved':
               context.push('/my-profile-view');
@@ -289,10 +302,46 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             case 'special_match_received':
               context.push('/private-matches');
               break;
+            case 'pass_changed':
+            case 'password_changed':
+            case 'account_suspended':
+            case 'account_blocked':
+              context.push('/settings/security');
+              break;
+            case 'welcome':
+              context.go('/');
+              break;
+            default:
+              if (targetUserId != null) {
+                context.push('/profile-view-details/$targetUserId');
+              } else {
+                context.go('/requests');
+              }
           }
         },
       ),
     );
+  }
+
+  String? _extractTargetUserId(Map<String, dynamic>? data) {
+    if (data == null || data.isEmpty) return null;
+    const candidateKeys = [
+      'user_id',
+      'other_user_id',
+      'sender_id',
+      'receiver_id',
+      'requester_id',
+      'responder_id',
+      'viewer_id',
+      'profile_id',
+    ];
+    for (final key in candidateKeys) {
+      final raw = data[key]?.toString().trim();
+      if (raw != null && raw.isNotEmpty && raw != 'null') {
+        return raw;
+      }
+    }
+    return null;
   }
 
   String _formatTime(DateTime timestamp) {

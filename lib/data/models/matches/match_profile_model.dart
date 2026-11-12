@@ -20,6 +20,8 @@ class MatchProfileModel {
   final bool hasBoostedProfile;
   final bool photoBlurred;
   final bool isOnline;
+  final bool isVerified;
+  final bool isProfileLocked;
   final String? occupation;
   final String? ethnicity;
   final String? education;
@@ -34,7 +36,6 @@ class MatchProfileModel {
   final String? envisionSpouse;
   final String? spouseReligiousStatusPref;
   final String? openToRelocateDetails;
-  final String? healthConcerns;
   final String? otherPreferences;
   final int? prefAgeMin;
   final int? prefAgeMax;
@@ -67,6 +68,8 @@ class MatchProfileModel {
     required this.hasBoostedProfile,
     required this.photoBlurred,
     this.isOnline = false,
+    this.isVerified = false,
+    this.isProfileLocked = false,
     this.occupation,
     this.ethnicity,
     this.education,
@@ -81,7 +84,6 @@ class MatchProfileModel {
     this.envisionSpouse,
     this.spouseReligiousStatusPref,
     this.openToRelocateDetails,
-    this.healthConcerns,
     this.otherPreferences,
     this.prefAgeMin,
     this.prefAgeMax,
@@ -94,6 +96,44 @@ class MatchProfileModel {
     this.pray5x,
     this.openToRelocate,
   });
+
+  static String? formatOfflineLastActive(
+    DateTime? lastActive,
+    String? lastActiveDisplay, {
+    bool isOnline = false,
+  }) {
+    if (isOnline) return null;
+
+    if (lastActive != null) {
+      final rawDiff = DateTime.now().toUtc().difference(lastActive.toUtc());
+      final diff = rawDiff.isNegative ? Duration.zero : rawDiff;
+      if (diff.inHours < 24) {
+        final hours = diff.inHours < 1 ? 1 : diff.inHours;
+        return 'Active $hours ${hours == 1 ? 'hr' : 'hrs'} ago';
+      }
+      final days = diff.inDays < 1 ? 1 : diff.inDays;
+      return 'Active $days ${days == 1 ? 'day' : 'days'} ago';
+    }
+
+    final display = lastActiveDisplay?.trim();
+    if (display == null || display.isEmpty) return null;
+    final lower = display.toLowerCase();
+    if (lower == 'active now' || lower == 'online' || lower == 'offline') {
+      return null;
+    }
+    if (RegExp(r'\b(m|min|mins|minute|minutes|just now)\b', caseSensitive: false)
+            .hasMatch(lower) ||
+        RegExp(r'^\d+\s*m\s+ago$', caseSensitive: false).hasMatch(lower)) {
+      return 'Active 1 hr ago';
+    }
+    return display;
+  }
+
+  String? get offlineLastActiveLabel => formatOfflineLastActive(
+        lastActive,
+        lastActiveDisplay,
+        isOnline: isOnline,
+      );
 
   static bool _computeIsOnline(
     Map<String, dynamic> json,
@@ -191,6 +231,8 @@ class MatchProfileModel {
       hasBoostedProfile: json['has_boosted_profile'] as bool? ?? false,
       photoBlurred: json['photo_blurred'] as bool? ?? true,
       isOnline: _computeIsOnline(json, parsedLastActive, parsedLastActiveDisplay),
+      isVerified: json['is_verified'] as bool? ?? false,
+      isProfileLocked: json['is_profile_locked'] as bool? ?? false,
       occupation: _asString(json['occupation']),
       ethnicity: _formatMappedString(
         json['ethnicity'],
@@ -211,7 +253,6 @@ class MatchProfileModel {
       envisionSpouse: _asString(json['envision_spouse']),
       spouseReligiousStatusPref: _asString(json['spouse_religious_status_pref']),
       openToRelocateDetails: _asString(json['open_to_relocate_details']),
-      healthConcerns: _asString(json['health_concerns']),
       otherPreferences: _asString(json['other_preferences']),
       prefAgeMin: _asInt(json['pref_age_min']),
       prefAgeMax: _asInt(json['pref_age_max']),
@@ -267,6 +308,30 @@ class ConnectionRequestModel {
   String? get receiverCountry => MatchProfileModel._asString(otherUser['country']);
   String get senderId => MatchProfileModel._asString(otherUser['id']) ?? '';
   String get receiverId => MatchProfileModel._asString(otherUser['id']) ?? '';
+  bool get isOtherUserVerified => otherUser['is_verified'] == true;
+  DateTime? get otherUserLastActive => otherUser['last_active'] != null
+      ? DateTime.tryParse(otherUser['last_active'].toString())
+      : null;
+  String? get otherUserLastActiveDisplay =>
+      MatchProfileModel._asString(otherUser['last_active_display']);
+  bool get isOtherUserOnline {
+    if (otherUser['is_online'] == true) return true;
+    final display = otherUserLastActiveDisplay?.toLowerCase().trim() ?? '';
+    if (display == 'active now' || display == 'online') return true;
+    final dt = otherUserLastActive;
+    if (dt != null) {
+      final diff = DateTime.now().toUtc().difference(dt.toUtc());
+      return diff.inSeconds < 300 && diff.inMinutes > -5;
+    }
+    return false;
+  }
+
+  String? get otherUserOfflineLastActiveLabel =>
+      MatchProfileModel.formatOfflineLastActive(
+        otherUserLastActive,
+        otherUserLastActiveDisplay,
+        isOnline: isOtherUserOnline,
+      );
   List<dynamic> get otherUserPhotos =>
       otherUser['photos'] is List ? otherUser['photos'] as List<dynamic> : [];
 
@@ -358,6 +423,30 @@ class MatchModel {
       MatchProfileModel._asString(otherUser['country']);
   String get matchedUserId =>
       MatchProfileModel._asString(otherUser['id']) ?? '';
+  bool get isOtherUserVerified => otherUser['is_verified'] == true;
+  DateTime? get otherUserLastActive => otherUser['last_active'] != null
+      ? DateTime.tryParse(otherUser['last_active'].toString())
+      : null;
+  String? get otherUserLastActiveDisplay =>
+      MatchProfileModel._asString(otherUser['last_active_display']);
+  bool get isOtherUserOnline {
+    if (otherUser['is_online'] == true) return true;
+    final display = otherUserLastActiveDisplay?.toLowerCase().trim() ?? '';
+    if (display == 'active now' || display == 'online') return true;
+    final dt = otherUserLastActive;
+    if (dt != null) {
+      final diff = DateTime.now().toUtc().difference(dt.toUtc());
+      return diff.inSeconds < 300 && diff.inMinutes > -5;
+    }
+    return false;
+  }
+
+  String? get otherUserOfflineLastActiveLabel =>
+      MatchProfileModel.formatOfflineLastActive(
+        otherUserLastActive,
+        otherUserLastActiveDisplay,
+        isOnline: isOtherUserOnline,
+      );
   List<dynamic> get matchedUserPhotos =>
       otherUser['photos'] is List ? otherUser['photos'] as List<dynamic> : [];
   Map<String, dynamic>? get waliDetails => otherUser['wali_details'] is Map

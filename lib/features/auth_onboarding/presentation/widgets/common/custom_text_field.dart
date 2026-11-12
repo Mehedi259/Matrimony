@@ -47,9 +47,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+        Text.rich(
+          TextSpan(
+            text: widget.label,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+            children: widget.isRequired
+                ? const [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(
+                        color: Color(0xFFE54B5E),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ]
+                : null,
+          ),
         ),
         const SizedBox(height: 8),
         TextFormField(

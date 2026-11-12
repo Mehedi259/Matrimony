@@ -325,36 +325,43 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> deactivateAccount() async {
-    final response = await _apiClient.post(ApiConstants.deactivate);
-    
+    final response = await _apiClient.post(
+      ApiConstants.deactivate,
+      data: <String, dynamic>{},
+    );
+
     // Clear local data after deactivation
     await _storageService.clearAll();
-    
-    return response.data;
+
+    return response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : <String, dynamic>{};
   }
 
-  Future<Map<String, dynamic>> deleteAccount() async {
-    final response = await _apiClient.delete(ApiConstants.profile);
-    
+  Future<void> deleteAccount() async {
+    await _apiClient.delete(ApiConstants.profile);
+
     // Clear all local data after deletion
     await _storageService.clearAll();
-    
-    return response.data;
   }
 
   Future<Map<String, dynamic>> submitWhyLeaving({
     required String reason,
     String? feedback,
   }) async {
+    final trimmedFeedback = feedback?.trim();
     final response = await _apiClient.post(
       ApiConstants.whyLeaving,
       data: {
-        'reason': reason,
-        if (feedback != null) 'feedback': feedback,
+        'reasons': reason,
+        if (trimmedFeedback != null && trimmedFeedback.isNotEmpty)
+          'tell_us_more': trimmedFeedback,
       },
     );
 
-    return response.data;
+    return response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : <String, dynamic>{};
   }
 
   // ========== HELPER METHODS ==========

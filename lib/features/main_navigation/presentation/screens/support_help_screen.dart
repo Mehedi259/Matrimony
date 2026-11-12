@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../data/repositories/support_repository.dart';
 import '../../../../data/models/support/support_models.dart';
+import '../../../../providers/auth_provider.dart';
 import 'package:get/get.dart';
 
 class SupportHelpScreen extends StatefulWidget {
@@ -94,9 +96,11 @@ class _SupportHelpScreenState extends State<SupportHelpScreen> {
               }
 
               try {
+                final userEmail = context.read<AuthProvider>().currentUser?.email;
                 await _supportRepository.submitFeedback(
                   feedbackType: subjectController.text,
                   message: messageController.text,
+                  email: userEmail,
                 );
 
                 if (!mounted) return;

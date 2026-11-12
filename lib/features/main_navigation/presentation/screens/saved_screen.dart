@@ -103,6 +103,7 @@ class _SavedScreenState extends State<SavedScreen> {
                         padding: const EdgeInsets.only(bottom: 16),
                         child: MatchCard(
                           username: wishlist['codename'] ?? 'User',
+                          isVerified: wishlist['is_verified'] == true,
                           age: wishlist['age'] != null
                               ? '${wishlist['age']} Years old'
                               : 'N/A',

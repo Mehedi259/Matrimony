@@ -4,11 +4,19 @@ import 'package:flutter/services.dart';
 class CountryPhoneField extends StatefulWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final String label;
+  final String hintText;
+  final bool isRequired;
+  final ValueChanged<String>? onChanged;
 
   const CountryPhoneField({
     super.key,
     required this.controller,
     this.validator,
+    this.label = 'Phone Number',
+    this.hintText = 'Phone number',
+    this.isRequired = true,
+    this.onChanged,
   });
 
   @override
@@ -17,6 +25,8 @@ class CountryPhoneField extends StatefulWidget {
 
 class _CountryPhoneFieldState extends State<CountryPhoneField> {
   String _selectedFlag = '🇬🇧';
+  final TextEditingController _localController = TextEditingController();
+  bool _isSyncing = false;
 
   // Map of flag emoji to country code
   final Map<String, String> _flagToCode = {
@@ -47,26 +57,119 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _syncFromExternal();
+    widget.controller.addListener(_onExternalChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant CountryPhoneField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onExternalChanged);
+      _syncFromExternal();
+      widget.controller.addListener(_onExternalChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onExternalChanged);
+    _localController.dispose();
+    super.dispose();
+  }
+
+  void _onExternalChanged() {
+    if (_isSyncing) return;
+    _syncFromExternal();
+  }
+
+  void _syncFromExternal() {
+    final raw = widget.controller.text.trim();
+    String nextFlag = _selectedFlag;
+    String nextLocal = raw;
+
+    if (raw.startsWith('+')) {
+      final compact = raw.replaceAll(RegExp(r'\s+'), '');
+      final sortedEntries = _flagToCode.entries.toList()
+        ..sort((a, b) => b.value.length.compareTo(a.value.length));
+      for (final entry in sortedEntries) {
+        if (compact.startsWith(entry.value)) {
+          if (entry.value == '+1' && compact != raw) {
+            nextFlag = '🇺🇸';
+          } else {
+            nextFlag = entry.value == '+1' ? '🇺🇸' : entry.key;
+          }
+          nextLocal = compact
+              .substring(entry.value.length)
+              .replaceAll(RegExp(r'[^0-9]'), '');
+          break;
+        }
+      }
+    } else {
+      nextLocal = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    }
+
+    _isSyncing = true;
+    if (_localController.text != nextLocal) {
+      _localController.value = TextEditingValue(
+        text: nextLocal,
+        selection: TextSelection.collapsed(offset: nextLocal.length),
+      );
+    }
+    if (mounted && _selectedFlag != nextFlag) {
+      setState(() => _selectedFlag = nextFlag);
+    } else {
+      _selectedFlag = nextFlag;
+    }
+    _isSyncing = false;
+  }
+
+  void _syncToExternal() {
+    if (_isSyncing) return;
+    final digits = _localController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final code = _flagToCode[_selectedFlag] ?? '+44';
+    final combined = digits.isEmpty ? '' : '$code$digits';
+    _isSyncing = true;
+    if (widget.controller.text != combined) {
+      widget.controller.value = TextEditingValue(
+        text: combined,
+        selection: TextSelection.collapsed(offset: combined.length),
+      );
+    }
+    _isSyncing = false;
+    widget.onChanged?.call(combined);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: const TextSpan(
-            text: 'Phone Number',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-            children: [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(color: Colors.red),
-              ),
-            ],
+          text: TextSpan(
+            text: widget.label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+            children: widget.isRequired
+                ? const [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ]
+                : const [],
           ),
         ),
         const SizedBox(height: 8),
         Container(
           height: 56,
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFE0E0E0)),
           ),
@@ -74,7 +177,7 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
             children: [
               // Country Code Dropdown
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: const BorderRadius.only(
@@ -89,7 +192,7 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
                   child: DropdownButton<String>(
                     value: _selectedFlag,
                     isDense: true,
-                    icon: const Icon(Icons.arrow_drop_down, size: 24),
+                    icon: const Icon(Icons.arrow_drop_down, size: 22),
                     // Show flag + code in dropdown items
                     items: _flagToCode.keys.map((flag) {
                       return DropdownMenuItem(
@@ -99,8 +202,13 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
                           children: [
                             Text(flag, style: const TextStyle(fontSize: 20)),
                             const SizedBox(width: 6),
-                            Text(_flagToCode[flag]!, 
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                            Text(
+                              _flagToCode[flag]!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -110,6 +218,7 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
                         setState(() {
                           _selectedFlag = flag;
                         });
+                        _syncToExternal();
                       }
                     },
                   ),
@@ -118,17 +227,21 @@ class _CountryPhoneFieldState extends State<CountryPhoneField> {
               // Phone Number Input
               Expanded(
                 child: TextFormField(
-                  controller: widget.controller,
-                  validator: widget.validator,
+                  controller: _localController,
+                  validator: widget.validator == null
+                      ? null
+                      : (_) => widget.validator!(widget.controller.text),
+                  onChanged: (_) => _syncToExternal(),
                   keyboardType: TextInputType.phone,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    hintText: 'Phone number',
-                    hintStyle: TextStyle(color: Color(0xFFBDBDBD)),
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                   ),
                 ),
               ),

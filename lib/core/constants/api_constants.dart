@@ -34,6 +34,7 @@ class ApiConstants {
   // Questions/Profile Setup
   static const String maleBasicInfo = '$apiPrefix/questions/male/basic-info/';
   static const String femaleBasicInfo = '$apiPrefix/questions/female/basic-info/';
+  static const String waliProfile = '$apiPrefix/questions/wali/profile/';
   static const String waliBasicInfo = '$apiPrefix/questions/wali/basic-info/';
   
   static const String malePhotos = '$apiPrefix/questions/male/photos/';

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../widgets/common/gradient_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/multi_select_field.dart';
+import '../widgets/common/country_phone_field.dart';
 import '../../../../core/constants/dropdown_options.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../providers/profile_provider.dart';
@@ -61,10 +62,28 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
   void initState() {
     super.initState();
     _loadExistingData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshRemoteProfileData();
+    });
+  }
+
+  Future<void> _refreshRemoteProfileData() async {
+    if (!mounted) return;
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    if (profileProvider.basicInfo == null) {
+      await profileProvider.loadBasicInfo();
+    }
+    if (isWali && profileProvider.waliProfile == null) {
+      await profileProvider.loadWaliProfile();
+    }
+    if (mounted) {
+      setState(() => _loadExistingData());
+    }
   }
 
   void _loadExistingData() {
-    final info = Provider.of<ProfileProvider>(context, listen: false).basicInfo;
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final info = profileProvider.basicInfo;
     if (info != null) {
       _religionSect = info.sect != null ? ChoiceMappings.keyToDisplay(info.sect!, ChoiceMappings.sectKeyToDisplay) : null;
       _maritalStatus = info.maritalStatus != null ? ChoiceMappings.keyToDisplay(info.maritalStatus!, ChoiceMappings.maritalStatusKeyToDisplay) : null;
@@ -90,6 +109,46 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
       if (info.languagesSpoken.isNotEmpty) {
         _languagesSpoken = ChoiceMappings.keysToDisplays(info.languagesSpoken, ChoiceMappings.languageKeyToDisplay);
       }
+      if (info.dress != null && info.dress!.isNotEmpty) {
+        _dressStyle = ChoiceMappings.keyToDisplay(
+          info.dress!,
+          ChoiceMappings.dressKeyToDisplay,
+        );
+      }
+      if (!isWali) {
+        if (info.waliName != null && info.waliName!.isNotEmpty) {
+          _waliNameController.text = info.waliName!;
+        }
+        if (info.waliRelation != null && info.waliRelation!.isNotEmpty) {
+          _waliRelationController.text = info.waliRelation!;
+        }
+        if (info.waliNumber != null && info.waliNumber!.isNotEmpty) {
+          _waliNumberController.text = info.waliNumber!;
+        }
+      }
+    }
+
+    if (isWali) {
+      final wp = profileProvider.waliProfile;
+      final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+      final fallbackName = user != null
+          ? '${user.firstName} ${user.lastName}'.trim()
+          : '';
+      if (wp != null) {
+        _waliNameController.text = (wp.waliName != null && wp.waliName!.isNotEmpty)
+            ? wp.waliName!
+            : fallbackName;
+        if (wp.relationToSister != null && wp.relationToSister!.isNotEmpty) {
+          final rel = wp.relationToSister!.trim();
+          _waliRelationController.text =
+              rel[0].toUpperCase() + (rel.length > 1 ? rel.substring(1).toLowerCase() : '');
+        }
+        if (wp.phone != null && wp.phone!.isNotEmpty) {
+          _waliNumberController.text = wp.phone!;
+        }
+      } else if (_waliNameController.text.isEmpty && fallbackName.isNotEmpty) {
+        _waliNameController.text = fallbackName;
+      }
     }
   }
 
@@ -102,8 +161,16 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     super.dispose();
   }
 
+  bool get isWali {
+    if (widget.userType?.toLowerCase() == 'wali') return true;
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    return user?.role.toLowerCase() == 'wali';
+  }
+
   bool get isSister {
-    if (widget.gender == 'Female' || widget.userType == 'sister') return true;
+    if (widget.gender == 'Female' || widget.userType == 'sister' || isWali) {
+      return true;
+    }
     final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
     return user?.role == 'female' || user?.gender == 'female';
   }
@@ -144,9 +211,9 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
           _buildDropdown(
             label: 'Marital Status',
             value: _maritalStatus,
-            items: widget.gender == 'Male' 
-              ? DropdownOptions.maritalStatusBrother 
-              : DropdownOptions.maritalStatusSister,
+            items: isSister
+                ? DropdownOptions.maritalStatusSister
+                : DropdownOptions.maritalStatusBrother,
             onChanged: (value) => setState(() => _maritalStatus = value),
             isRequired: true,
           ),
@@ -157,6 +224,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
             options: DropdownOptions.ethnicities,
             selectedValues: _ethnicity,
             onChanged: (values) => setState(() => _ethnicity = values),
+            isRequired: true,
           ),
           const SizedBox(height: 24),
           
@@ -165,6 +233,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
             options: DropdownOptions.nationalities,
             selectedValues: _nationality,
             onChanged: (values) => setState(() => _nationality = values),
+            isRequired: true,
           ),
           const SizedBox(height: 24),
           
@@ -251,20 +320,37 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
               label: 'Wali Name',
               hint: 'Enter your guardian\'s full name',
               controller: _waliNameController,
+              isRequired: true,
             ),
             const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Relationship to you',
-              hint: 'e.g., Father, Brother, Uncle',
-              controller: _waliRelationController,
-            ),
+            if (isWali)
+              _buildDropdown(
+                label: 'Relationship to you',
+                value: const ['Father', 'Brother', 'Uncle', 'Grandfather', 'Other']
+                        .contains(_waliRelationController.text)
+                    ? _waliRelationController.text
+                    : null,
+                items: const ['Father', 'Brother', 'Uncle', 'Grandfather', 'Other'],
+                onChanged: (value) {
+                  setState(() {
+                    _waliRelationController.text = value ?? '';
+                  });
+                },
+                isRequired: true,
+              )
+            else
+              CustomTextField(
+                label: 'Relationship to you',
+                hint: 'e.g., Father, Brother, Uncle',
+                controller: _waliRelationController,
+                isRequired: true,
+              ),
             const SizedBox(height: 16),
-            CustomTextField(
-              label: 'Wali Contact Number',
-              hint: 'Include country code',
+            CountryPhoneField(
               controller: _waliNumberController,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              label: 'Wali Contact Number',
+              hintText: 'Guardian contact number',
+              isRequired: true,
             ),
             const SizedBox(height: 24),
             const Divider(thickness: 2),
@@ -405,9 +491,20 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
 
   void _saveAndContinue() async {
     // Validate required fields
-    if (_religionSect == null || _maritalStatus == null || _ethnicity.isEmpty || _nationality.isEmpty || _hasChildren == null) {
+    if (_religionSect == null ||
+        _maritalStatus == null ||
+        _ethnicity.isEmpty ||
+        _nationality.isEmpty ||
+        _hasChildren == null ||
+        _height == null ||
+        _weight == null ||
+        _prayerFrequency == null ||
+        _openToRelocating == null) {
       Get.showSnackbar(
         const GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: EdgeInsets.all(16),
+          borderRadius: 8,
           messageText: Text('Please fill all required fields', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
@@ -418,9 +515,9 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
 
     if (isSister) {
       if (_dressStyle == null ||
-          _waliNameController.text.isEmpty ||
-          _waliRelationController.text.isEmpty ||
-          _waliNumberController.text.isEmpty) {
+          _waliNameController.text.trim().isEmpty ||
+          _waliRelationController.text.trim().isEmpty ||
+          _waliNumberController.text.trim().isEmpty) {
         SnackBarHelper.showError(context, 'Please fill all required fields including Wali information');
         return;
       }
@@ -432,7 +529,7 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
       return;
     }
 
-    Map<String, dynamic> data = {
+    final Map<String, dynamic> data = {
       'sect': ChoiceMappings.displayToKey(_religionSect!, ChoiceMappings.sectDisplayToKey),
       'marital_status': ChoiceMappings.displayToKey(_maritalStatus!, ChoiceMappings.maritalStatusDisplayToKey),
       'ethnicity': ChoiceMappings.displaysToKeys(_ethnicity, ChoiceMappings.ethnicityDisplayToKey),
@@ -449,20 +546,29 @@ class _PersonalDetailsScreenState extends State<PersonalDetailsScreen> {
     if (_employmentController.text.isNotEmpty) data['employment'] = _employmentController.text;
     if (_income != null) data['income'] = ChoiceMappings.displayToKey(_income!, ChoiceMappings.incomeDisplayToKey);
     if (_frame != null) data['frame'] = ChoiceMappings.displayToKey(_frame!, ChoiceMappings.frameDisplayToKey);
-    data['health_concerns'] = 'None';
     if (_languagesSpoken.isNotEmpty) {
       data['languages_spoken'] = ChoiceMappings.displaysToKeys(_languagesSpoken, ChoiceMappings.languageDisplayToKey);
     }
 
     if (isSister) {
       data['dress'] = ChoiceMappings.displayToKey(_dressStyle!, ChoiceMappings.dressDisplayToKey);
-      data['wali_name'] = _waliNameController.text;
-      data['wali_relation'] = _waliRelationController.text;
-      data['wali_number'] = _waliNumberController.text;
+      if (!isWali) {
+        data['wali_name'] = _waliNameController.text.trim();
+        data['wali_relation'] = _waliRelationController.text.trim();
+        data['wali_number'] = _waliNumberController.text.trim();
+      }
     }
 
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
-    final success = await profileProvider.updateBasicInfo(data);
+    var success = await profileProvider.updateBasicInfo(data);
+
+    if (success && isWali) {
+      success = await profileProvider.updateWaliProfile({
+        'wali_name': _waliNameController.text.trim(),
+        'relation_to_sister': _waliRelationController.text.trim().toLowerCase(),
+        'phone': _waliNumberController.text.trim(),
+      });
+    }
     
     if (success && mounted) {
       Get.showSnackbar(

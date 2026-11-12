@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'profile_badges.dart';
 
 class MatchCard extends StatelessWidget {
   final String username;
+  final bool isVerified;
   final String age;
   final String ethnicity;
   final String country;
@@ -29,6 +31,7 @@ class MatchCard extends StatelessWidget {
   const MatchCard({
     super.key,
     required this.username,
+    this.isVerified = false,
     required this.age,
     required this.ethnicity,
     required this.country,
@@ -206,7 +209,11 @@ class MatchCard extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                              VerifiedCodename(
+                                codename: username,
+                                isVerified: isVerified,
+                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
                               if ([age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Text(
@@ -240,7 +247,11 @@ class MatchCard extends StatelessWidget {
                       ],
                     )
                   else if (username.isNotEmpty) ...[
-                    Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    VerifiedCodename(
+                      codename: username,
+                      isVerified: isVerified,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                     if ([age, ethnicity].where((s) => s.isNotEmpty && s != 'N/A').isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -379,27 +390,32 @@ class MatchCard extends StatelessWidget {
                                     : (isRequestSent
                                         ? Icons.check
                                         : Icons.favorite),
-                                size: 16,
+                                size: 15,
                                 color: isConnected
                                     ? Colors.green[700]
                                     : (isRequestSent
-                                        ? Colors.grey
+                                        ? Colors.grey[700]
                                         : Theme.of(context).primaryColor),
                               ),
-                              label: Text(
-                                isConnected
-                                    ? 'Connected'
-                                    : (isRequestSent
-                                        ? 'Connection is pending'
-                                        : 'Send Interest'),
-                                style: TextStyle(
-                                  color: isConnected
-                                      ? Colors.green[700]
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  isConnected
+                                      ? 'Connected'
                                       : (isRequestSent
-                                          ? Colors.grey
-                                          : Theme.of(context).primaryColor),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                          ? 'Connection is pending'
+                                          : 'Send Interest'),
+                                  maxLines: 1,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: isConnected
+                                        ? Colors.green[700]
+                                        : (isRequestSent
+                                            ? Colors.grey[700]
+                                            : Theme.of(context).primaryColor),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -411,8 +427,10 @@ class MatchCard extends StatelessWidget {
                                     : Colors.grey[200],
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                           ),

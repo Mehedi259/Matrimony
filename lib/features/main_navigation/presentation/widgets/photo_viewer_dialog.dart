@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:screen_protector/screen_protector.dart';
 import '../../../../core/constants/choice_mappings.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
+import '../../../../providers/auth_provider.dart';
 import '../../../../providers/matches_provider.dart';
+import '../../../../providers/profile_provider.dart';
 
 /// Opens a screenshot-protected fullscreen photo viewer dialog with pinch-to-zoom.
 ///
@@ -498,14 +500,76 @@ class MatchedPhotoActionSection extends StatelessWidget {
     );
   }
 
+  T? _tryWatch<T>(BuildContext context) {
+    try {
+      return context.watch<T>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
   Widget _buildWaliSection(BuildContext context, Color buttonColor) {
+    final matchesProvider = _tryWatch<MatchesProvider>(context);
+    final profileProvider = _tryWatch<ProfileProvider>(context);
+    final authRole =
+        _tryWatch<AuthProvider>(context)?.currentUser?.role.toLowerCase() ?? '';
+
+    final bool isOtherLockedElsewhere =
+        !match.isDiscussionLocked && match.otherUser['is_profile_locked'] == true;
+    final bool isSelfLockedElsewhere = !match.isDiscussionLocked &&
+        (matchesProvider?.isCurrentUserProfileLocked ?? false);
+    final bool isBlockedByDiscussionLock =
+        isSelfLockedElsewhere || isOtherLockedElsewhere;
+
     if (match.isWaliApproved) {
-      final relation = match.waliRelation != null && match.waliRelation!.isNotEmpty
-          ? ChoiceMappings.keyToDisplay(
-              match.waliRelation!,
-              ChoiceMappings.waliRelationKeyToDisplay,
-            )
-          : null;
+      String? resolvedName = match.waliName;
+      String? resolvedNumber = match.waliNumber;
+      String? resolvedRelationRaw = match.waliRelation;
+
+      if (isFemaleOrWali) {
+        if (authRole == 'wali') {
+          final wp = profileProvider?.waliProfile;
+          resolvedName = (resolvedName != null && resolvedName.trim().isNotEmpty)
+              ? resolvedName
+              : wp?.waliName;
+          resolvedNumber =
+              (resolvedNumber != null && resolvedNumber.trim().isNotEmpty)
+                  ? resolvedNumber
+                  : wp?.phone;
+          resolvedRelationRaw =
+              (resolvedRelationRaw != null && resolvedRelationRaw.trim().isNotEmpty)
+                  ? resolvedRelationRaw
+                  : wp?.relationToSister;
+        } else {
+          final info = profileProvider?.basicInfo;
+          resolvedName = (resolvedName != null && resolvedName.trim().isNotEmpty)
+              ? resolvedName
+              : info?.waliName;
+          resolvedNumber =
+              (resolvedNumber != null && resolvedNumber.trim().isNotEmpty)
+                  ? resolvedNumber
+                  : info?.waliNumber;
+          resolvedRelationRaw =
+              (resolvedRelationRaw != null && resolvedRelationRaw.trim().isNotEmpty)
+                  ? resolvedRelationRaw
+                  : info?.waliRelation;
+        }
+      }
+
+      final displayName = (resolvedName != null && resolvedName.trim().isNotEmpty)
+          ? resolvedName.trim()
+          : 'Not provided';
+      final displayNumber =
+          (resolvedNumber != null && resolvedNumber.trim().isNotEmpty)
+              ? resolvedNumber.trim()
+              : 'Not provided';
+      final relation =
+          (resolvedRelationRaw != null && resolvedRelationRaw.trim().isNotEmpty)
+              ? ChoiceMappings.keyToDisplay(
+                  resolvedRelationRaw.trim(),
+                  ChoiceMappings.waliRelationKeyToDisplay,
+                )
+              : null;
 
       return Container(
         padding: const EdgeInsets.all(16),
@@ -558,22 +622,23 @@ class MatchedPhotoActionSection extends StatelessWidget {
                 Expanded(
                   child: _WaliField(
                     label: 'Wali Name',
-                    value: match.waliName ?? 'Shared with brother',
+                    value: displayName,
                   ),
                 ),
                 Expanded(
                   child: _WaliField(
                     label: 'Wali Number',
-                    value: match.waliNumber ?? 'N/A',
+                    value: displayNumber,
                   ),
                 ),
               ],
             ),
-            if (relation != null) ...[
+            if (relation != null && relation.isNotEmpty) ...[
               const SizedBox(height: 10),
               _WaliField(label: 'Relation', value: relation),
             ],
-            if (match.status.toLowerCase() == 'in_discussion') ...[
+            if (match.status.toLowerCase() == 'in_discussion' ||
+                match.status.toLowerCase() == 'wali_accepted') ...[
               const SizedBox(height: 14),
               SizedBox(
                 width: double.infinity,
@@ -591,6 +656,35 @@ class MatchedPhotoActionSection extends StatelessWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      );
+    }
+
+    if (isBlockedByDiscussionLock) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.deepPurple.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_rounded, color: Colors.deepPurple, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                isSelfLockedElsewhere
+                    ? 'Your profile is currently locked in another Wali discussion. End that discussion before sending or accepting Wali details here.'
+                    : '$otherCodename is currently locked in another Wali discussion.',
+                style: const TextStyle(
+                  color: Colors.deepPurple,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -647,13 +741,13 @@ class MatchedPhotoActionSection extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final success = await context
-                            .read<MatchesProvider>()
-                            .respondToWaliRequest(
-                              matchId: match.id,
-                              accept: true,
-                            );
-                        if (success && context.mounted) {
+                        final provider = context.read<MatchesProvider>();
+                        final success = await provider.respondToWaliRequest(
+                          matchId: match.id,
+                          accept: true,
+                        );
+                        if (!context.mounted) return;
+                        if (success) {
                           Get.showSnackbar(
                             const GetSnackBar(
                               messageText: Text(
@@ -661,6 +755,16 @@ class MatchedPhotoActionSection extends StatelessWidget {
                               ),
                               backgroundColor: Colors.green,
                               duration: Duration(seconds: 3),
+                            ),
+                          );
+                        } else {
+                          Get.showSnackbar(
+                            GetSnackBar(
+                              messageText: Text(
+                                provider.errorMessage ?? 'Unable to send Wali details',
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
                             ),
                           );
                         }

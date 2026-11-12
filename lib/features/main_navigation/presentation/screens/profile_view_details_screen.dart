@@ -5,11 +5,13 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/matches_provider.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../providers/profile_provider.dart';
 import '../../../../data/models/matches/match_profile_model.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/choice_mappings.dart';
 import '../widgets/photo_viewer_dialog.dart';
+import '../widgets/profile_badges.dart';
 import '../widgets/upgrade_subscription_dialog.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
@@ -62,12 +64,20 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     });
 
     final matchesProvider = context.read<MatchesProvider>();
-    final role = context.read<AuthProvider>().currentUser?.role;
+    final profileProvider = context.read<ProfileProvider>();
+    final user = context.read<AuthProvider>().currentUser;
+    final role = user?.role;
+    final lowerRole = role?.toLowerCase();
+    final isFemaleOrWali = lowerRole == 'female' ||
+        lowerRole == 'wali' ||
+        user?.gender?.toLowerCase() == 'female';
     final profileFuture = matchesProvider.getProfileDetails(widget.userId);
     await Future.wait<void>([
       profileFuture,
       matchesProvider.loadMatches(),
       matchesProvider.loadConnectionRequestsForRole(role),
+      if (isFemaleOrWali) profileProvider.loadBasicInfo(),
+      if (lowerRole == 'wali') profileProvider.loadWaliProfile(),
     ]);
 
     if (!mounted) return;
@@ -91,16 +101,19 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     if (_profile == null) return;
 
     final matchesProvider = context.read<MatchesProvider>();
-    if (matchesProvider.isCurrentUserProfileLocked) {
+    if (matchesProvider.isCurrentUserProfileLocked || _profile!.isProfileLocked) {
+      final msg = matchesProvider.isCurrentUserProfileLocked
+          ? 'Your profile is locked in an active Wali discussion.'
+          : 'This profile is currently locked in an active Wali discussion.';
       Get.showSnackbar(
-        const GetSnackBar(
+        GetSnackBar(
           snackPosition: SnackPosition.TOP,
-          margin: EdgeInsets.all(16),
+          margin: const EdgeInsets.all(16),
           borderRadius: 8,
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
           messageText: Text(
-            'Your profile is locked in an active Wali discussion.',
-            style: TextStyle(color: Colors.white),
+            msg,
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.deepPurple,
         ),
@@ -141,6 +154,25 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
     required bool accept,
   }) async {
     final matchesProvider = context.read<MatchesProvider>();
+    if (accept &&
+        (matchesProvider.isCurrentUserProfileLocked ||
+            (_profile?.isProfileLocked ?? false))) {
+      final msg = matchesProvider.isCurrentUserProfileLocked
+          ? 'Your profile is locked in an active Wali discussion.'
+          : 'This profile is currently locked in an active Wali discussion.';
+      Get.showSnackbar(
+        GetSnackBar(
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+          messageText: Text(msg, style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+
     final success = await matchesProvider.respondToRequest(
       requestId: requestId,
       accept: accept,
@@ -479,13 +511,15 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _profile!.codename,
+                            VerifiedCodename(
+                              codename: _profile!.codename,
+                              isVerified: _profile!.isVerified,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF1E293B),
                               ),
+                              iconSize: 22,
                             ),
                             const SizedBox(height: 4),
                             Builder(
@@ -509,36 +543,10 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                           ],
                         ),
                       ),
-                      if (_profile!.isOnline)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Online',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      OnlineStatusBadge(
+                        isOnline: _profile!.isOnline,
+                        offlineLabel: _profile!.offlineLastActiveLabel,
+                      ),
                     ],
                   ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideX(begin: -0.2, end: 0),
                   const SizedBox(height: 16),
@@ -699,84 +707,138 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                           .firstOrNull;
 
                       if (hasReceived && matchingReceived != null) {
-                        return Row(
+                        final bool isLockedOut =
+                            matchesProvider.isCurrentUserProfileLocked ||
+                                _profile!.isProfileLocked;
+
+                        return Column(
                           children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 52,
-                                child: OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _handleRespondToReceivedRequest(
-                                    matchingReceived.id,
-                                    accept: false,
+                            if (isLockedOut) ...[
+                              Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.deepPurple.withValues(alpha: 0.25),
                                   ),
-                                  icon: const Icon(
-                                    Icons.close_rounded,
-                                    size: 18,
-                                    color: Color(0xFFE54B5E),
-                                  ),
-                                  label: const Text(
-                                    'Decline',
-                                    style: TextStyle(
-                                      color: Color(0xFFE54B5E),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(
-                                      color: Color(0xFFE54B5E),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
+                                ),
+                                child: Text(
+                                  matchesProvider.isCurrentUserProfileLocked
+                                      ? 'Your profile is locked in an active Wali discussion.'
+                                      : 'This profile is currently locked in an active Wali discussion.',
+                                  style: const TextStyle(
+                                    color: Colors.deepPurple,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 2,
-                              child: SizedBox(
-                                height: 52,
-                                child: ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _handleRespondToReceivedRequest(
-                                    matchingReceived.id,
-                                    accept: true,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.check_circle_outline,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                                  label: const Text(
-                                    'Accept Request',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                            ],
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 52,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          _handleRespondToReceivedRequest(
+                                        matchingReceived.id,
+                                        accept: false,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.close_rounded,
+                                        size: 18,
+                                        color: Color(0xFFE54B5E),
+                                      ),
+                                      label: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'Decline',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: Color(0xFFE54B5E),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        side: const BorderSide(
+                                          color: Color(0xFFE54B5E),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryColor,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 0,
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 52,
+                                    child: ElevatedButton.icon(
+                                      onPressed: isLockedOut
+                                          ? null
+                                          : () => _handleRespondToReceivedRequest(
+                                                matchingReceived.id,
+                                                accept: true,
+                                              ),
+                                      icon: const Icon(
+                                        Icons.check_circle_outline,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                      label: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'Accept Request',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        disabledBackgroundColor: Colors.grey[400],
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ).animate().fadeIn(duration: 600.ms, delay: 450.ms).slideY(begin: 0.2, end: 0);
                       }
 
                       final bool isLockedOut =
-                          matchesProvider.isCurrentUserProfileLocked;
-                      final String buttonText = isLockedOut
-                          ? 'Profile Locked (In Discussion)'
-                          : 'Send Interest';
+                          matchesProvider.isCurrentUserProfileLocked ||
+                              _profile!.isProfileLocked;
+                      final String buttonText = _profile!.isProfileLocked &&
+                              !matchesProvider.isCurrentUserProfileLocked
+                          ? 'This Profile is Locked (In Discussion)'
+                          : isLockedOut
+                              ? 'Profile Locked (In Discussion)'
+                              : 'Send Interest';
                       final bool isEnabled = canSendRequest && !isLockedOut;
 
                       return SizedBox(
@@ -958,7 +1020,6 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
       _profile!.spouseReligiousStatusPref,
     );
     addField('Relocation Details', _profile!.openToRelocateDetails);
-    addField('Health Concerns', _profile!.healthConcerns);
     addField('Other Preferences', _profile!.otherPreferences);
     addField(
       'Languages',
@@ -992,7 +1053,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
             label: fields[i].key,
             value: fields[i].value,
             primaryColor: primaryColor,
-            multiLine: fields[i].key != 'Languages',
+            multiLine: true,
           )
               .animate()
               .fadeIn(duration: 400.ms, delay: (50 * i).ms)

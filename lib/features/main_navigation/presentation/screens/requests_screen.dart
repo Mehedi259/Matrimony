@@ -49,8 +49,24 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     ]);
   }
 
-  Future<void> _handleAcceptRequest(String requestId) async {
+  Future<void> _handleAcceptRequest(
+    String requestId, {
+    bool isOtherProfileLocked = false,
+  }) async {
     final matchesProvider = context.read<MatchesProvider>();
+    if (matchesProvider.isCurrentUserProfileLocked || isOtherProfileLocked) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Profile is currently locked in a Wali discussion. Cannot accept request.',
+            ),
+            backgroundColor: Color(0xFF6A1B9A),
+          ),
+        );
+      }
+      return;
+    }
     final success = await matchesProvider.respondToRequest(requestId: requestId, accept: true);
     
     if (!mounted) return;
@@ -284,6 +300,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               padding: const EdgeInsets.only(bottom: 16.0),
               child: MatchCard(
                 username: match.matchedUserCodename,
+                isVerified: match.isOtherUserVerified,
                 age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
                 ethnicity: match.matchedUserEthnicity ?? 'N/A',
                 country: match.matchedUserCountry ?? 'N/A',
@@ -310,12 +327,15 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               padding: const EdgeInsets.only(bottom: 16.0),
               child: MatchCard(
                 username: request.senderCodename,
+                isVerified: request.isOtherUserVerified,
                 age: request.senderAge != null ? '${request.senderAge} Years old' : 'N/A',
                 ethnicity: request.senderEthnicity ?? 'N/A',
                 country: request.senderCountry ?? 'N/A',
                 imageUrl: null,
                 photos: request.otherUserPhotos,
-                lockMessage: 'Photos will be revealed after mutual interest',
+                lockMessage: request.otherUser['is_profile_locked'] == true
+                    ? 'Currently locked in an active Wali discussion'
+                    : 'Photos will be revealed after mutual interest',
                 isLocked: true,
                 isBlurred: true,
                 onViewProfile: () {
@@ -324,7 +344,11 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
                   });
                 },
                 onDecline: () => _showDeclineDialog(context, request.id),
-                onAccept: () => _handleAcceptRequest(request.id),
+                onAccept: () => _handleAcceptRequest(
+                  request.id,
+                  isOtherProfileLocked:
+                      request.otherUser['is_profile_locked'] == true,
+                ),
               ).animate().fadeIn(duration: 700.ms, delay: (500 + index * 200).ms).slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
             );
           }).toList(),
@@ -375,6 +399,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               padding: const EdgeInsets.only(bottom: 16.0),
               child: MatchCard(
                 username: request.receiverCodename,
+                isVerified: request.isOtherUserVerified,
                 age: request.receiverAge != null ? '${request.receiverAge} Years old' : 'N/A',
                 ethnicity: request.receiverEthnicity ?? 'N/A',
                 country: request.receiverCountry ?? 'N/A',
@@ -436,6 +461,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
             padding: const EdgeInsets.only(bottom: 16.0),
             child: MatchCard(
               username: match.matchedUserCodename,
+              isVerified: match.isOtherUserVerified,
               age: match.matchedUserAge != null ? '${match.matchedUserAge} Years old' : 'N/A',
               ethnicity: match.matchedUserEthnicity ?? 'N/A',
               country: match.matchedUserCountry ?? 'N/A',

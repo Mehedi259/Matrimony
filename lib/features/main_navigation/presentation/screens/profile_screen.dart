@@ -187,7 +187,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         basicInfo.income != null &&
         basicInfo.frame != null &&
         basicInfo.languagesSpoken.isNotEmpty &&
-        basicInfo.healthConcerns != null && basicInfo.healthConcerns!.isNotEmpty &&
         (!isSister || (basicInfo.dress != null && basicInfo.waliName != null && basicInfo.waliName!.isNotEmpty && basicInfo.waliRelation != null && basicInfo.waliRelation!.isNotEmpty && basicInfo.waliNumber != null && basicInfo.waliNumber!.isNotEmpty));
 
     bool isPreferencesComplete = basicInfo != null && 

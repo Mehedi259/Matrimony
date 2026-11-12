@@ -41,21 +41,22 @@ class ChatRepository {
   }
 
   Future<ChatMessageModel> sendMessage({
-    required String message,
+    String message = '',
     String? attachmentPath,
   }) async {
+    final trimmedMessage = message.trim();
     if (attachmentPath != null) {
       final response = await _apiClient.uploadFile(
         ApiConstants.myChatMessages,
         filePath: attachmentPath,
         fieldName: 'attachment',
-        additionalData: {'text': message},
+        additionalData: trimmedMessage.isNotEmpty ? {'text': trimmedMessage} : null,
       );
       return ChatMessageModel.fromJson(response.data);
     } else {
       final response = await _apiClient.post(
         ApiConstants.myChatMessages,
-        data: {'text': message},
+        data: {'text': trimmedMessage},
       );
       return ChatMessageModel.fromJson(response.data);
     }
