@@ -938,24 +938,42 @@ class MatchedPhotoActionSection extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Unlock & End Discussion?'),
         content: const Text(
-          'This will end your current discussion and unlock your profile.',
+          'Warning: This will immediately cancel and drop this connection, '
+          'permanently remove the Wali details, unlock both profiles, '
+          'and notify the other person that you have ended the Wali stage.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Keep'),
+            child: const Text('Keep Connection'),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               final provider = context.read<MatchesProvider>();
               final success = await provider.unlockMatch(match.id);
-              if (success && context.mounted) {
+              if (!context.mounted) return;
+              if (success) {
                 Get.showSnackbar(
                   const GetSnackBar(
-                    messageText: Text('Connection unlocked'),
+                    messageText: Text(
+                      'Connection dropped and both profiles unlocked.',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     backgroundColor: Colors.green,
                     duration: Duration(seconds: 3),
+                  ),
+                );
+                onViewerClosed?.call();
+              } else {
+                Get.showSnackbar(
+                  GetSnackBar(
+                    messageText: Text(
+                      provider.errorMessage ?? 'Failed to unlock connection',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
@@ -964,7 +982,10 @@ class MatchedPhotoActionSection extends StatelessWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Unlock', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Unlock & End Discussion',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

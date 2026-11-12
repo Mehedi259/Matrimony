@@ -462,6 +462,7 @@ class MatchModel {
       waliDetails?['wali_number']?.toString() ??
       otherUser['wali_phone']?.toString();
   bool get isWaliApproved {
+    if (!isActiveConnection) return false;
     final waliStatus = waliRequestStatus.toLowerCase();
     final matchStatus = status.toLowerCase();
     return waliStatus == 'accepted' ||
@@ -471,6 +472,7 @@ class MatchModel {
   }
 
   bool get isDiscussionLocked {
+    if (!isActiveConnection) return false;
     final matchStatus = status.toLowerCase();
     return isWaliApproved ||
         matchStatus == 'wali_accepted' ||

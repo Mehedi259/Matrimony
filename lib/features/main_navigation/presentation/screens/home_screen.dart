@@ -312,7 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   final isConnected = matchesProvider.hasActiveConnectionWith(profile.id);
                   final isRequestSent = !isConnected &&
                       matchesProvider.hasPendingSentRequestTo(profile.id);
-                  final canSendRequest = user?.role == 'male';
+                  final normalizedRole = user?.role.toLowerCase().trim();
+                  final canSendRequest = normalizedRole == 'male' ||
+                      normalizedRole == 'female' ||
+                      normalizedRole == 'wali';
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),

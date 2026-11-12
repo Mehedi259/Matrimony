@@ -260,10 +260,22 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
                 photos: match.matchedUserPhotos,
                 otherCodename: name,
                 isFemaleOrWali: isFemaleOrWali,
-                onViewerClosed: () {
-                  if (mounted) {
+                onViewerClosed: () async {
+                  if (!mounted) return;
+                  final matchesProvider = context.read<MatchesProvider>();
+                  final authProvider = context.read<AuthProvider>();
+                  await Future.wait([
+                    matchesProvider.loadMatches(),
+                    authProvider.refreshProfile(),
+                  ]);
+                  if (!mounted) return;
+                  final updated = matchesProvider.matches
+                      .where((m) => m.id == match.id || m.matchId == match.matchId)
+                      .firstOrNull;
+                  if (updated == null || !updated.isActiveConnection) {
+                    context.pop();
+                  } else {
                     setState(() {});
-                    context.read<MatchesProvider>().loadMatches();
                   }
                 },
               ),

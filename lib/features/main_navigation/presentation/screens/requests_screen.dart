@@ -173,6 +173,9 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
     ).toList();
 
+    final activeMatches =
+        matchesProvider.matches.where((m) => m.isActiveConnection).toList();
+
     final tabs = [
       _TabItem(
         label: 'Received',
@@ -187,7 +190,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       _TabItem(
         label: 'Matches',
         icon: Icons.favorite_outline,
-        count: matchesProvider.matches.length,
+        count: activeMatches.length,
       ),
     ];
 
@@ -427,7 +430,10 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (matchesProvider.matches.isEmpty) {
+    final activeMatches =
+        matchesProvider.matches.where((m) => m.isActiveConnection).toList();
+
+    if (activeMatches.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => matchesProvider.loadMatches(),
         child: CustomScrollView(
@@ -453,8 +459,8 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-        children: matchesProvider.matches.map((match) {
-          final index = matchesProvider.matches.indexOf(match);
+        children: activeMatches.map((match) {
+          final index = activeMatches.indexOf(match);
           final isActuallyLocked = isFemaleOrWali ? false : !match.photosCurrentlyVisible;
           
           return Padding(

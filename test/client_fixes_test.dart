@@ -876,5 +876,80 @@ void main() {
       expect(faq.order, 0);
     });
   });
+
+  group('Unlock lifecycle & dropped match lock state (#8)', () {
+    test('dropped matches are never considered locked or Wali-approved', () {
+      final activeDiscussion = MatchModel.fromJson({
+        'id': 'm-active',
+        'match_id': 'MT-10',
+        'status': 'in_discussion',
+        'wali_request_status': 'accepted',
+        'other_user': {'id': 'u-other', 'codename': 'S-1'},
+        'updated_at': '2026-11-12T10:00:00Z',
+      });
+      expect(activeDiscussion.isActiveConnection, isTrue);
+      expect(activeDiscussion.isWaliApproved, isTrue);
+      expect(activeDiscussion.isDiscussionLocked, isTrue);
+
+      final droppedEvenWithOldWaliStatus = MatchModel.fromJson({
+        'id': 'm-dropped',
+        'match_id': 'MT-11',
+        'status': 'dropped',
+        'wali_request_status': 'accepted',
+        'other_user': {'id': 'u-other2', 'codename': 'S-2'},
+        'updated_at': '2026-11-12T10:05:00Z',
+      });
+      expect(droppedEvenWithOldWaliStatus.isActiveConnection, isFalse);
+      expect(droppedEvenWithOldWaliStatus.isWaliApproved, isFalse);
+      expect(droppedEvenWithOldWaliStatus.isDiscussionLocked, isFalse);
+    });
+
+    testWidgets(
+      'Unlock / End Discussion popup warns about immediate cancellation, Wali removal, and notification',
+      (tester) async {
+        final lockedMatch = MatchModel.fromJson({
+          'id': 'm-lock-ui',
+          'match_id': 'MT-12',
+          'status': 'in_discussion',
+          'wali_request_status': 'accepted',
+          'other_user': {
+            'id': 'u-wali',
+            'codename': 'S-4',
+            'wali_details': {
+              'wali_name': 'Abu Fatima',
+              'wali_relation': 'Father',
+              'wali_number': '+447700900111',
+            },
+          },
+          'updated_at': '2026-11-12T10:00:00Z',
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: MatchedPhotoActionSection(
+                  match: lockedMatch,
+                  photos: const [],
+                  otherCodename: 'S-4',
+                  isFemaleOrWali: false,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Unlock / End Discussion'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Unlock & End Discussion?'), findsOneWidget);
+        expect(find.textContaining('cancel and drop'), findsOneWidget);
+        expect(find.textContaining('Wali details'), findsOneWidget);
+        expect(find.textContaining('notify the other person'), findsOneWidget);
+        expect(find.text('Keep Connection'), findsOneWidget);
+        expect(find.text('Unlock & End Discussion'), findsOneWidget);
+      },
+    );
+  });
 }
 

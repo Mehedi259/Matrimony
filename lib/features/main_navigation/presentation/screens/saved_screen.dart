@@ -25,7 +25,7 @@ class _SavedScreenState extends State<SavedScreen> {
     final provider = context.read<MatchesProvider>();
     await Future.wait([
       provider.loadWishlists(),
-      provider.loadSentRequests(),
+      provider.loadConnectionRequestsForRole(null),
       provider.loadMatches(),
       provider.fetchConnectionUsage(),
     ]);

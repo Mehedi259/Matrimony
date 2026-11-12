@@ -313,22 +313,12 @@ class MatchesProvider extends ChangeNotifier {
     }
   }
 
-  /// Loads only the connection request list applicable to [role] to avoid
-  /// role-restricted 403 responses from the backend.
+  /// Loads both sent and received connection requests for any normal member role.
   Future<void> loadConnectionRequestsForRole(String? role) async {
-    final normalized = role?.toLowerCase().trim();
-    if (normalized == 'male') {
-      _receivedRequests = [];
-      await loadSentRequests();
-    } else if (normalized == 'female' || normalized == 'wali') {
-      _sentRequests = [];
-      await loadReceivedRequests();
-    } else {
-      await Future.wait([
-        loadSentRequests(),
-        loadReceivedRequests(),
-      ]);
-    }
+    await Future.wait([
+      loadSentRequests(),
+      loadReceivedRequests(),
+    ]);
   }
 
   Future<bool> respondToRequest({
@@ -446,8 +436,21 @@ class MatchesProvider extends ChangeNotifier {
 
     try {
       await _matchesRepository.unlockMatch(matchId);
-      await loadMatches();
+      final selectedProfileId = _selectedProfile?.id;
+      final futures = <Future>[
+        loadMatches(),
+        loadSentRequests(),
+        loadReceivedRequests(),
+      ];
+      if (_directoryProfiles.isNotEmpty) {
+        futures.add(loadDirectory());
+      }
+      if (selectedProfileId != null && selectedProfileId.isNotEmpty) {
+        futures.add(getProfileDetails(selectedProfileId));
+      }
+      await Future.wait(futures);
       _setLoading(false);
+      notifyListeners();
       return true;
     } catch (e) {
       _handleError(e);

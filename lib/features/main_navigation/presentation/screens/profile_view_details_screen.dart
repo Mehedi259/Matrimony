@@ -599,7 +599,10 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                       final hasReceived = matchesProvider.hasPendingReceivedRequestFrom(_profile!.id);
                       final matchingMatch = matchesProvider.activeMatchForUser(_profile!.id);
                       final isMatch = matchingMatch != null;
-                      final canSendRequest = authUser?.role == 'male';
+                      final normalizedRole = authUser?.role.toLowerCase().trim();
+                      final canSendRequest = normalizedRole == 'male' ||
+                          normalizedRole == 'female' ||
+                          normalizedRole == 'wali';
                       final isFemaleOrWali =
                           authUser?.role.toLowerCase() == 'female' ||
                               authUser?.role.toLowerCase() == 'wali' ||
@@ -640,7 +643,7 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                               accentColor: secondaryColor,
                               onViewerClosed: () {
                                 if (mounted) {
-                                  context.read<MatchesProvider>().loadMatches();
+                                  _loadProfileData();
                                 }
                               },
                             ),
