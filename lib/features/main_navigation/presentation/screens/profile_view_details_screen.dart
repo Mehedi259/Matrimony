@@ -13,6 +13,7 @@ import '../../../../core/constants/choice_mappings.dart';
 import '../widgets/photo_viewer_dialog.dart';
 import '../widgets/profile_badges.dart';
 import '../widgets/upgrade_subscription_dialog.dart';
+import '../../../safety/profile_safety_actions.dart';
 
 class ProfileViewDetailsScreen extends StatefulWidget {
   final String userId;
@@ -429,22 +430,12 @@ class _ProfileViewDetailsScreenState extends State<ProfileViewDetailsScreen>
                   ),
                   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
                 ),
-                onSelected: (value) {
-                  // Handle menu actions
-                  Get.showSnackbar(
-                    GetSnackBar(
-          snackPosition: SnackPosition.TOP,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          duration: const Duration(seconds: 3),
-          messageText: Text('$value selected')),
-                  );
+                onSelected: (value) async {
+                  final close = await handleProfileSafetyAction(context,
+                      action: value, targetUserId: widget.userId);
+                  if (close && context.mounted) context.pop();
                 },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(value: 'Hide Profile', child: Text('Hide Profile')),
-                  const PopupMenuItem<String>(value: 'Block Profile', child: Text('Block Profile')),
-                  const PopupMenuItem<String>(value: 'Report Profile', child: Text('Report Profile')),
-                ],
+                itemBuilder: (BuildContext context) => profileSafetyMenuItems(),
               ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
             ],
             flexibleSpace: FlexibleSpaceBar(

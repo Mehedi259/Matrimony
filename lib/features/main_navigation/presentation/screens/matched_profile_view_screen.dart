@@ -10,6 +10,7 @@ import '../../../../data/models/matches/match_profile_model.dart';
 import '../widgets/header_action_buttons.dart';
 import '../widgets/photo_viewer_dialog.dart';
 import '../widgets/profile_badges.dart';
+import '../../../safety/profile_safety_actions.dart';
 import 'package:get/get.dart';
 
 class MatchedProfileViewScreen extends StatefulWidget {
@@ -121,12 +122,12 @@ class _MatchedProfileViewScreenState extends State<MatchedProfileViewScreen> {
           const NotificationBellButton(),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onSelected: (value) {},
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(value: 'hide', child: Text('Hide Profile')),
-              const PopupMenuItem<String>(value: 'block', child: Text('Block Profile')),
-              const PopupMenuItem<String>(value: 'report', child: Text('Report Profile')),
-            ],
+            onSelected: (value) async {
+              final close = await handleProfileSafetyAction(context,
+                  action: value, targetUserId: match.matchedUserId);
+              if (close && context.mounted) context.pop();
+            },
+            itemBuilder: (BuildContext context) => profileSafetyMenuItems(),
           ),
         ],
       ),
