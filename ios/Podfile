@@ -39,5 +39,23 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    # Xcode 27 only supports deployment targets >= 15.0; many pods still declare 9–13.
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
+  end
+end
+
+# Xcode 27's lipo refuses `-output X X` (same file in and out, errno 17), which
+# breaks CocoaPods' arch stripping for prebuilt fat frameworks such as
+# ScreenPreventerKit. Strip into a temp file and move it into place instead.
+post_integrate do |installer|
+  Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', '*', '*-frameworks.sh')).each do |script|
+    text = File.read(script)
+    fixed = text.gsub('lipo -remove "$arch" -output "$binary" "$binary"',
+                      'lipo -remove "$arch" -output "$binary.lipo-tmp" "$binary" && mv -f "$binary.lipo-tmp" "$binary"')
+    File.write(script, fixed) if fixed != text
   end
 end
