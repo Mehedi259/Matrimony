@@ -70,6 +70,10 @@ class ApiConstants {
   static const String unlockMatch = '$apiPrefix/matches/'; // + id + /unlock/
   static const String connectionUsage = '$apiPrefix/matches/usage/';
 
+  // Subscriptions / in-app purchases
+  static const String subscriptionVerify = '$apiPrefix/subscriptions/verify/';
+  static const String subscriptionStatus = '$apiPrefix/subscriptions/status/';
+
   // Matchmaking
   static const String myMatchmakingRequest = '$apiPrefix/matchmaking/my-request/';
 

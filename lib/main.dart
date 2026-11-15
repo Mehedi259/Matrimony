@@ -7,6 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/matches_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/notification_provider.dart';
+import 'features/subscription/purchase_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,19 @@ void main() async {
   // Initialize AuthProvider and check authentication state
   final authProvider = AuthProvider();
   await authProvider.initialize();
+
+  // In-app purchases: start listening once a user is signed in, so purchases
+  // left unfinished (app killed mid-purchase) are verified on the next launch.
+  final purchaseProvider = PurchaseProvider();
+  void syncPurchasesWithAuth() {
+    if (authProvider.isAuthenticated) {
+      purchaseProvider.init();
+    } else {
+      purchaseProvider.reset();
+    }
+  }
+  authProvider.addListener(syncPurchasesWithAuth);
+  syncPurchasesWithAuth();
   
   runApp(
     MultiProvider(
@@ -30,6 +44,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MatchesProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider.value(value: purchaseProvider),
       ],
       child: MatrimonyApp(),
     ),
