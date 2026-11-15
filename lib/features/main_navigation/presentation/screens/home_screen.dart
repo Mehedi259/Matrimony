@@ -207,6 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.visibility_outlined,
                       iconColor: Colors.blue,
                       count: '${matchesProvider.profileViewers.length.toString().padLeft(2, '0')}',
+                      locked: matchesProvider.profileViewersLocked,
                       label: 'Profile View',
                       onTap: () => context.push('/profile-views'),
                     )
@@ -396,6 +397,7 @@ class _StatCard extends StatelessWidget {
   final String count;
   final String label;
   final VoidCallback? onTap;
+  final bool locked;
 
   const _StatCard({
     required this.icon,
@@ -403,6 +405,7 @@ class _StatCard extends StatelessWidget {
     required this.count,
     required this.label,
     this.onTap,
+    this.locked = false,
   });
 
   @override
@@ -426,9 +429,14 @@ class _StatCard extends StatelessWidget {
           children: [
             Icon(icon, color: iconColor),
             const SizedBox(height: 8),
-            Text(count,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            locked
+                ? const SizedBox(
+                    height: 24,
+                    child: Icon(Icons.lock_outline, size: 20, color: Colors.grey),
+                  )
+                : Text(count,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold)),
             Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),

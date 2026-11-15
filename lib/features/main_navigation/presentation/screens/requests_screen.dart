@@ -170,7 +170,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     final isFemaleOrWali = user?.role.toLowerCase() == 'female' || user?.role.toLowerCase() == 'wali' || user?.gender?.toLowerCase() == 'female';
 
     final photoRequests = matchesProvider.matches.where(
-      (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
+      (m) => m.hasPendingPhotoRequestFromOtherUser
     ).toList();
 
     final activeMatches =
@@ -255,7 +255,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
     }
     
     final photoRequests = matchesProvider.matches.where(
-      (m) => m.photoRequestStatus == 'requested' && m.photoRequestedByOtherUser
+      (m) => m.hasPendingPhotoRequestFromOtherUser
     ).toList();
 
     if (matchesProvider.receivedRequests.isEmpty && photoRequests.isEmpty) {
@@ -477,8 +477,7 @@ class _RequestsScreenState extends State<RequestsScreen> with SingleTickerProvid
               isLocked: isActuallyLocked,
               isMatched: true,
               isBlurred: true,
-              matchedButtonText: (match.photoRequestStatus == 'requested' &&
-                      match.photoRequestedByOtherUser)
+              matchedButtonText: match.hasPendingPhotoRequestFromOtherUser
                   ? 'Review Photo Request'
                   : (isFemaleOrWali && match.waliRequestStatus == 'requested')
                       ? 'Review Wali Request'

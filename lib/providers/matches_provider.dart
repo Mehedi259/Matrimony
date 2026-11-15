@@ -19,6 +19,7 @@ class MatchesProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _selectedProfileError;
   String? _profileViewersError;
+  bool _profileViewersLocked = false;
   Map<String, dynamic>? _connectionUsage;
   bool _justExhaustedRequests = false;
   bool _lastSendFailedDueToLimit = false;
@@ -35,6 +36,10 @@ class MatchesProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get selectedProfileError => _selectedProfileError;
   String? get profileViewersError => _profileViewersError;
+
+  /// True when the plan does not include "who viewed me" (backend answers 403).
+  /// The UI then shows a lock instead of a misleading "00".
+  bool get profileViewersLocked => _profileViewersLocked;
   Map<String, dynamic>? get connectionUsage => _connectionUsage;
   bool get justExhaustedRequests => _justExhaustedRequests;
   bool get lastSendFailedDueToLimit => _lastSendFailedDueToLimit;
@@ -80,6 +85,7 @@ class MatchesProvider extends ChangeNotifier {
     _errorMessage = null;
     _selectedProfileError = null;
     _profileViewersError = null;
+    _profileViewersLocked = false;
     _isLoading = false;
     _isLoadingProfileViewers = false;
     notifyListeners();
@@ -537,12 +543,15 @@ class MatchesProvider extends ChangeNotifier {
 
     try {
       _profileViewers = await _matchesRepository.getProfileViewers();
+      _profileViewersLocked = false;
       _isLoadingProfileViewers = false;
       notifyListeners();
       return true;
     } catch (e) {
       _profileViewers = [];
       _isLoadingProfileViewers = false;
+      _profileViewersLocked = (e is ApiException && e.statusCode == 403) ||
+          (e is DioException && e.response?.statusCode == 403);
       if (e is ApiException) {
         _profileViewersError = e.message.trim().isNotEmpty
             ? e.message

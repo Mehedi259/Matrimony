@@ -486,6 +486,14 @@ class MatchModel {
         'dropped',
       }.contains(status.toLowerCase());
 
+  /// The other person asked to see my photos and is waiting for my answer.
+  /// Only for live connections: a request left over on a cancelled/dropped
+  /// match must not show up as "Review Photo Request".
+  bool get hasPendingPhotoRequestFromOtherUser =>
+      isActiveConnection &&
+      photoRequestStatus == 'requested' &&
+      photoRequestedByOtherUser;
+
   factory MatchModel.fromJson(Map<String, dynamic> json) {
     final other = json['other_user'];
     return MatchModel(

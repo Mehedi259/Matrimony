@@ -951,5 +951,32 @@ void main() {
       },
     );
   });
+
+  group('Photo requests on ended connections', () {
+    MatchModel matchWith(String status) => MatchModel.fromJson({
+          'id': 'm-$status',
+          'match_id': 'MT-9',
+          'status': status,
+          'other_user': {'id': 'u-9', 'codename': 'B-9'},
+          'photos_currently_visible': false,
+          'photo_request_status': 'requested',
+          'photo_requested_by_other_user': true,
+          'wali_request_status': 'none',
+          'second_photo_request_status': 'pending',
+          'photo_view_count': 1,
+          'updated_at': '2026-11-15T12:00:00Z',
+        });
+
+    test('pending photo request is shown for a live connection', () {
+      expect(matchWith('accepted').hasPendingPhotoRequestFromOtherUser, isTrue);
+    });
+
+    test('leftover photo request on an ended connection is hidden', () {
+      for (final status in ['dropped', 'cancelled', 'declined']) {
+        expect(matchWith(status).hasPendingPhotoRequestFromOtherUser, isFalse,
+            reason: status);
+      }
+    });
+  });
 }
 

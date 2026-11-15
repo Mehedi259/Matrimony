@@ -104,6 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.visibility_outlined,
                     label: 'Profile Views',
                     value: '${matchesProvider.profileViewers.length.toString().padLeft(2, '0')}',
+                    locked: matchesProvider.profileViewersLocked,
                     color: Colors.blue,
                     onTap: () => context.push('/profile-views'),
                   ),
@@ -468,8 +469,9 @@ class _StatPill extends StatelessWidget {
   final String value;
   final Color color;
   final VoidCallback? onTap;
+  final bool locked;
 
-  const _StatPill({required this.icon, required this.label, required this.value, required this.color, this.onTap});
+  const _StatPill({required this.icon, required this.label, required this.value, required this.color, this.onTap, this.locked = false});
 
   @override
   Widget build(BuildContext context) {
@@ -493,7 +495,9 @@ class _StatPill extends StatelessWidget {
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+            locked
+                ? const SizedBox(height: 22, child: Icon(Icons.lock_outline, size: 18, color: Colors.grey))
+                : Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
             const SizedBox(height: 2),
             Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey), textAlign: TextAlign.center),
           ],
