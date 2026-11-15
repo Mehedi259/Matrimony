@@ -94,7 +94,7 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
         const SizedBox(height: 16),
         _PlanCard(
           title: 'Free',
-          price: '£0',
+          price: 'Free',
           subtitle: 'Always free',
           features: const [
             'Receive connection requests',
@@ -139,7 +139,7 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
           title: 'Annual',
           price: p.priceFor(IapProducts.annual),
           subtitle: 'per year · auto-renews',
-          discountBadge: '(30% off)',
+          discountBadge: _annualSavingsLabel(p),
           features: const [
             'Unlimited connection requests',
             'Profile listed at the top of suggested matches',
@@ -206,6 +206,15 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  /// "(28% off)" from the store's real prices; hidden if prices aren't loaded.
+  String? _annualSavingsLabel(PurchaseProvider p) {
+    final monthly = p.product(IapProducts.monthly)?.rawPrice;
+    final annual = p.product(IapProducts.annual)?.rawPrice;
+    if (monthly == null || annual == null || monthly <= 0) return null;
+    final pct = ((1 - annual / (monthly * 12)) * 100).floor();
+    return pct >= 5 ? '(Save $pct%)' : null;
   }
 
   Widget _currentPlanBanner(SubscriptionStatus s) {
