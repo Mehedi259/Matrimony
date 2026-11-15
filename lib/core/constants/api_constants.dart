@@ -1,6 +1,11 @@
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'https://api.amuslimmatchmaker.com';
+  // Override for local/staging builds:
+  //   flutter run --dart-define=API_BASE_URL=http://localhost:8000
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://api.amuslimmatchmaker.com',
+  );
   static const String apiPrefix = '/api';
 
   // Auth Endpoints

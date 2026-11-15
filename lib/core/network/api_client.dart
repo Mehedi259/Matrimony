@@ -11,6 +11,16 @@ class ApiClient {
   final StorageService _storageService = StorageService();
   bool _isInitialized = false;
 
+  /// In-flight refresh, shared so parallel 401s trigger only one refresh call
+  /// (refresh tokens rotate, so a second concurrent refresh would fail).
+  Future<bool>? _refreshInFlight;
+
+  /// Called once when the session can no longer be refreshed. The app wires
+  /// this up to clear auth state and send the user to the login screen.
+  static VoidCallback? onSessionExpired;
+
+  static const String _refreshPath = '${ApiConstants.apiPrefix}/user/token/refresh/';
+
   ApiClient._internal() {
     _dio = Dio(
       BaseOptions(
@@ -86,17 +96,23 @@ class ApiClient {
             print('📛 Response: ${error.response?.data}');
           }
 
-          // Handle token expiration
-          if (error.response?.statusCode == 401) {
-            // Try to refresh token
-            final refreshed = await _refreshToken();
+          // Handle token expiration. Only for requests that carried a token
+          // (a 401 from login with a wrong password is not a session expiry),
+          // and never for a request that was already retried.
+          final sentToken = error.requestOptions.headers['Authorization'] != null;
+          final alreadyRetried = error.requestOptions.extra['retried'] == true;
+          if (error.response?.statusCode == 401 && sentToken && !alreadyRetried) {
+            final refreshed = await _refreshTokenOnce();
             if (refreshed) {
-              // Retry the failed request
-              return handler.resolve(await _retry(error.requestOptions));
-            } else {
-              // Token refresh failed, logout user
-              await _storageService.clearTokens();
+              try {
+                return handler.resolve(await _retry(error.requestOptions));
+              } on DioException catch (retryError) {
+                return handler.next(retryError);
+              }
             }
+            // Refresh failed: the session is over.
+            await _storageService.clearAll();
+            onSessionExpired?.call();
           }
 
           return handler.next(error);
@@ -117,6 +133,11 @@ class ApiClient {
     }
   }
 
+  Future<bool> _refreshTokenOnce() {
+    return _refreshInFlight ??=
+        _refreshToken().whenComplete(() => _refreshInFlight = null);
+  }
+
   Future<bool> _refreshToken() async {
     try {
       final refreshToken = await _storageService.getRefreshToken();
@@ -124,14 +145,28 @@ class ApiClient {
         return false;
       }
 
-      final response = await _dio.post(
-        '${ApiConstants.apiPrefix}/user/token/refresh/',
+      // Separate Dio without our interceptors, so a 401 here cannot recurse
+      // back into the refresh logic and no stale Bearer header is sent.
+      final refreshDio = Dio(BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.connectTimeout,
+        receiveTimeout: ApiConstants.receiveTimeout,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      ));
+      final response = await refreshDio.post(
+        _refreshPath,
         data: {'refresh': refreshToken},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.data is Map) {
         final newAccessToken = response.data['access'];
+        if (newAccessToken is! String || newAccessToken.isEmpty) return false;
         await _storageService.saveAccessToken(newAccessToken);
+        // Backend rotates refresh tokens (old one is blacklisted), so keep the new one.
+        final newRefreshToken = response.data['refresh'];
+        if (newRefreshToken is String && newRefreshToken.isNotEmpty) {
+          await _storageService.saveRefreshToken(newRefreshToken);
+        }
         return true;
       }
       return false;
@@ -144,14 +179,23 @@ class ApiClient {
   }
 
   Future<Response<dynamic>> _retry(RequestOptions requestOptions) async {
+    // Drop the old Authorization header; onRequest adds the fresh token.
+    final headers = Map<String, dynamic>.from(requestOptions.headers)
+      ..remove('Authorization');
     final options = Options(
       method: requestOptions.method,
-      headers: requestOptions.headers,
+      headers: headers,
+      contentType: requestOptions.contentType,
+      responseType: requestOptions.responseType,
+      extra: {...requestOptions.extra, 'retried': true},
     );
 
     return _dio.request<dynamic>(
       requestOptions.path,
-      data: requestOptions.data,
+      // A FormData body is consumed by the first send; re-sending needs a copy.
+      data: requestOptions.data is FormData
+          ? (requestOptions.data as FormData).clone()
+          : requestOptions.data,
       queryParameters: requestOptions.queryParameters,
       options: options,
     );

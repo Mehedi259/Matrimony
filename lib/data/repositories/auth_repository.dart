@@ -174,8 +174,12 @@ class AuthRepository {
 
   Future<void> logout() async {
     try {
-      // Call logout endpoint to invalidate token on server
-      await _apiClient.post(ApiConstants.logout);
+      // Call logout endpoint so the server blacklists the refresh token
+      final refreshToken = await _storageService.getRefreshToken();
+      await _apiClient.post(
+        ApiConstants.logout,
+        data: {if (refreshToken != null && refreshToken.isNotEmpty) 'refresh': refreshToken},
+      );
     } catch (e) {
       // Continue with local logout even if server call fails
     } finally {

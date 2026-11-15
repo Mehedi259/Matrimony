@@ -6,6 +6,9 @@ import 'core/theme/app_theme.dart';
 import 'core/services/screen_protection_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/matches_provider.dart';
+import 'providers/profile_provider.dart';
+import 'providers/notification_provider.dart';
+import 'core/network/api_client.dart';
 import 'features/auth_onboarding/presentation/screens/welcome_screen.dart';
 import 'features/auth_onboarding/presentation/screens/login_screen.dart';
 import 'features/auth_onboarding/presentation/screens/profile_type_selection_screen.dart';
@@ -94,11 +97,29 @@ class _MatrimonyAppState extends State<MatrimonyApp> with WidgetsBindingObserver
     final authProvider = context.read<AuthProvider>();
     _wasAuthenticated = authProvider.authState == AuthState.authenticated;
     _router = _createRouter(_wasAuthenticated);
+    ApiClient.onSessionExpired = _handleSessionExpired;
+  }
+
+  /// Refresh token is no longer valid: reset all user state and go to login.
+  void _handleSessionExpired() {
+    if (!mounted) return;
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isAuthenticated) return;
+    context.read<ProfileProvider>().clearData();
+    context.read<MatchesProvider>().clearData();
+    context.read<NotificationProvider>().clearData();
+    authProvider.handleSessionExpired();
+    _router.go('/login');
+    Get.showSnackbar(const GetSnackBar(
+      message: 'Your session has expired. Please log in again.',
+      duration: Duration(seconds: 3),
+    ));
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    ApiClient.onSessionExpired = null;
     super.dispose();
   }
 

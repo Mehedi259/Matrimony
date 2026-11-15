@@ -209,6 +209,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Local-only sign-out used when the session expired (refresh token no
+  /// longer valid). Tokens/storage are already cleared by ApiClient.
+  void handleSessionExpired() {
+    if (_authState == AuthState.unauthenticated) return;
+    _currentUser = null;
+    _authState = AuthState.unauthenticated;
+    _pendingEmail = null;
+    _pendingRole = null;
+    _resetEmail = null;
+    _resetToken = null;
+    notifyListeners();
+  }
+
   // ========== PASSWORD RESET ==========
 
   Future<bool> passwordResetInitiate({required String email}) async {
