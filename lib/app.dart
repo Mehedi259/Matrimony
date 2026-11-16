@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/screen_protection_service.dart';
+import 'core/services/push_notification_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/matches_provider.dart';
 import 'providers/profile_provider.dart';
@@ -97,6 +98,7 @@ class _MatrimonyAppState extends State<MatrimonyApp> with WidgetsBindingObserver
     final authProvider = context.read<AuthProvider>();
     _wasAuthenticated = authProvider.authState == AuthState.authenticated;
     _router = _createRouter(_wasAuthenticated);
+    PushNotificationService.attachRouter(_router);
     ApiClient.onSessionExpired = _handleSessionExpired;
   }
 

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/notification_provider.dart';
 import '../../../../data/models/notification_model.dart';
+import '../../../../core/services/notification_router.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -249,99 +250,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             provider.markAsRead(notification.id);
           }
 
-          final targetUserId = _extractTargetUserId(notification.data);
-
-          // Navigate based on notification type
-          switch (type.toLowerCase()) {
-            case 'request':
-            case 'connection_request_received':
-            case 'connection_request_accepted':
-            case 'connection_request_declined':
-            case 'connection_request_cancelled':
-            case 'match':
-            case 'match_created':
-            case 'photo_request_received':
-            case 'photo_request_approved':
-            case 'photo_request_declined':
-            case 'wali_request_received':
-            case 'wali_request_approved':
-            case 'wali_request_declined':
-            case 'unlock_request_received':
-              if (targetUserId != null) {
-                context.push('/profile-view-details/$targetUserId');
-              } else {
-                context.go('/requests');
+          final pushed = NotificationRouter.open(
+            GoRouter.of(context),
+            type,
+            notification.data,
+          );
+          if (NotificationRouter.opensAdminChat(type)) {
+            pushed?.then((_) {
+              if (context.mounted) {
+                context.read<NotificationProvider>().refreshUnreadAdminMessages();
               }
-              break;
-            case 'message':
-            case 'new_message':
-              context.push('/settings/chat-with-admin').then((_) {
-                if (context.mounted) {
-                  context.read<NotificationProvider>().refreshUnreadAdminMessages();
-                }
-              });
-              break;
-            case 'profile':
-            case 'profile_view':
-            case 'profile_viewed':
-            case 'new_profile_view':
-              if (targetUserId != null) {
-                context.push('/profile-view-details/$targetUserId');
-              } else {
-                context.push('/profile-views');
-              }
-              break;
-            case 'profile_approved':
-              context.push('/my-profile-view');
-              break;
-            case 'private_matchmaking_requested':
-            case 'private_matchmaking_confirmed':
-            case 'pm_approved':
-            case 'pm_declined':
-            case 'pm_match_update':
-            case 'special_match_received':
-              context.push('/private-matches');
-              break;
-            case 'pass_changed':
-            case 'password_changed':
-            case 'account_suspended':
-            case 'account_blocked':
-              context.push('/settings/security');
-              break;
-            case 'welcome':
-              context.go('/');
-              break;
-            default:
-              if (targetUserId != null) {
-                context.push('/profile-view-details/$targetUserId');
-              } else {
-                context.go('/requests');
-              }
+            });
           }
         },
       ),
     );
-  }
-
-  String? _extractTargetUserId(Map<String, dynamic>? data) {
-    if (data == null || data.isEmpty) return null;
-    const candidateKeys = [
-      'user_id',
-      'other_user_id',
-      'sender_id',
-      'receiver_id',
-      'requester_id',
-      'responder_id',
-      'viewer_id',
-      'profile_id',
-    ];
-    for (final key in candidateKeys) {
-      final raw = data[key]?.toString().trim();
-      if (raw != null && raw.isNotEmpty && raw != 'null') {
-        return raw;
-      }
-    }
-    return null;
   }
 
   String _formatTime(DateTime timestamp) {

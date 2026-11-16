@@ -94,6 +94,7 @@ class ApiConstants {
   // Notifications
   static const String notifications = '$apiPrefix/notification/shared/';
   static const String notificationsMarkAllRead = '$apiPrefix/notification/shared/mark-all-read/';
+  static const String notificationDevices = '$apiPrefix/notification/devices/';
   static const String notificationsUnreadCount = '$apiPrefix/notification/shared/unread-count/';
 
   // Wishlists

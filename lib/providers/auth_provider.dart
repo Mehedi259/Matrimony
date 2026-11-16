@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/services/push_notification_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/models/user_model.dart';
 import '../core/services/storage_service.dart';
@@ -192,6 +193,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
+
+    // Stop pushes to this phone while the access token is still valid.
+    await PushNotificationService.onLoggingOut();
 
     try {
       await _authRepository.logout();
