@@ -12,8 +12,8 @@ class IapProducts {
 
   /// Shown until the store returns localized prices.
   static const Map<String, String> fallbackPrices = {
-    monthly: '£15',
-    annual: '£125',
+    monthly: '£14.99',
+    annual: '£124.99',
     topUp: '£5',
   };
 
